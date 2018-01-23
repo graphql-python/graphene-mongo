@@ -1,6 +1,6 @@
 from datetime import datetime
 from mongoengine import (
-    connect, Document
+    connect, Document, EmbeddedDocument
 )
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField, ListField,
@@ -22,7 +22,7 @@ class Pet(Document):
     reporter_id = StringField()
 
 
-class Article(Document):
+class Article(EmbeddedDocument):
 
     meta = {'collection': 'test_article'}
     headline = StringField(required=True)
@@ -32,12 +32,11 @@ class Article(Document):
 
 class Reporter(Document):
     meta = {'collection': 'test_repoter'}
-    
+
     first_name = StringField(required=True)
     last_name = StringField(requred=True)
     email = EmailField()
-    #ariticles = ListField(EmbeddedDocumentField(Article))
-    favorite_article = ReferenceField(Article)
+    ariticles = ListField(EmbeddedDocumentField(Article))
     custom_map = MapField(field=StringField())
     awards = ListField()
 

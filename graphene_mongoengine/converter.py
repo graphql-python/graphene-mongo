@@ -54,13 +54,14 @@ def convert_date_to_string(field, registry=None):
 
 
 @convert_mongoengine_field.register(mongoengine.DictField)
+@convert_mongoengine_field.register(mongoengine.MapField)
 def convert_dict_to_jsonstring(field, registry=None):
     return JSONString(description=field.db_field, required=not field.null)
 
 
 @convert_mongoengine_field.register(mongoengine.DateTimeField)
 def convert_date_to_string(field, registry=None):
-    return DateTime(description=field.db_field, required=not field.null)
+    return String(description=field.db_field, required=not field.null)
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
