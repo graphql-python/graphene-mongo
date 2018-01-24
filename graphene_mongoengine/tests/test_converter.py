@@ -2,9 +2,15 @@ import graphene
 import mongoengine
 import pytest
 
+from graphene import Dynamic
+from graphene import Node
+
 from py.test import raises
 
+from .models import Article, Reporter
 from ..converter import convert_mongoengine_field
+from ..types import MongoengineObjectType
+
 
 def assert_conversion(mongoengine_field, graphene_field, *args, **kwargs):
     field = mongoengine_field(*args, **kwargs)
@@ -58,11 +64,24 @@ def test_should_date_convert_string():
 def test_should_dict_convert_json():
     assert_conversion(mongoengine.DictField, graphene.JSONString)
 
-
-#def test_should_convert_map_to_json():
-#    assert_conversion(mongoengine.MapField, graphene.JSONString)
+# FIXME
+# def test_should_convert_map_to_json():
+#     assert_conversion(mongoengine.MapField, graphene.JSONString)
 
 
 def test_should_postgres_array_convert_list():
     assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
+
+
+def test_should_reference_convert_dynamic():
+    class R(MongoengineObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    dynamic_field = convert_mongoengine_field(Article._fields['reporter'], R._meta.registry)
+    assert isinstance(dynamic_field, Dynamic)
+    graphene_type = dynamic_field.get_type()
+    assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == R
 

@@ -36,7 +36,7 @@ class Reporter(Document):
     first_name = StringField(required=True)
     last_name = StringField(requred=True)
     email = EmailField()
-    ariticles = ListField(EmbeddedDocumentField(Article))
-    custom_map = MapField(field=StringField())
-    awards = ListField()
+    #ariticles = ListField(EmbeddedDocumentField(Article))
+    #custom_map = MapField(field=StringField())
+    awards = ListField(StringField())
 

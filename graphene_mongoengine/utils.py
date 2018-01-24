@@ -10,7 +10,6 @@ def get_model_fields(model, excluding=None):
         excluding = []
     attributes = dict()
     for attr_name in vars(model):
-        print(attr_name)
         if attr_name in excluding:
             continue
         attr = getattr(model, attr_name)
@@ -19,10 +18,18 @@ def get_model_fields(model, excluding=None):
 
     return OrderedDict(sorted(attributes.items()))
 
+
 def is_valid_mongoengine_model(model):
     return inspect.isclass(model) and (
         issubclass(model, mongoengine.Document)
     )
+
+
+def maybe_queryset(value):
+    if isinstance(value, Manager):
+        value = value.get_queryset()
+    return value
+
 
 def import_single_dispatch():
     try:

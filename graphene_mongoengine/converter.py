@@ -48,11 +48,6 @@ def convert_field_to_float(field, registry=None):
     return Float(description=field.db_field, required=not field.null)
 
 
-@convert_mongoengine_field.register(mongoengine.DateTimeField)
-def convert_date_to_string(field, registry=None):
-    return DateTime(description=field.db_field, required=not field.null)
-
-
 @convert_mongoengine_field.register(mongoengine.DictField)
 @convert_mongoengine_field.register(mongoengine.MapField)
 def convert_dict_to_jsonstring(field, registry=None):
@@ -73,3 +68,33 @@ def convert_postgres_array_to_list(field, registry=None):
         base_type = type(base_type)
     return List(base_type, description=field.db_field, required=not field.null)
 
+
+@convert_mongoengine_field.register(mongoengine.ReferenceField)
+def convert_field_to_dynamic(field, registry=None):
+    model = field.document_type
+
+    def dynamic_type():
+        _type = registry.get_type_for_model(model)
+        if not _type:
+            return
+        return Field(_type)
+
+    return Dynamic(dynamic_type)
+
+""" TODO
+@convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
+def convert_field_to_dynamic(field, registry=None):
+    model = field.document_type
+
+    def dynamic_type():
+        print('a')
+        print(model)
+        _type = registry.get_type_for_model(model)
+        print(_type)
+        if not _type:
+            return
+        null = getattr(field, 'null', True)
+        return Field(_type, required=not null)
+
+    return Dynamic(dynamic_type)
+"""

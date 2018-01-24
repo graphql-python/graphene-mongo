@@ -5,6 +5,7 @@ from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
 
+from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry
 from .utils import (get_model_fields, is_valid_mongoengine_model)
 
@@ -13,15 +14,15 @@ def construct_fields(model, registry, only_fields, exclude_fields):
     _model_fields = get_model_fields(model)
 
     fields = OrderedDict()
-    for field in _model_fields:
-        name = field.name
+
+    for name, field in _model_fields.items():
         is_not_in_only = only_fields and name not in options.only_fields
         is_excluded = name in exclude_fields
         if is_not_in_only or is_excluded:
             # We skip this field if we specify only_fields and is not
             # in there. Or when we exclude this field in exclude_fields
             continue
-        converted = convert_mongoengine_field_with_choices(field, registry)
+        converted = convert_mongoengine_field(field, registry)
         if not converted:
             continue
         fields[name] = converted
@@ -42,6 +43,8 @@ class MongoengineObjectType(ObjectType):
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
                                     only_fields=(), exclude_fields=(), filter_fields=None, connection=None,
                                     connection_class=None, use_connection=None, interfaces=(), **options):
+        print(model)
+        print(type(model))
         assert is_valid_mongoengine_model(model), (
             'You need to pass a valid Mongoengine Model in {}.Meta, received "{}".'
         ).format(cls.__name__, model)
@@ -58,7 +61,9 @@ class MongoengineObjectType(ObjectType):
             construct_fields(model, registry, only_fields, exclude_fields),
             _as=Field
         )
-
+        print('hahaha')
+        #print(model)
+        #print(mongoengine_fields)
         if use_connection is None and interfaces:
             use_connection = any((issubclass(interface, Node) for interface in interfaces))
 
