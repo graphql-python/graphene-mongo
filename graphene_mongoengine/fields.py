@@ -59,6 +59,9 @@ class MongoengineConnectionField(ConnectionField):
     def merge_querysets(cls, default_queryset, queryset):
         return queryset & default_queryset
 
+    """
+    TODO: Not sure this works well or not
+    """
     @classmethod
     def connection_resolver(cls, resolver, connection, model, root, info, **args):
         iterable = resolver(root, info, **args)

@@ -1,3 +1,5 @@
+from py.test import raises
+
 from graphene import Field, Int, Interface, ObjectType
 from graphene.relay import Node, is_node
 
@@ -59,6 +61,21 @@ def test_object_type():
         'reporter'
     ])
     assert is_node(Human)
+
+
+def test_should_raise_if_no_model():
+    with raises(Exception) as excinfo:
+        class Human1(MongoengineObjectType):
+            pass
+    assert 'valid Mongoengine Model' in str(excinfo.value)
+
+
+def test_should_raise_if_model_is_invalid():
+    with raises(Exception) as excinfo:
+        class Human2(MongoengineObjectType):
+            class Meta:
+                model = 1
+    assert 'valid Mongoengine Model' in str(excinfo.value)
 
 
 def with_local_registry(func):
