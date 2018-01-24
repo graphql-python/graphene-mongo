@@ -12,11 +12,9 @@ from .utils import (get_model_fields, is_valid_mongoengine_model)
 
 def construct_fields(model, registry, only_fields, exclude_fields):
     _model_fields = get_model_fields(model)
-
     fields = OrderedDict()
-
     for name, field in _model_fields.items():
-        is_not_in_only = only_fields and name not in options.only_fields
+        is_not_in_only = only_fields and name not in only_fields
         is_excluded = name in exclude_fields
         if is_not_in_only or is_excluded:
             # We skip this field if we specify only_fields and is not
