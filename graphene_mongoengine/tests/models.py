@@ -27,7 +27,9 @@ class Article(EmbeddedDocument):
     meta = {'collection': 'test_article'}
     headline = StringField(required=True)
     pub_date = DateTimeField(default=datetime.now)
+    editor = ReferenceField(Editor)
     reporter = ReferenceField('Reporter')
+
 
 
 class Reporter(Document):
@@ -36,7 +38,7 @@ class Reporter(Document):
     first_name = StringField(required=True)
     last_name = StringField(requred=True)
     email = EmailField()
-    #ariticles = ListField(EmbeddedDocumentField(Article))
+    ariticles = ListField(EmbeddedDocumentField(Article))
     #custom_map = MapField(field=StringField())
     awards = ListField(StringField())
 
