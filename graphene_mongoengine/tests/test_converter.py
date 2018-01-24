@@ -8,7 +8,9 @@ from graphene import Node
 from py.test import raises
 
 from .models import Article, Editor, Reporter
+
 from ..converter import convert_mongoengine_field
+from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
 
@@ -73,13 +75,6 @@ def test_should_postgres_array_convert_list():
     assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
 
 
-def test_should_embedded_convert_():
-    assert_conversion(
-        mongoengine.ListField,
-        graphene.List,
-        field=mongoengine.EmbeddedDocumentField(Article)
-    )
-
 def test_should_reference_convert_dynamic():
     class E(MongoengineObjectType):
         class Meta:
@@ -92,4 +87,16 @@ def test_should_reference_convert_dynamic():
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == E
 
+
+def test_should_one2many_convert_list():
+    class A(MongoengineObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+
+    graphene_field = convert_mongoengine_field(Reporter._fields['articles'].field, A._meta.registry)
+    assert isinstance(graphene_field, graphene.Dynamic)
+    dynamic_field = graphene_field.get_type()
+    assert isinstance(dynamic_field, graphene.Field)
+    assert dynamic_field.type == A
 

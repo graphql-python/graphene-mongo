@@ -31,14 +31,13 @@ class Article(EmbeddedDocument):
     reporter = ReferenceField('Reporter')
 
 
-
 class Reporter(Document):
     meta = {'collection': 'test_repoter'}
 
     first_name = StringField(required=True)
     last_name = StringField(requred=True)
     email = EmailField()
-    ariticles = ListField(EmbeddedDocumentField(Article))
+    articles = ListField(EmbeddedDocumentField(Article))
     #custom_map = MapField(field=StringField())
     awards = ListField(StringField())
 

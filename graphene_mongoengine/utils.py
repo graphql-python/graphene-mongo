@@ -21,7 +21,7 @@ def get_model_fields(model, excluding=None):
 
 def is_valid_mongoengine_model(model):
     return inspect.isclass(model) and (
-        issubclass(model, mongoengine.Document)
+        issubclass(model, mongoengine.Document) or issubclass(model, mongoengine.EmbeddedDocument)
     )
 
 

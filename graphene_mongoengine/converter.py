@@ -7,6 +7,7 @@ from graphql import assert_valid_name
 
 import mongoengine
 
+from .fields import MongoengineConnectionField
 from .utils import import_single_dispatch
 
 singledispatch = import_single_dispatch()
@@ -69,6 +70,7 @@ def convert_postgres_array_to_list(field, registry=None):
     return List(base_type, description=field.db_field, required=not field.null)
 
 
+@convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
 @convert_mongoengine_field.register(mongoengine.ReferenceField)
 def convert_field_to_dynamic(field, registry=None):
     model = field.document_type
@@ -76,25 +78,12 @@ def convert_field_to_dynamic(field, registry=None):
     def dynamic_type():
         _type = registry.get_type_for_model(model)
         if not _type:
-            return
+            return None
+
+        if isinstance(model, mongoengine.EmbeddedDocument):
+            return MongoengineConnectionField(_type)
+
         return Field(_type)
 
     return Dynamic(dynamic_type)
 
-""" TODO
-@convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
-def convert_field_to_dynamic(field, registry=None):
-    model = field.document_type
-
-    def dynamic_type():
-        print('a')
-        print(model)
-        _type = registry.get_type_for_model(model)
-        print(_type)
-        if not _type:
-            return
-        null = getattr(field, 'null', True)
-        return Field(_type, required=not null)
-
-    return Dynamic(dynamic_type)
-"""

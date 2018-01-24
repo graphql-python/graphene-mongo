@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from functools import partial
 
+from graphene import Field
 from graphene.relay import ConnectionField
 from graphene.relay.connection import PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
@@ -26,10 +27,10 @@ class MongoenginListField(Field):
         return partial(self.list_resolver, parent_resolver)
 
 
-class MongoEngineConnectionField(ConnectionField):
+class MongoengineConnectionField(ConnectionField):
 
     def __init__(self, *args, **kwargs):
-        super(MongoEngineConnectionField, self).__init(
+        super(MongoengineConnectionField, self).__init(
             *args,
             **kwargs
         )
@@ -38,7 +39,7 @@ class MongoEngineConnectionField(ConnectionField):
     def type(self):
         from .types import MongoengineObjectType
         _type = super(ConnectionField, self).type
-        assert issubclass(_type, MongoengineObjectType), "MongoEngineConnectionField only accepts DjangoObjectType types"
+        assert issubclass(_type, MongoengineObjectType), "MongoengineConnectionField only accepts DjangoObjectType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(_type.__name__)
         return _type._meta.connection
 
@@ -80,5 +81,4 @@ class MongoEngineConnectionField(ConnectionField):
 
     def get_resolver(self, parent_resolver):
         return partial(self.connection_resolver, parent_resolver, self.type, self.model)
-
 
