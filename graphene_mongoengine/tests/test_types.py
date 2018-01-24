@@ -33,14 +33,14 @@ def test_mongoengine_interface():
 def test_objecttype_registered():
     assert issubclass(Character, ObjectType)
     assert Character._meta.model == Reporter
-    assert set(
-        Character._meta.fields.keys()) == set([
+    assert set(Character._meta.fields.keys()) == set([
         'id',
         'first_name',
         'last_name',
         'email',
         'articles',
-        'awards'])
+        'awards'
+    ])
 
 
 def test_node_replacedfield():
@@ -56,8 +56,8 @@ def test_object_type():
         'headline',
         'pub_date',
         'editor',
-        'reporter']
-    )
+        'reporter'
+    ])
     assert is_node(Human)
 
 
