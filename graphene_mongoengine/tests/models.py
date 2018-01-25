@@ -1,11 +1,13 @@
 from datetime import datetime
 from mongoengine import (
-    Document, EmbeddedDocument
+    connect, Document, EmbeddedDocument
 )
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField, ListField,
     MapField, ReferenceField, StringField
 )
+
+connect('mongoenginetest', host='mongomock://localhost', alias='default')
 
 
 class Editor(Document):
@@ -22,7 +24,7 @@ class Pet(Document):
     reporter_id = StringField()
 
 
-class Article(EmbeddedDocument):
+class EmbeddedArticle(EmbeddedDocument):
 
     meta = {'collection': 'test_article'}
     headline = StringField(required=True)
@@ -37,7 +39,8 @@ class Reporter(Document):
     first_name = StringField(required=True)
     last_name = StringField(requred=True)
     email = EmailField()
-    articles = ListField(EmbeddedDocumentField(Article))
-    #custom_map = MapField(field=StringField())
+    embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
+    # FIXME
+    # custom_map = MapField(field=StringField())
     awards = ListField(StringField())
 
