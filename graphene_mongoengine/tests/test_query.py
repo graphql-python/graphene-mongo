@@ -4,7 +4,7 @@ import graphene
 
 from graphene.relay import Node
 
-from .models import Editor, EmbeddedArticle, Reporter
+from .models import Article, Editor, EmbeddedArticle, Reporter
 from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
@@ -16,10 +16,12 @@ def setup_fixtures():
     editor2.save()
 
     reporter = Reporter(first_name='Allen', last_name='Iverson',
-                        email='ai@gmail.com', awards=['2010-mvp'])
-    embedded_article1 = EmbeddedArticle(headline='Hello', editor=editor1)
-    embedded_article2 = EmbeddedArticle(headline='World', editor=editor2)
-    reporter.articles = [embedded_article1, embedded_article2]
+                        email='ai@gmail.com',  awards=['2010-mvp'])
+    article1 = Article(headline='Hello', editor=editor1)
+    article1.save()
+    article2 = Article(headline='World', editor=editor2)
+    article2.save()
+    reporter.articles = [article1, article2]
     reporter.save()
 
 setup_fixtures()
@@ -72,9 +74,9 @@ def test_should_query_editor_well():
 
 
 def test_should_query_reporter_well():
-    class EmbeddedArticleType(MongoengineObjectType):
+    class ArticleType(MongoengineObjectType):
         class Meta:
-            model = EmbeddedArticle
+            model = Article
 
     class ReporterType(MongoengineObjectType):
         class Meta:
@@ -84,7 +86,7 @@ def test_should_query_reporter_well():
         reporter = graphene.Field(ReporterType)
 
         def resolve_reporter(self, *args, **kwargs):
-            Reporter.objects.first()
+            return Reporter.objects.first()
 
     query = '''
         query ReporterQuery {
@@ -92,7 +94,9 @@ def test_should_query_reporter_well():
                 firstName,
                 lastName,
                 email,
-                embeddedArticles,
+                articles {
+                    headline
+                },
                 awards
             }
         }
@@ -100,10 +104,11 @@ def test_should_query_reporter_well():
     expected = {
         'reporter': {
             'firstName': 'Allen',
-            'lastName': 'Iversion',
+            'lastName': 'Iverson',
             'email': 'ai@gmail.com',
-            'embeddedArticles': [
-                
+            'articles': [
+                {'headline': 'Hello'},
+                {'headline': 'World'}
             ],
             'awards': ['2010-mvp']
         }
@@ -111,5 +116,6 @@ def test_should_query_reporter_well():
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
-    print(result.data)
+    assert not result.errors
+    assert dict(result.data['reporter']) == expected['reporter']
 

@@ -81,13 +81,6 @@ def convert_field_to_dynamic(field, registry=None):
         if not _type:
             return None
 
-        #if issubclass(model, mongoengine.Document):
-        #    print('aaaaa')
-        #    return MongoengineConnectionField(_type)
-
-        #if isinstance(model, mongoengine.EmbeddedDocument):
-        #    return MongoengineConnectionField(_type)
-
         return Field(_type)
 
     return Dynamic(dynamic_type)
