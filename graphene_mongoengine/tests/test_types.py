@@ -5,7 +5,7 @@ from graphene.relay import Node, is_node
 
 from .. import registry
 from ..types import MongoengineObjectType
-from .models import EmbeddedArticle
+from .models import Article
 from .models import Reporter
 
 registry.reset_global_registry()
@@ -16,7 +16,7 @@ class Human(MongoengineObjectType):
     pub_date = Int()
 
     class Meta:
-        model = EmbeddedArticle
+        model = Article
         registry = registry.get_global_registry()
         interfaces = (Node,)
 
@@ -40,7 +40,9 @@ def test_objecttype_registered():
         'first_name',
         'last_name',
         'email',
-        'embedded_articles',
+        # FIXME
+        # 'embedded_articles',
+        'articles',
         'awards'
     ])
 
@@ -97,7 +99,7 @@ def with_local_registry(func):
 def test_mongoengine_objecttype_only_fields():
     class A(MongoengineObjectType):
         class Meta:
-            model = EmbeddedArticle
+            model = Article
             only_fields = ('headline')
 
 
@@ -109,7 +111,7 @@ def test_mongoengine_objecttype_only_fields():
 def test_mongoengine_objecttype_exclude_fields():
     class A(MongoengineObjectType):
         class Meta:
-            model = EmbeddedArticle
+            model = Article
             exclude_fields = ('headline')
 
     assert 'headline' not in list(A._meta.fields.keys())

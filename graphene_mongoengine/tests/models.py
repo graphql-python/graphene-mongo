@@ -24,9 +24,18 @@ class Pet(Document):
     reporter_id = StringField()
 
 
-class EmbeddedArticle(EmbeddedDocument):
+class Article(Document):
 
     meta = {'collection': 'test_article'}
+    headline = StringField(required=True)
+    pub_date = DateTimeField(default=datetime.now)
+    editor = ReferenceField(Editor)
+    reporter = ReferenceField('Reporter')
+
+
+class EmbeddedArticle(EmbeddedDocument):
+
+    meta = {'collection': 'test_embedded_article'}
     headline = StringField(required=True)
     pub_date = DateTimeField(default=datetime.now)
     editor = ReferenceField(Editor)
@@ -39,7 +48,9 @@ class Reporter(Document):
     first_name = StringField(required=True)
     last_name = StringField(requred=True)
     email = EmailField()
-    embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
+    articles = ListField(ReferenceField(Article))
+    # FIXME
+    # embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
     # FIXME
     # custom_map = MapField(field=StringField())
     awards = ListField(StringField())

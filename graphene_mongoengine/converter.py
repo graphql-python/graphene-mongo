@@ -65,7 +65,8 @@ def convert_postgres_array_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
     if isinstance(base_type, (Dynamic)):
         base_type = base_type.get_type()._type
-    if not isinstance(base_type, (List, NonNull)):
+    if not isinstance(base_type, (List, NonNull)) \
+        and not isinstance(field.field, mongoengine.ReferenceField):
         base_type = type(base_type)
     return List(base_type, description=field.db_field, required=not field.null)
 
@@ -80,8 +81,12 @@ def convert_field_to_dynamic(field, registry=None):
         if not _type:
             return None
 
-        if isinstance(model, mongoengine.EmbeddedDocument):
-            return MongoengineConnectionField(_type)
+        #if issubclass(model, mongoengine.Document):
+        #    print('aaaaa')
+        #    return MongoengineConnectionField(_type)
+
+        #if isinstance(model, mongoengine.EmbeddedDocument):
+        #    return MongoengineConnectionField(_type)
 
         return Field(_type)
 
