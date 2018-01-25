@@ -7,7 +7,7 @@ from graphene import Node
 
 from py.test import raises
 
-from .models import Article, Editor, Reporter
+from .models import Editor, EmbeddedArticle, Reporter
 
 from ..converter import convert_mongoengine_field
 from ..fields import MongoengineConnectionField
@@ -81,7 +81,7 @@ def test_should_reference_convert_dynamic():
             model = Editor
             interfaces = (Node,)
 
-    dynamic_field = convert_mongoengine_field(Article._fields['editor'], E._meta.registry)
+    dynamic_field = convert_mongoengine_field(EmbeddedArticle._fields['editor'], E._meta.registry)
     assert isinstance(dynamic_field, Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
@@ -91,10 +91,11 @@ def test_should_reference_convert_dynamic():
 def test_should_one2many_convert_list():
     class A(MongoengineObjectType):
         class Meta:
-            model = Article
+            model = EmbeddedArticle
             interfaces = (Node,)
 
-    graphene_field = convert_mongoengine_field(Reporter._fields['articles'].field, A._meta.registry)
+    graphene_field = convert_mongoengine_field(
+        Reporter._fields['embedded_articles'].field, A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
