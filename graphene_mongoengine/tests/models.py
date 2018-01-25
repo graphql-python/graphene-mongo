@@ -1,18 +1,18 @@
 from datetime import datetime
 from mongoengine import (
-    connect, Document, EmbeddedDocument
+    Document, EmbeddedDocument
 )
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField, ListField,
     MapField, ReferenceField, StringField
 )
 
-connect(host='mongodb://localhost:27017', alias='default')
 
 class Editor(Document):
 
     meta = {'collection': 'test_editor'}
-    name = StringField(max_length=16, required=True)
+    first_name = StringField(required=True)
+    last_name = StringField(required=True)
 
 
 class Pet(Document):

@@ -91,7 +91,7 @@ class MongoengineObjectType(ObjectType):
     def is_type_of(cls, root, info):
         if isinstance(root, cls):
             return True
-        if not is_mapped_instance(root):
+        if not is_valid_mongoengine_model(type(root)):
             raise Exception((
                 'Received incompatible instance "{}".'
             ).format(root))
