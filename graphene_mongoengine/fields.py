@@ -29,17 +29,19 @@ class MongoenginListField(Field):
 
 class MongoengineConnectionField(ConnectionField):
 
+    '''
     def __init__(self, *args, **kwargs):
         super(MongoengineConnectionField, self).__init(
             *args,
             **kwargs
         )
+    '''
 
     @property
     def type(self):
         from .types import MongoengineObjectType
         _type = super(ConnectionField, self).type
-        assert issubclass(_type, MongoengineObjectType), "MongoengineConnectionField only accepts DjangoObjectType types"
+        assert issubclass(_type, MongoengineObjectType), "MongoengineConnectionField only accepts MongoengineObjectType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(_type.__name__)
         return _type._meta.connection
 
