@@ -20,7 +20,6 @@ from mongoengine import Document
 from mongoengine.fields import StringField
 
 class User(Document):
-
     meta = {'collection': 'user'}
     first_name = StringField(required=True)
     last_name = StringField(required=True)
@@ -62,3 +61,22 @@ query = '''
 result = schema.execute(query)
 ```
 
+## TODOs
+
+- [ ] Examples
+- [ ] Paging
+- [ ] Filtering
+
+## Contributing
+
+After cloning this repo, ensure dependencies are installed by running:
+
+```sh
+python setup.py install
+```
+
+After developing, the full test suite can be evaluated by running:
+
+```sh
+python setup.py test # Use --pytest-args="-v -s" for verbose mode
+```
