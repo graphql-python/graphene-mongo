@@ -180,3 +180,19 @@ def test_should_node():
     assert not result.errors
     assert dict(result.data['reporter']) == expected['reporter']
 
+# TODO:
+def test_should_custom_identifier():
+    pass
+
+# TODO:
+def test_should_mutate_well():
+    pass
+
+# TODO:
+def test_should_filter():
+    pass
+
+# TODO:
+def test_should_paging():
+    pass
+
