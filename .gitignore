@@ -1,4 +1,7 @@
 .cache/
+.eggs/
+dist/
+graphene_mongoengine.egg-info/
 *.pyc
 *.swp
 

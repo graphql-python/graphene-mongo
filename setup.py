@@ -1,0 +1,48 @@
+from setuptools import find_packages, setup
+
+setup(
+    name='graphene-mongoengine',
+    version='0.1.0',
+
+    description='Graphene Mongoengine integration',
+    long_description=open('README.rst').read(),
+
+    url='https://github.com/abawchen/graphene-mongoengine',
+
+    author='Abaw Chen',
+    author_email='abaw.chen@gmail.com',
+
+    license='MIT',
+
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Libraries',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: Implementation :: PyPy',
+    ],
+
+    keywords='api graphql protocol rest relay graphene mongo mongoengine',
+
+    packages=find_packages(exclude=['tests']),
+
+    install_requires=[
+        'graphene >=2.0',
+        'mongoengine>=0.15.0',
+        'singledispatch>=3.4.0.3',
+        'iso8601>=0.1.12'
+    ],
+    python_requires='>=2.7',
+    zip_safe=True,
+    setup_requires=['pytest-runner'],
+    tests_require=[
+        'pytest>=3.3.2',
+        'mock'
+    ],
+    test_suite="graphene_mongoengine.tests",
+
+)
