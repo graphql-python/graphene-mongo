@@ -92,7 +92,6 @@ def test_should_one2many_convert_list():
     class A(MongoengineObjectType):
         class Meta:
             model = Article
-            interfaces = (Node,)
 
     graphene_field = convert_mongoengine_field(
         Reporter._fields['articles'], A._meta.registry)

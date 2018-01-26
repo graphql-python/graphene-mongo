@@ -119,3 +119,64 @@ def test_should_query_reporter_well():
     assert not result.errors
     assert dict(result.data['reporter']) == expected['reporter']
 
+def test_should_node():
+    class ArticleNode(MongoengineObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+
+    class ReporterNode(MongoengineObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        reporter = graphene.Field(ReporterNode)
+
+        def resolve_reporter(self, *args, **kwargs):
+            return Reporter.objects.first()
+
+    query = '''
+        query ReporterQuery {
+            reporter {
+                firstName,
+                articles {
+                    edges {
+                        node {
+                            headline
+                        }
+                    }
+                }
+                lastName,
+                email
+            }
+        }
+    '''
+    expected = {
+        'reporter': {
+            'firstName': 'Allen',
+            'lastName': 'Iverson',
+            'articles': {
+                'edges': [
+                    {
+                        'node': {
+                            'headline': 'Hello'
+                        }
+                    },
+                    {
+                        'node': {
+                            'headline': 'World'
+                        }
+                    }
+                ],
+            },
+            'email': 'ai@gmail.com'
+        }
+    }
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert dict(result.data['reporter']) == expected['reporter']
+
