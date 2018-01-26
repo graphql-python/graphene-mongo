@@ -1,5 +1,5 @@
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
-                      NonNull, String, UUID)
+                      NonNull, String, UUID, is_node)
 from graphene.types.datetime import DateTime, Time
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
@@ -65,7 +65,10 @@ def convert_postgres_array_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
     if isinstance(base_type, (Dynamic)):
         base_type = base_type.get_type()._type
-    if not isinstance(base_type, (List, NonNull)):
+    if is_node(base_type):
+       return MongoengineConnectionField(base_type)
+    elif not isinstance(base_type, (List, NonNull)) \
+        and not isinstance(field.field, mongoengine.ReferenceField):
         base_type = type(base_type)
     return List(base_type, description=field.db_field, required=not field.null)
 
@@ -79,9 +82,6 @@ def convert_field_to_dynamic(field, registry=None):
         _type = registry.get_type_for_model(model)
         if not _type:
             return None
-
-        if isinstance(model, mongoengine.EmbeddedDocument):
-            return MongoengineConnectionField(_type)
 
         return Field(_type)
 

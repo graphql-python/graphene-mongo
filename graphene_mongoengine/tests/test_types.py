@@ -40,6 +40,8 @@ def test_objecttype_registered():
         'first_name',
         'last_name',
         'email',
+        # FIXME
+        # 'embedded_articles',
         'articles',
         'awards'
     ])
