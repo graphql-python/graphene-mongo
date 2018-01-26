@@ -64,6 +64,7 @@ result = schema.execute(query)
 ## TODOs
 
 - [ ] Examples
+- [ ] Support List(EmbeddedDocument)
 - [ ] Paging
 - [ ] Filtering
 
