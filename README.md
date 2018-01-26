@@ -51,12 +51,12 @@ Then you can simply query the schema:
 
 ```python
 query = '''
-	query {
-		users {
-			firstName,
-			lastName
-		}
-	}
+    query {
+        users {
+            firstName,
+            lastName
+        }
+    }
 '''
 result = schema.execute(query)
 ```
