@@ -79,7 +79,6 @@ class MongoengineObjectType(ObjectType):
         _meta.registry = registry
         _meta.fields = mongoengine_fields
         _meta.connection = connection
-
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
         )
@@ -91,7 +90,7 @@ class MongoengineObjectType(ObjectType):
     def is_type_of(cls, root, info):
         if isinstance(root, cls):
             return True
-        if not is_mapped_instance(root):
+        if not is_valid_mongoengine_model(type(root)):
             raise Exception((
                 'Received incompatible instance "{}".'
             ).format(root))
@@ -101,13 +100,13 @@ class MongoengineObjectType(ObjectType):
     def get_node(cls, id, context, info):
         if isinstance(getattr(cls._meta.model, get_key_name(cls._meta.model)), NumberAttribute):
             return cls._meta.model.get(int(id))
-        else:
-            return cls._meta.model.get(id)
+
+        return cls._meta.model.get(id)
 
     def resolve_id(self, info):
         return str(self.id)
 
-    @classmethod
-    def get_connection(cls):
-        return connection_for_type(cls)
+    #@classmethod
+    #def get_connection(cls):
+    #    return connection_for_type(cls)
 

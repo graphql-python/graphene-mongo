@@ -7,12 +7,14 @@ from mongoengine.fields import (
     MapField, ReferenceField, StringField
 )
 
-connect(host='mongodb://localhost:27017', alias='default')
+connect('mongoenginetest', host='mongomock://localhost', alias='default')
+
 
 class Editor(Document):
 
     meta = {'collection': 'test_editor'}
-    name = StringField(max_length=16, required=True)
+    first_name = StringField(required=True)
+    last_name = StringField(required=True)
 
 
 class Pet(Document):
@@ -22,9 +24,18 @@ class Pet(Document):
     reporter_id = StringField()
 
 
-class Article(EmbeddedDocument):
+class Article(Document):
 
     meta = {'collection': 'test_article'}
+    headline = StringField(required=True)
+    pub_date = DateTimeField(default=datetime.now)
+    editor = ReferenceField(Editor)
+    reporter = ReferenceField('Reporter')
+
+
+class EmbeddedArticle(EmbeddedDocument):
+
+    meta = {'collection': 'test_embedded_article'}
     headline = StringField(required=True)
     pub_date = DateTimeField(default=datetime.now)
     editor = ReferenceField(Editor)
@@ -37,7 +48,10 @@ class Reporter(Document):
     first_name = StringField(required=True)
     last_name = StringField(requred=True)
     email = EmailField()
-    articles = ListField(EmbeddedDocumentField(Article))
-    #custom_map = MapField(field=StringField())
+    articles = ListField(ReferenceField(Article))
+    # FIXME
+    # embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
+    # FIXME
+    # custom_map = MapField(field=StringField())
     awards = ListField(StringField())
 
