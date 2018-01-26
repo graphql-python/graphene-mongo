@@ -1,13 +1,13 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='graphene-mongoengine',
+    name='graphene-mongo',
     version='0.1.0',
 
     description='Graphene Mongoengine integration',
     long_description=open('README.rst').read(),
 
-    url='https://github.com/abawchen/graphene-mongoengine',
+    url='https://github.com/abawchen/graphene-mongo',
 
     author='Abaw Chen',
     author_email='abaw.chen@gmail.com',
@@ -44,6 +44,6 @@ setup(
         'mongomock>=3.8.0'
         'mock'
     ],
-    test_suite="graphene_mongoengine.tests",
+    test_suite="graphene_mongo.tests",
 
 )
