@@ -7,7 +7,7 @@ from mongoengine.fields import (
     MapField, ReferenceField, StringField
 )
 
-connect('mongoenginetest', host='mongomock://localhost', alias='default')
+connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
 
 
 class Editor(Document):
