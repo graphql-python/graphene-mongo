@@ -29,13 +29,12 @@ class MongoenginListField(Field):
 
 class MongoengineConnectionField(ConnectionField):
 
-    '''
-    def __init__(self, *args, **kwargs):
-        super(MongoengineConnectionField, self).__init(
+    def __init__(self, type, *args, **kwargs):
+        super(MongoengineConnectionField, self).__init__(
+            type,
             *args,
             **kwargs
         )
-    '''
 
     @property
     def type(self):
@@ -62,7 +61,7 @@ class MongoengineConnectionField(ConnectionField):
         return queryset & default_queryset
 
     """
-    TODO: Not sure this works well or not
+    TODO: Not sure this works :(
     """
     @classmethod
     def connection_resolver(cls, resolver, connection, model, root, info, **args):
@@ -85,5 +84,6 @@ class MongoengineConnectionField(ConnectionField):
         return connection
 
     def get_resolver(self, parent_resolver):
+        ('??')
         return partial(self.connection_resolver, parent_resolver, self.type, self.model)
 
