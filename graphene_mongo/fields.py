@@ -10,10 +10,10 @@ from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from .utils import maybe_queryset
 
 
-class MongoenginListField(Field):
+class MongoengineListField(Field):
 
     def __init__(self, _type, *args, **kwargs):
-        super(MongoenginListField, self).__init__(List(_type), *args, **kwargs)
+        super(MongoengineListField, self).__init__(List(_type), *args, **kwargs)
 
     @property
     def model(self):
