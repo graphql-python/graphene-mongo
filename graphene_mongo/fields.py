@@ -67,7 +67,7 @@ class MongoengineConnectionField(ConnectionField):
     def connection_resolver(cls, resolver, connection, model, root, info, **args):
         iterable = resolver(root, info, **args)
         if not iterable:
-            interable = cls.get_query(model, info, **args)
+            iterable = cls.get_query(model, info, **args)
         _len = len(iterable)
         connection = connection_from_list_slice(
             iterable,
