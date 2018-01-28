@@ -5,7 +5,6 @@ import graphene
 from graphene.relay import Node
 
 from .models import Article, Editor, EmbeddedArticle, Reporter
-from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
 
