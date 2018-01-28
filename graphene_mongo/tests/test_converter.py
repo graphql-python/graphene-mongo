@@ -10,7 +10,6 @@ from py.test import raises
 from .models import Article, Editor, EmbeddedArticle, Reporter
 
 from ..converter import convert_mongoengine_field
-from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
 
