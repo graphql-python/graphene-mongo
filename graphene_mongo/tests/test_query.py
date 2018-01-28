@@ -180,9 +180,51 @@ def test_should_node():
     assert not result.errors
     assert dict(result.data['reporter']) == expected['reporter']
 
-# TODO:
-def test_should_custom_identifier():
-    pass
+def test_should_connection_field():
+    class EditorNode(MongoengineObjectType):
+
+        class Meta:
+            model = Editor
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        all_editors = MongoengineConnectionField(EditorNode)
+
+    query = '''
+        query EditorQuery {
+          allEditors {
+            edges {
+                node {
+                    firstName,
+                    lastName
+                }
+            }
+          }
+        }
+    '''
+    expected = {
+        'allEditors': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Penny',
+                        'lastName': 'Hardaway'
+                    },
+                },
+                {
+                    'node': {
+                        'firstName': 'Grant',
+                        'lastName': 'Hill'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert dict(result.data['allEditors']) == expected['allEditors']
 
 # TODO:
 def test_should_mutate_well():
