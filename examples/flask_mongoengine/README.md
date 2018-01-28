@@ -3,8 +3,7 @@ Example Flask+MongoEngine Project
 ================================
 
 This example project demos integration between Graphene, Flask and MongoEngine.
-The project contains two models, one named `Department` and another
-named `Employee`.
+The project contains three models, which are `Department`, `Employee` and `Role`.
 
 Getting started
 ---------------
