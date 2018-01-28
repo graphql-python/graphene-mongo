@@ -1,6 +1,6 @@
-#from .fields import (
-#    MongoEngineDocumentField
-#)
+from .fields import (
+    MongoengineConnectionField
+)
 
 from .types import (
     MongoengineObjectType,
