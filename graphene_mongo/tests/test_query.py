@@ -5,6 +5,7 @@ import graphene
 from graphene.relay import Node
 
 from .models import Article, Editor, EmbeddedArticle, Reporter
+from .utils import with_local_registry
 from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
@@ -27,6 +28,7 @@ def setup_fixtures():
 setup_fixtures()
 
 
+@with_local_registry
 def test_should_query_editor_well():
     class EditorType(MongoengineObjectType):
         class Meta:
@@ -73,6 +75,7 @@ def test_should_query_editor_well():
     assert all(item in result.data['editors'] for item in expected['editors'])
 
 
+@with_local_registry
 def test_should_query_reporter_well():
     class ArticleType(MongoengineObjectType):
         class Meta:
@@ -119,13 +122,17 @@ def test_should_query_reporter_well():
     assert not result.errors
     assert dict(result.data['reporter']) == expected['reporter']
 
+
+@with_local_registry
 def test_should_node():
     class ArticleNode(MongoengineObjectType):
+
         class Meta:
             model = Article
             interfaces = (Node,)
 
     class ReporterNode(MongoengineObjectType):
+
         class Meta:
             model = Reporter
             interfaces = (Node,)
@@ -180,6 +187,8 @@ def test_should_node():
     assert not result.errors
     assert dict(result.data['reporter']) == expected['reporter']
 
+
+@with_local_registry
 def test_should_connection_field():
     class EditorNode(MongoengineObjectType):
 
@@ -227,6 +236,7 @@ def test_should_connection_field():
     assert dict(result.data['allEditors']) == expected['allEditors']
 
 
+@with_local_registry
 def test_should_mutate_well():
     class ArticleNode(MongoengineObjectType):
 
