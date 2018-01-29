@@ -7,6 +7,7 @@ from .. import registry
 from ..types import MongoengineObjectType
 from .models import Article
 from .models import Reporter
+from .utils import with_local_registry
 
 registry.reset_global_registry()
 
@@ -78,21 +79,6 @@ def test_should_raise_if_model_is_invalid():
             class Meta:
                 model = 1
     assert 'valid Mongoengine Model' in str(excinfo.value)
-
-
-def with_local_registry(func):
-    def inner(*args, **kwargs):
-        old = registry.get_global_registry()
-        registry.reset_global_registry()
-        try:
-            retval = func(*args, **kwargs)
-        except Exception as e:
-            registry.registry = old
-            raise e
-        else:
-            registry.registry = old
-            return retval
-    return inner
 
 
 @with_local_registry
