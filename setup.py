@@ -19,10 +19,10 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
 
@@ -41,7 +41,7 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=[
         'pytest>=3.3.2',
-        'mongomock>=3.8.0'
+        'mongomock',
         'mock'
     ],
     test_suite="graphene_mongo.tests",
