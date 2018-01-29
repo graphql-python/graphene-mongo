@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/abawchen/graphene-mongo.svg?branch=master)](https://travis-ci.org/abawchen/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/abawchen/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/abawchen/graphene-mongo?branch=master)
+
 # Graphene-Mongo
 
 A [Mongoengine](https://mongoengine-odm.readthedocs.io/) integration for [Graphene](http://graphene-python.org/).
