@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from collections import OrderedDict
-from functools import partial
+from functools import partial, reduce
 
 from graphene import Field
 from graphene.relay import ConnectionField
