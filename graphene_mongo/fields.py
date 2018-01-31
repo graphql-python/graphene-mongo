@@ -1,11 +1,13 @@
 from __future__ import absolute_import
 
-from functools import partial
+from collections import OrderedDict
+from functools import partial, reduce
 
 from graphene import Field
 from graphene.relay import ConnectionField
 from graphene.relay.connection import PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphene.types.argument import to_arguments
 
 from .utils import maybe_queryset
 
@@ -52,8 +54,36 @@ class MongoengineConnectionField(ConnectionField):
     def model(self):
         return self.node_type._meta.model
 
+    @property
+    def args(self):
+        return to_arguments(
+            self._base_args or OrderedDict(), self.default_filter_args
+        )
+
+    @args.setter
+    def args(self, args):
+        self._base_args = args
+
+    @property
+    def default_filter_args(self):
+        return reduce(
+            lambda r, kv: r.update({kv[0]: kv[1]._type._of_type()}) or r if hasattr(kv[1], '_type') else r,
+            self.fields.items(),
+            {}
+        )
+
+    @property
+    def filter_fields(self):
+        return self._type._meta.filter_fields
+
+    @property
+    def fields(self):
+        return self._type._meta.fields
+
     @classmethod
     def get_query(cls, model, info, **args):
+        if args:
+            return model.objects().filter(**args)
         return model.objects()
 
     @classmethod
@@ -84,6 +114,5 @@ class MongoengineConnectionField(ConnectionField):
         return connection
 
     def get_resolver(self, parent_resolver):
-        ('??')
         return partial(self.connection_resolver, parent_resolver, self.type, self.model)
 

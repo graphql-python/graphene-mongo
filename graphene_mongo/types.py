@@ -33,7 +33,7 @@ class MongoengineObjectTypeOptions(ObjectTypeOptions):
     model = None  # type: Model
     registry = None  # type: Registry
     connection = None  # type: Type[Connection]
-
+    filter_fields = ()
 
 class MongoengineObjectType(ObjectType):
 
@@ -78,6 +78,7 @@ class MongoengineObjectType(ObjectType):
         _meta.model = model
         _meta.registry = registry
         _meta.fields = mongoengine_fields
+        _meta.filter_fields = filter_fields
         _meta.connection = connection
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options

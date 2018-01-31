@@ -292,9 +292,46 @@ def test_should_mutate_well():
     assert not result.errors
     assert result.data == expected
 
-# TODO:
+@with_local_registry
 def test_should_filter():
-    pass
+    class ArticleNode(MongoengineObjectType):
+
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filter_fields = ('headline',)
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        articles = MongoengineConnectionField(ArticleNode)
+
+    query = '''
+        query ArticleQuery {
+          articles(headline: "World") {
+            edges {
+                node {
+                    headline
+                }
+            }
+          }
+        }
+    '''
+    expected = {
+        'articles': {
+            'edges': [
+                {
+                    'node': {
+                        'headline': 'World'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
 
 # TODO:
 def test_should_paging():
