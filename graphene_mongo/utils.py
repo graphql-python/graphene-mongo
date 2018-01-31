@@ -31,6 +31,15 @@ def maybe_queryset(value):
     return value
 
 
+def get_default_filter_fields(node):
+    # Notes: Convert all model fields into filter fields by default,
+    #        except for Dynamic type.
+    return reduce(
+        lambda r, (k, v): r.update({k, v._type._of_type()}) or r if hasattr(v, '_type') else a,
+        node._meta.fields.items(),
+        {}
+    )
+
 def import_single_dispatch():
     try:
         from functools import singledispatch
