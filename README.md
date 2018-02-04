@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/abawchen/graphene-mongo.svg?branch=master)](https://travis-ci.org/abawchen/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/abawchen/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/abawchen/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/abawchen/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/abawchen/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest)
 
 # Graphene-Mongo
 
