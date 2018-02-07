@@ -28,4 +28,3 @@ def get_global_registry():
 def reset_global_registry():
     global registry
     registry = None
-

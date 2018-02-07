@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from graphene import Field, ObjectType
+from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -34,6 +34,7 @@ class MongoengineObjectTypeOptions(ObjectTypeOptions):
     registry = None  # type: Registry
     connection = None  # type: Type[Connection]
     filter_fields = ()
+
 
 class MongoengineObjectType(ObjectType):
 
@@ -97,17 +98,14 @@ class MongoengineObjectType(ObjectType):
             ).format(root))
         return isinstance(root, cls._meta.model)
 
+    # noqa
     @classmethod
     def get_node(cls, id, context, info):
-        if isinstance(getattr(cls._meta.model, get_key_name(cls._meta.model)), NumberAttribute):
-            return cls._meta.model.get(int(id))
-
         return cls._meta.model.get(id)
 
     def resolve_id(self, info):
         return str(self.id)
 
-    #@classmethod
-    #def get_connection(cls):
-    #    return connection_for_type(cls)
-
+    # @classmethod
+    # def get_connection(cls):
+    #     return connection_for_type(cls)
