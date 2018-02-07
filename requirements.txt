@@ -1,4 +1,5 @@
 coveralls==1.2.0
+flake8==3.5.0
 graphene==2.0.1
 iso8601==0.1.12
 mongoengine==0.15.0

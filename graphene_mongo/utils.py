@@ -25,12 +25,6 @@ def is_valid_mongoengine_model(model):
     )
 
 
-def maybe_queryset(value):
-    if isinstance(value, Manager):
-        value = value.get_queryset()
-    return value
-
-
 def import_single_dispatch():
     try:
         from functools import singledispatch
@@ -54,6 +48,7 @@ def import_single_dispatch():
     return singledispatch
 
 
+# noqa
 def get_type_for_document(schema, document):
     types = schema.types.values()
     for _type in types:
@@ -61,4 +56,3 @@ def get_type_for_document(schema, document):
             _type._meta, 'document', None)
         if document == type_document:
             return _type
-

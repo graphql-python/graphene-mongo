@@ -8,7 +8,10 @@ clean:
 	@find . -name "*.pyc" -delete
 	@find . -name "__pycache__" -delete
 
-test: clean
+lint:
+	@flake8 graphene_mongo
+
+test: clean lint
 	py.test --cov=graphene_mongo
 
 register-pypitest:
