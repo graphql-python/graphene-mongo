@@ -275,14 +275,14 @@ def test_should_filter():
         articles = MongoengineConnectionField(ArticleNode)
 
     query = '''
-        query ArticleQuery {
-          articles(headline: "World") {
-            edges {
-                node {
-                    headline
+        query ArticlesQuery {
+            articles(headline: "World") {
+                edges {
+                    node {
+                        headline
+                    }
                 }
             }
-          }
         }
     '''
     expected = {
@@ -302,8 +302,42 @@ def test_should_filter():
     assert result.data == expected
 
 
-def test_should_first_n():
-    pass
+def test_should_custom_kwargs():
+
+    class Query(graphene.ObjectType):
+
+        editors = graphene.List(EditorType, first=graphene.Int())
+
+        def resolve_editors(self, *args, **kwargs):
+            editors = Editor.objects()
+            if 'first' in kwargs:
+                editors = editors[:kwargs['first']]
+            return list(editors)
+
+    query = '''
+        query EditorQuery {
+            editors(first: 2) {
+                firstName,
+                lastName
+            }
+        }
+    '''
+    expected = {
+        'editors':[
+            {
+                'firstName': 'Penny',
+                'lastName': 'Hardaway'
+            },
+            {
+                'firstName': 'Grant',
+                'lastName': 'Hill'
+            }
+        ]
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert all(item in result.data['editors'] for item in expected['editors'])
 
 # TODO:
 def test_should_paging():
