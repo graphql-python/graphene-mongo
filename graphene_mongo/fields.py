@@ -3,15 +3,14 @@ from __future__ import absolute_import
 from collections import OrderedDict
 from functools import partial, reduce
 
-from graphene import Field
+from graphene import Field, List
 from graphene.relay import ConnectionField
 from graphene.relay.connection import PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from graphene.types.argument import to_arguments
 
-from .utils import maybe_queryset
 
-
+# noqa
 class MongoengineListField(Field):
 
     def __init__(self, _type, *args, **kwargs):
@@ -21,9 +20,9 @@ class MongoengineListField(Field):
     def model(self):
         return self.type.of_type._meta.node._meta.model
 
-    @staticmethod
-    def list_resolver(resolver, root, info, **args):
-        return maybe_queryset(resolver(root, info, **args))
+    # @staticmethod
+    # def list_resolver(resolver, root, info, **args):
+    #    return maybe_queryset(resolver(root, info, **args))
 
     def get_resolver(self, parent_resolver):
         return partial(self.list_resolver, parent_resolver)
@@ -115,4 +114,3 @@ class MongoengineConnectionField(ConnectionField):
 
     def get_resolver(self, parent_resolver):
         return partial(self.connection_resolver, parent_resolver, self.type, self.model)
-
