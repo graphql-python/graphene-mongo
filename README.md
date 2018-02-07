@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/abawchen/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/abawchen/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/graphql-python/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/graphql-python/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest)
 
 # Graphene-Mongo
 
@@ -66,20 +66,25 @@ result = schema.execute(query)
 ## TODOs
 
 - [ ] Examples
+   - [x] Flask example
+   - [ ] Django example
+- [ ] Filtering
+   - [x] Basic filtering of equal comparison
+   - [ ] Advanced filtering
 - [ ] Support List(EmbeddedDocument)
 - [ ] Paging
-- [ ] Filtering
+
 
 ## Contributing
 
 After cloning this repo, ensure dependencies are installed by running:
 
 ```sh
-python setup.py install
+pip install -r requirements.txt
 ```
 
 After developing, the full test suite can be evaluated by running:
 
 ```sh
-python setup.py test # Use --pytest-args="-v -s" for verbose mode
+make test
 ```
