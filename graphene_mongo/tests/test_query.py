@@ -5,9 +5,10 @@ import graphene
 from graphene.relay import Node
 
 from .models import Article, Editor, EmbeddedArticle, Reporter
-from .utils import with_local_registry
+from .types import (ArticleNode, ArticleType,
+                    EditorNode, EditorType,
+                    ReporterNode, ReporterType)
 from ..fields import MongoengineConnectionField
-from ..types import MongoengineObjectType
 
 
 def setup_fixtures():
@@ -15,6 +16,8 @@ def setup_fixtures():
     editor1.save()
     editor2 = Editor(first_name='Grant', last_name='Hill')
     editor2.save()
+    editor3 = Editor(first_name='Dennis', last_name='Rodman')
+    editor3.save()
 
     reporter = Reporter(first_name='Allen', last_name='Iverson',
                         email='ai@gmail.com',  awards=['2010-mvp'])
@@ -28,11 +31,7 @@ def setup_fixtures():
 setup_fixtures()
 
 
-@with_local_registry
 def test_should_query_editor_well():
-    class EditorType(MongoengineObjectType):
-        class Meta:
-            model = Editor
 
     class Query(graphene.ObjectType):
        editor = graphene.Field(EditorType)
@@ -65,8 +64,11 @@ def test_should_query_editor_well():
         }, {
             'firstName': 'Grant',
             'lastName': 'Hill'
+        }, {
+            'firstName': 'Dennis',
+            'lastName': 'Rodman'
         }]
-        }
+    }
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
@@ -75,15 +77,7 @@ def test_should_query_editor_well():
     assert all(item in result.data['editors'] for item in expected['editors'])
 
 
-@with_local_registry
 def test_should_query_reporter_well():
-    class ArticleType(MongoengineObjectType):
-        class Meta:
-            model = Article
-
-    class ReporterType(MongoengineObjectType):
-        class Meta:
-            model = Reporter
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
@@ -123,19 +117,7 @@ def test_should_query_reporter_well():
     assert dict(result.data['reporter']) == expected['reporter']
 
 
-@with_local_registry
 def test_should_node():
-    class ArticleNode(MongoengineObjectType):
-
-        class Meta:
-            model = Article
-            interfaces = (Node,)
-
-    class ReporterNode(MongoengineObjectType):
-
-        class Meta:
-            model = Reporter
-            interfaces = (Node,)
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -188,13 +170,7 @@ def test_should_node():
     assert dict(result.data['reporter']) == expected['reporter']
 
 
-@with_local_registry
 def test_should_connection_field():
-    class EditorNode(MongoengineObjectType):
-
-        class Meta:
-            model = Editor
-            interfaces = (Node,)
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -219,12 +195,19 @@ def test_should_connection_field():
                     'node': {
                         'firstName': 'Penny',
                         'lastName': 'Hardaway'
-                    },
+                    }
                 },
                 {
                     'node': {
                         'firstName': 'Grant',
                         'lastName': 'Hill'
+                    }
+
+                },
+                {
+                    'node': {
+                        'firstName': 'Dennis',
+                        'lastName': 'Rodman'
                     }
                 }
             ]
@@ -236,14 +219,7 @@ def test_should_connection_field():
     assert dict(result.data['allEditors']) == expected['allEditors']
 
 
-@with_local_registry
 def test_should_mutate_well():
-    class ArticleNode(MongoengineObjectType):
-
-        class Meta:
-            model = Article
-            interfaces = (Node,)
-
 
     class CreateArticle(graphene.Mutation):
 
@@ -292,14 +268,7 @@ def test_should_mutate_well():
     assert not result.errors
     assert result.data == expected
 
-@with_local_registry
 def test_should_filter():
-    class ArticleNode(MongoengineObjectType):
-
-        class Meta:
-            model = Article
-            interfaces = (Node,)
-            filter_fields = ('headline',)
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -332,6 +301,9 @@ def test_should_filter():
     assert not result.errors
     assert result.data == expected
 
+
+def test_should_first_n():
+    pass
 
 # TODO:
 def test_should_paging():
