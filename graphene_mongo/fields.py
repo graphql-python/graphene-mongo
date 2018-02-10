@@ -84,12 +84,14 @@ class MongoengineConnectionField(ConnectionField):
     def get_query(cls, model, info, **args):
         objs = model.objects()
         if args:
+            first = args.pop('first', None)
+            last = args.pop('last', None)
             objs = objs.filter(**args)
 
-            if 'first' in args:
-                objs = objs[:args['first']]
-            if 'last' in args:
-                objs = objs[:-args['last']]
+            if first is not None:
+                objs = objs[:first]
+            if last is not None:
+                objs = objs[:-last]
 
         return objs
 
