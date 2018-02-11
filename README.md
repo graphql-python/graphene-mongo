@@ -7,7 +7,7 @@ A [Mongoengine](https://mongoengine-odm.readthedocs.io/) integration for [Graphe
 
 ## Installation
 
-For instaling graphene, just run this command in your shell
+For instaling graphene-mongo, just run this command in your shell
 
 ```
 pip install graphene-mongo
@@ -63,17 +63,22 @@ query = '''
 result = schema.execute(query)
 ```
 
+To learn more check out the following [examples](examples/):
+
+* **Full example**: [Flask MongoEngine example](examples/flask_mongoengine)
+
 ## TODOs
 
 - [ ] Examples
    - [x] Flask example
    - [ ] Django example
-- [ ] Filtering
-   - [x] Basic filtering of equal comparison
+- [ ] Filtering & Paging
+   - [x] Default filtering enabled with all model's attributes by equal comparison
+   - [x] Take first, or last n items
    - [ ] Advanced filtering
-- [ ] Support List(EmbeddedDocument)
-- [ ] Paging
-
+- [ ] Support more types
+   - [ ] List(EmbeddedDocument)
+   - [ ] Others
 
 ## Contributing
 
