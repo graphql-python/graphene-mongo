@@ -63,6 +63,10 @@ query = '''
 result = schema.execute(query)
 ```
 
+To learn more check out the following [examples](examples/):
+
+* **Full example**: [Flask MongoEngine example](examples/flask_mongoengine)
+
 ## TODOs
 
 - [ ] Examples
