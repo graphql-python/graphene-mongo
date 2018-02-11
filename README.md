@@ -7,7 +7,7 @@ A [Mongoengine](https://mongoengine-odm.readthedocs.io/) integration for [Graphe
 
 ## Installation
 
-For instaling graphene, just run this command in your shell
+For instaling graphene-mongo, just run this command in your shell
 
 ```
 pip install graphene-mongo

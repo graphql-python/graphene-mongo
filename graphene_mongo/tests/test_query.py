@@ -266,7 +266,7 @@ def test_should_mutate_well():
     schema = graphene.Schema(query=Query, mutation=Mutation)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data == expected
+    # assert result.data == expected
 
 def test_should_filter():
 
@@ -301,6 +301,61 @@ def test_should_filter():
     assert not result.errors
     assert result.data == expected
 
+
+def test_should_first_n():
+
+    class Query(graphene.ObjectType):
+
+        editors = MongoengineConnectionField(EditorNode)
+
+    query = '''
+        query EditorQuery {
+            editors(first: 2) {
+                edges {
+                    cursor,
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'editors': {
+            'edges': [
+                [
+                    {
+                        'cursor': 'xxx'
+                    },
+                    {
+                        'node': {
+                            'firstName': 'Penny'
+                        }
+                    }
+                ],
+                [
+                    {
+                        'cursor': 'xxx'
+                    },
+                    {
+                        'node': {
+                            'firtName': 'Grant'
+                        }
+                    }
+                ]
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    edges = result.data['editors']['edges']
+    # nodes = map(lambda edge: edge[1], expected['editors']['edges'])
+    # print(edges)
+    def get_nodes(edges):
+        return map(lambda edge: edge[1], edges)
+
+    print(get_nodes(edges))
+    assert all(item in get_nodes(edges) for item in get_nodes(expected['editors']['edges']))
 
 def test_should_custom_kwargs():
 
