@@ -68,12 +68,13 @@ result = schema.execute(query)
 - [ ] Examples
    - [x] Flask example
    - [ ] Django example
-- [ ] Filtering
-   - [x] Basic filtering of equal comparison
+- [ ] Filtering & Paging
+   - [x] Default filtering enabled with all model's attributes by equal comparison
+   - [x] Take first, or last n items
    - [ ] Advanced filtering
-- [ ] Support List(EmbeddedDocument)
-- [ ] Paging
-
+- [ ] Support more types
+   - [ ] List(EmbeddedDocument)
+   - [ ] Others
 
 ## Contributing
 
