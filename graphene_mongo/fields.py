@@ -81,9 +81,18 @@ class MongoengineConnectionField(ConnectionField):
 
     @classmethod
     def get_query(cls, model, info, **args):
+        objs = model.objects()
         if args:
-            return model.objects().filter(**args)
-        return model.objects()
+            first = args.pop('first', None)
+            last = args.pop('last', None)
+            objs = objs.filter(**args)
+
+            if first is not None:
+                objs = objs[:first]
+            if last is not None:
+                objs = objs[:-last]
+
+        return objs
 
     @classmethod
     def merge_querysets(cls, default_queryset, queryset):
