@@ -58,7 +58,7 @@ def convert_date_to_string(field, registry=None):
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
-def convert_postgres_array_to_list(field, registry=None):
+def convert_field_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
     if isinstance(base_type, (Dynamic)):
         base_type = base_type.get_type()._type
