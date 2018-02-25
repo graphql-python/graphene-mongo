@@ -26,13 +26,20 @@ def setup_fixtures():
     article1.save()
     article2 = Article(headline='World', editor=editor2)
     article2.save()
+
     reporter.articles = [article1, article2]
     reporter.save()
 
-    player = Player(first_name='Michael', last_name='Jordan')
-    player.save()
+    player1 = Player(first_name='Michael', last_name='Jordan')
+    player1.save()
+    player2 = Player(first_name='Magic', last_name='Johnson', opponent=player1)
+    player2.save()
 
 setup_fixtures()
+
+
+def get_nodes(data, key):
+    return map(lambda edge: edge['node'], data[key]['edges'])
 
 
 def test_should_query_editor_well():
@@ -351,11 +358,8 @@ def test_should_first_n():
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
 
-    def get_nodes(data):
-        return map(lambda edge: edge['node'], data['editors']['edges'])
-
     assert not result.errors
-    assert all(item in get_nodes(result.data) for item in get_nodes(expected))
+    assert all(item in get_nodes(result.data, 'editors') for item in get_nodes(expected, 'editors'))
 
 def test_should_custom_kwargs():
 
@@ -408,7 +412,9 @@ def test_should_self_reference():
                     cursor,
                     node {
                         firstName,
-
+                        opponent {
+                            firstName
+                        }
                     }
                 }
             }
@@ -420,13 +426,17 @@ def test_should_self_reference():
                 {
                     'cursor': 'xxx',
                     'node': {
-                        'firstName': 'Penny'
+                        'firstName': 'Michael',
+                        'opponent': None
                     }
                 },
                 {
                     'cursor': 'xxx',
                     'node': {
-                        'firstName': 'Grant'
+                        'firstName': 'Magic',
+                        'opponent': {
+                            'firstName': 'Michael'
+                        }
                     }
                 }
             ]
@@ -434,15 +444,9 @@ def test_should_self_reference():
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
-    print(result.data)
 
     assert not result.errors
-    '''
-    def get_nodes(data):
-        return map(lambda edge: edge['node'], data['editors']['edges'])
-
-    assert all(item in get_nodes(result.data) for item in get_nodes(expected))
-    '''
+    assert all(item in get_nodes(result.data, 'players') for item in get_nodes(expected, 'players'))
 
 
 # TODO:
