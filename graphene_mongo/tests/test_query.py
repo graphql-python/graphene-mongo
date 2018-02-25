@@ -4,9 +4,10 @@ import graphene
 
 from graphene.relay import Node
 
-from .models import Article, Editor, EmbeddedArticle, Reporter
+from .models import Article, Editor, Player, Reporter
 from .types import (ArticleNode, ArticleType,
                     EditorNode, EditorType,
+                    PlayerNode, PlayerType,
                     ReporterNode, ReporterType)
 from ..fields import MongoengineConnectionField
 
@@ -27,6 +28,9 @@ def setup_fixtures():
     article2.save()
     reporter.articles = [article1, article2]
     reporter.save()
+
+    player = Player(first_name='Michael', last_name='Jordan')
+    player.save()
 
 setup_fixtures()
 
@@ -279,7 +283,10 @@ def test_should_filter():
             articles(headline: "World") {
                 edges {
                     node {
-                        headline
+                        headline,
+                        editor {
+                            firstName
+                        }
                     }
                 }
             }
@@ -290,7 +297,10 @@ def test_should_filter():
             'edges': [
                 {
                     'node': {
-                        'headline': 'World'
+                        'headline': 'World',
+                        'editor': {
+                            'firstName': 'Grant'
+                        }
                     }
                 }
             ]
@@ -344,6 +354,7 @@ def test_should_first_n():
     def get_nodes(data):
         return map(lambda edge: edge['node'], data['editors']['edges'])
 
+    assert not result.errors
     assert all(item in get_nodes(result.data) for item in get_nodes(expected))
 
 def test_should_custom_kwargs():
@@ -382,6 +393,57 @@ def test_should_custom_kwargs():
     result = schema.execute(query)
     assert not result.errors
     assert all(item in result.data['editors'] for item in expected['editors'])
+
+
+def test_should_self_reference():
+
+    class Query(graphene.ObjectType):
+
+        players = MongoengineConnectionField(PlayerNode)
+
+    query = '''
+        query PlayerQuery {
+            players {
+                edges {
+                    cursor,
+                    node {
+                        firstName,
+
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'players': {
+            'edges': [
+                {
+                    'cursor': 'xxx',
+                    'node': {
+                        'firstName': 'Penny'
+                    }
+                },
+                {
+                    'cursor': 'xxx',
+                    'node': {
+                        'firstName': 'Grant'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    print(result.data)
+
+    assert not result.errors
+    '''
+    def get_nodes(data):
+        return map(lambda edge: edge['node'], data['editors']['edges'])
+
+    assert all(item in get_nodes(result.data) for item in get_nodes(expected))
+    '''
+
 
 # TODO:
 def test_should_paging():
