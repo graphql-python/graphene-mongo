@@ -44,6 +44,7 @@ class PlayerNode(MongoengineObjectType):
         model = Player
         interfaces = (Node,)
 
+
 class ReporterNode(MongoengineObjectType):
 
     class Meta:
