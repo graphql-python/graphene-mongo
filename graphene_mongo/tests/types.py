@@ -1,7 +1,7 @@
 from graphene.relay import Node
 
-from .models import Article, Editor, Reporter
 from ..types import MongoengineObjectType
+from .models import Article, Editor, Player, Reporter
 
 
 class EditorType(MongoengineObjectType):
@@ -12,6 +12,12 @@ class EditorType(MongoengineObjectType):
 class ArticleType(MongoengineObjectType):
     class Meta:
         model = Article
+
+
+class PlayerType(MongoengineObjectType):
+    class Meta:
+        model = Player
+
 
 class ReporterType(MongoengineObjectType):
     class Meta:
@@ -24,12 +30,19 @@ class ArticleNode(MongoengineObjectType):
         model = Article
         interfaces = (Node,)
 
+
 class EditorNode(MongoengineObjectType):
 
     class Meta:
         model = Editor
         interfaces = (Node,)
 
+
+class PlayerNode(MongoengineObjectType):
+
+    class Meta:
+        model = Player
+        interfaces = (Node,)
 
 class ReporterNode(MongoengineObjectType):
 

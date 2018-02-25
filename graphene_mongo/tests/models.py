@@ -46,7 +46,7 @@ class Reporter(Document):
     meta = {'collection': 'test_repoter'}
 
     first_name = StringField(required=True)
-    last_name = StringField(requred=True)
+    last_name = StringField(required=True)
     email = EmailField()
     articles = ListField(ReferenceField(Article))
     # FIXME
@@ -54,4 +54,10 @@ class Reporter(Document):
     # FIXME
     # custom_map = MapField(field=StringField())
     awards = ListField(StringField())
+
+
+class Player(Document):
+    first_name = StringField(required=True)
+    last_name = StringField(required=True)
+    opponent = ReferenceField('Player')
 
