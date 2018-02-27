@@ -102,7 +102,7 @@ class MongoengineConnectionField(ConnectionField):
         return queryset & default_queryset
 
     """
-    TODO: Not sure this works :(
+    Notes: Not sure how does this work :(
     """
     @classmethod
     def connection_resolver(cls, resolver, connection, model, root, info, **args):

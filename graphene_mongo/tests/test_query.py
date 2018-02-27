@@ -37,6 +37,13 @@ def setup_fixtures():
     player3 = Player(first_name='Larry', last_name='Bird', players=[player1, player2])
     player3.save()
 
+    player1.players = [player2]
+    player1.save()
+
+    player2.players = [player1]
+    player2.save()
+
+
 setup_fixtures()
 
 
@@ -450,6 +457,89 @@ def test_should_self_reference():
                 ]
             }
         ]
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
+
+def test_should_node_self_reference():
+
+    class Query(graphene.ObjectType):
+
+        all_players = MongoengineConnectionField(PlayerNode)
+
+    query = '''
+        query PlayersQuery {
+            allPlayers {
+                edges {
+                    node {
+                        firstName,
+                        players {
+                            edges {
+                                node {
+                                    firstName
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'allPlayers': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Michael',
+                        'players': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'firstName': 'Magic'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    'node': {
+                        'firstName': 'Magic',
+                        'players': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'firstName': 'Michael'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    'node': {
+                        'firstName': 'Larry',
+                        'players': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'firstName': 'Michael'
+                                    }
+                                },
+                                {
+                                    'node': {
+                                        'firstName': 'Magic'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
