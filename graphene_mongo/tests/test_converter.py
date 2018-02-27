@@ -75,7 +75,9 @@ def test_should_field_convert_list():
 
 
 def test_should_reference_convert_dynamic():
+
     class E(MongoengineObjectType):
+
         class Meta:
             model = Editor
             interfaces = (Node,)
@@ -88,19 +90,22 @@ def test_should_reference_convert_dynamic():
 
 
 def test_should_one2many_convert_list():
+
     class A(MongoengineObjectType):
+
         class Meta:
             model = Article
 
-    graphene_field = convert_mongoengine_field(
-        Reporter._fields['articles'], A._meta.registry)
+    graphene_field = convert_mongoengine_field(Reporter._fields['articles'], A._meta.registry)
     assert isinstance(graphene_field, graphene.List)
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == A
 
 
 def test_should_self_reference_convert_dynamic():
+
     class P(MongoengineObjectType):
+
         class Meta:
             model = Player
             interfaces = (Node,)
@@ -110,4 +115,22 @@ def test_should_self_reference_convert_dynamic():
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == P
+
+
+def test_should_list_of_self_reference_convert_list():
+
+    class A(MongoengineObjectType):
+
+        class Meta:
+            model = Article
+
+    class P(MongoengineObjectType):
+
+        class Meta:
+            model = Player
+
+    graphene_field = convert_mongoengine_field(Player._fields['players'], P._meta.registry)
+    assert isinstance(graphene_field, graphene.List)
+    dynamic_field = graphene_field.get_type()
+    assert dynamic_field._of_type == P
 
