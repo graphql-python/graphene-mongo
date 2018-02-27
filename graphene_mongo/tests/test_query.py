@@ -4,9 +4,10 @@ import graphene
 
 from graphene.relay import Node
 
-from .models import Article, Editor, EmbeddedArticle, Reporter
+from .models import Article, Editor, Player, Reporter
 from .types import (ArticleNode, ArticleType,
                     EditorNode, EditorType,
+                    PlayerNode, PlayerType,
                     ReporterNode, ReporterType)
 from ..fields import MongoengineConnectionField
 
@@ -25,10 +26,29 @@ def setup_fixtures():
     article1.save()
     article2 = Article(headline='World', editor=editor2)
     article2.save()
+
     reporter.articles = [article1, article2]
     reporter.save()
 
+    player1 = Player(first_name='Michael', last_name='Jordan')
+    player1.save()
+    player2 = Player(first_name='Magic', last_name='Johnson', opponent=player1)
+    player2.save()
+    player3 = Player(first_name='Larry', last_name='Bird', players=[player1, player2])
+    player3.save()
+
+    player1.players = [player2]
+    player1.save()
+
+    player2.players = [player1]
+    player2.save()
+
+
 setup_fixtures()
+
+
+def get_nodes(data, key):
+    return map(lambda edge: edge['node'], data[key]['edges'])
 
 
 def test_should_query_editor_well():
@@ -279,7 +299,10 @@ def test_should_filter():
             articles(headline: "World") {
                 edges {
                     node {
-                        headline
+                        headline,
+                        editor {
+                            firstName
+                        }
                     }
                 }
             }
@@ -290,7 +313,10 @@ def test_should_filter():
             'edges': [
                 {
                     'node': {
-                        'headline': 'World'
+                        'headline': 'World',
+                        'editor': {
+                            'firstName': 'Grant'
+                        }
                     }
                 }
             ]
@@ -341,10 +367,8 @@ def test_should_first_n():
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
 
-    def get_nodes(data):
-        return map(lambda edge: edge['node'], data['editors']['edges'])
-
-    assert all(item in get_nodes(result.data) for item in get_nodes(expected))
+    assert not result.errors
+    assert all(item in get_nodes(result.data, 'editors') for item in get_nodes(expected, 'editors'))
 
 def test_should_custom_kwargs():
 
@@ -382,6 +406,154 @@ def test_should_custom_kwargs():
     result = schema.execute(query)
     assert not result.errors
     assert all(item in result.data['editors'] for item in expected['editors'])
+
+
+def test_should_self_reference():
+
+    class Query(graphene.ObjectType):
+
+        all_players = graphene.List(PlayerType)
+
+        def resolve_all_players(self, *args, **kwargs):
+            return Player.objects.all()
+
+    query = '''
+        query PlayersQuery {
+            allPlayers {
+                firstName,
+                opponent {
+                    firstName
+                },
+                players {
+                    firstName
+                }
+            }
+        }
+    '''
+    expected = {
+        'allPlayers': [
+            {
+                'firstName': 'Michael',
+                'opponent': None,
+                'players': [
+                    {
+                        'firstName': 'Magic'
+                    }
+                ]
+            },
+            {
+                'firstName': 'Magic',
+                'opponent': {
+                    'firstName': 'Michael'
+                },
+                'players': [
+                    {
+                        'firstName': 'Michael'
+                    }
+                ]
+            },
+            {
+                'firstName': 'Larry',
+                'opponent': None,
+                'players': [
+                    {
+                        'firstName': 'Michael'
+                    },
+                    {
+                        'firstName': 'Magic'
+                    }
+                ]
+            }
+        ]
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
+
+def test_should_node_self_reference():
+
+    class Query(graphene.ObjectType):
+
+        all_players = MongoengineConnectionField(PlayerNode)
+
+    query = '''
+        query PlayersQuery {
+            allPlayers {
+                edges {
+                    node {
+                        firstName,
+                        players {
+                            edges {
+                                node {
+                                    firstName
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'allPlayers': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Michael',
+                        'players': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'firstName': 'Magic'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    'node': {
+                        'firstName': 'Magic',
+                        'players': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'firstName': 'Michael'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    'node': {
+                        'firstName': 'Larry',
+                        'players': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'firstName': 'Michael'
+                                    }
+                                },
+                                {
+                                    'node': {
+                                        'firstName': 'Magic'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
 
 # TODO:
 def test_should_paging():

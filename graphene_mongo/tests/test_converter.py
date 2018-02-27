@@ -7,9 +7,10 @@ from graphene import Node
 
 from py.test import raises
 
-from .models import Article, Editor, EmbeddedArticle, Reporter
+from .models import Article, Editor, EmbeddedArticle, Player, Reporter
 
 from ..converter import convert_mongoengine_field
+from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
 
@@ -70,12 +71,14 @@ def test_should_dict_convert_json():
 #     assert_conversion(mongoengine.MapField, graphene.JSONString)
 
 
-def test_should_postgres_array_convert_list():
+def test_should_field_convert_list():
     assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
 
 
 def test_should_reference_convert_dynamic():
+
     class E(MongoengineObjectType):
+
         class Meta:
             model = Editor
             interfaces = (Node,)
@@ -88,13 +91,48 @@ def test_should_reference_convert_dynamic():
 
 
 def test_should_one2many_convert_list():
+
     class A(MongoengineObjectType):
+
         class Meta:
             model = Article
 
-    graphene_field = convert_mongoengine_field(
-        Reporter._fields['articles'], A._meta.registry)
+    graphene_field = convert_mongoengine_field(Reporter._fields['articles'], A._meta.registry)
     assert isinstance(graphene_field, graphene.List)
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == A
 
+def test_should_self_reference_convert_dynamic():
+    # pass
+    class P(MongoengineObjectType):
+
+        class Meta:
+            model = Player
+            interfaces = (Node,)
+
+    dynamic_field = convert_mongoengine_field(Player._fields['opponent'], P._meta.registry)
+    assert isinstance(dynamic_field, Dynamic)
+    graphene_type = dynamic_field.get_type()
+    assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == P
+
+    graphene_field = convert_mongoengine_field(Player._fields['players'], P._meta.registry)
+    assert isinstance(graphene_field, MongoengineConnectionField)
+
+
+def test_should_list_of_self_reference_convert_list():
+
+    class A(MongoengineObjectType):
+
+        class Meta:
+            model = Article
+
+    class P(MongoengineObjectType):
+
+        class Meta:
+            model = Player
+
+    graphene_field = convert_mongoengine_field(Player._fields['players'], P._meta.registry)
+    assert isinstance(graphene_field, graphene.List)
+    dynamic_field = graphene_field.get_type()
+    assert dynamic_field._of_type == P
