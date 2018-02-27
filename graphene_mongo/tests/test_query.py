@@ -435,14 +435,22 @@ def test_should_self_reference():
             {
                 'firstName': 'Michael',
                 'opponent': None,
-                'players': []
+                'players': [
+                    {
+                        'firstName': 'Magic'
+                    }
+                ]
             },
             {
                 'firstName': 'Magic',
                 'opponent': {
                     'firstName': 'Michael'
                 },
-                'players': []
+                'players': [
+                    {
+                        'firstName': 'Michael'
+                    }
+                ]
             },
             {
                 'firstName': 'Larry',
