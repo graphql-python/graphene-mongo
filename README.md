@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/graphql-python/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/graphql-python/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/graphql-python/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/graphql-python/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/graphene-mongo.svg)](https://badge.fury.io/py/graphene-mongo)
 
 # Graphene-Mongo
 
@@ -70,15 +70,16 @@ To learn more check out the following [examples](examples/):
 ## TODOs
 
 - [ ] Examples
-   - [x] Flask example
-   - [ ] Django example
+    - [x] Flask example
+    - [ ] Django example
 - [ ] Filtering & Paging
-   - [x] Default filtering enabled with all model's attributes by equal comparison
-   - [x] Take first, or last n items
-   - [ ] Advanced filtering
+    - [x] Default filtering enabled with all model's attributes by equal comparison
+    - [x] Take first, or last n items
+    - [ ] Advanced filtering
 - [ ] Support more types
-   - [ ] List(EmbeddedDocument)
-   - [ ] Others
+    - [x] Self-reference and list-of-self-reference relationship
+    - [ ] List(EmbeddedDocument)
+    - [ ] Others
 
 ## Contributing
 

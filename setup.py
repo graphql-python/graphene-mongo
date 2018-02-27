@@ -2,10 +2,10 @@ from setuptools import find_packages, setup
 
 setup(
     name='graphene-mongo',
-    version='0.1.2',
+    version='0.1.4',
 
     description='Graphene Mongoengine integration',
-    long_description=open('README.md').read(),
+    # long_description=open('README.md').read(),
 
     url='https://github.com/graphql-python/graphene-mongo',
 
