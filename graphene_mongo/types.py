@@ -4,6 +4,7 @@ from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
+from mongoengine import ListField
 
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry
@@ -13,6 +14,7 @@ from .utils import (get_model_fields, is_valid_mongoengine_model)
 def construct_fields(model, registry, only_fields, exclude_fields):
     _model_fields = get_model_fields(model)
     fields = OrderedDict()
+    self_referenced = OrderedDict()
     for name, field in _model_fields.items():
         is_not_in_only = only_fields and name not in only_fields
         is_excluded = name in exclude_fields
@@ -20,6 +22,23 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # We skip this field if we specify only_fields and is not
             # in there. Or when we exclude this field in exclude_fields
             continue
+        if isinstance(field, ListField):
+            # Take care of list of self-reference.
+            document_type_obj = field.field.__dict__.get('document_type_obj', None)
+            if document_type_obj == model._class_name \
+                    or isinstance(document_type_obj, model):
+                self_referenced[name] = field
+                continue
+        converted = convert_mongoengine_field(field, registry)
+        if not converted:
+            continue
+        fields[name] = converted
+    return fields, self_referenced
+
+
+def construct_self_referenced_fields(self_referenced, registry):
+    fields = OrderedDict()
+    for name, field in self_referenced.items():
         converted = convert_mongoengine_field(field, registry)
         if not converted:
             continue
@@ -55,10 +74,11 @@ class MongoengineObjectType(ObjectType):
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
 
-        mongoengine_fields = yank_fields_from_attrs(
-            construct_fields(model, registry, only_fields, exclude_fields),
-            _as=Field
+        converted_fields, self_referenced = construct_fields(
+            model, registry, only_fields, exclude_fields
         )
+        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
+
         if use_connection is None and interfaces:
             use_connection = any((issubclass(interface, Node) for interface in interfaces))
 
@@ -81,12 +101,19 @@ class MongoengineObjectType(ObjectType):
         _meta.fields = mongoengine_fields
         _meta.filter_fields = filter_fields
         _meta.connection = connection
+
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
         )
 
         if not skip_registry:
             registry.register(cls)
+            # Notes: Take care list of self-reference fields.
+            converted_fields = construct_self_referenced_fields(self_referenced, registry)
+            if converted_fields:
+                mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
+                cls._meta.fields.update(mongoengine_fields)
+                registry.register(cls)
 
     @classmethod
     def is_type_of(cls, root, info):

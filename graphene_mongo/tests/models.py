@@ -60,4 +60,5 @@ class Player(Document):
     first_name = StringField(required=True)
     last_name = StringField(required=True)
     opponent = ReferenceField('Player')
-
+    players = ListField(ReferenceField('Player'))
+    articles = ListField(ReferenceField('Article'))
