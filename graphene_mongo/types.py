@@ -26,13 +26,15 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # Take care of list of self-reference.
             document_type_obj = field.field.__dict__.get('document_type_obj', None)
             if document_type_obj == model._class_name \
-                    or isinstance(document_type_obj, model):
+                    or isinstance(document_type_obj, model) \
+                    or document_type_obj == model:
                 self_referenced[name] = field
                 continue
         converted = convert_mongoengine_field(field, registry)
         if not converted:
             continue
         fields[name] = converted
+
     return fields, self_referenced
 
 

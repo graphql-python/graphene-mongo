@@ -34,6 +34,8 @@ def setup_fixtures():
     player1.save()
     player2 = Player(first_name='Magic', last_name='Johnson', opponent=player1)
     player2.save()
+    player3 = Player(first_name='Larry', last_name='Bird', players=[player1, player2])
+    player3.save()
 
 setup_fixtures()
 
@@ -403,50 +405,56 @@ def test_should_self_reference():
 
     class Query(graphene.ObjectType):
 
-        players = MongoengineConnectionField(PlayerNode)
+        all_players = graphene.List(PlayerType)
+
+        def resolve_all_players(self, *args, **kwargs):
+            return Player.objects.all()
 
     query = '''
-        query PlayerQuery {
-            players {
-                edges {
-                    cursor,
-                    node {
-                        firstName,
-                        opponent {
-                            firstName
-                        }
-                    }
+        query PlayersQuery {
+            allPlayers {
+                firstName,
+                opponent {
+                    firstName
+                },
+                players {
+                    firstName
                 }
             }
         }
     '''
     expected = {
-        'players': {
-            'edges': [
-                {
-                    'cursor': 'xxx',
-                    'node': {
-                        'firstName': 'Michael',
-                        'opponent': None
-                    }
+        'allPlayers': [
+            {
+                'firstName': 'Michael',
+                'opponent': None,
+                'players': []
+            },
+            {
+                'firstName': 'Magic',
+                'opponent': {
+                    'firstName': 'Michael'
                 },
-                {
-                    'cursor': 'xxx',
-                    'node': {
-                        'firstName': 'Magic',
-                        'opponent': {
-                            'firstName': 'Michael'
-                        }
+                'players': []
+            },
+            {
+                'firstName': 'Larry',
+                'opponent': None,
+                'players': [
+                    {
+                        'firstName': 'Michael'
+                    },
+                    {
+                        'firstName': 'Magic'
                     }
-                }
-            ]
-        }
+                ]
+            }
+        ]
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
-
     assert not result.errors
-    assert all(item in get_nodes(result.data, 'players') for item in get_nodes(expected, 'players'))
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
 
 # TODO:

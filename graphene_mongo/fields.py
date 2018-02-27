@@ -65,8 +65,11 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def default_filter_args(self):
+        def is_filterable(kv):
+            return hasattr(kv[1], '_type') and hasattr(kv[1]._type, '_of_type')
+
         return reduce(
-            lambda r, kv: r.update({kv[0]: kv[1]._type._of_type()}) or r if hasattr(kv[1], '_type') else r,
+            lambda r, kv: r.update({kv[0]: kv[1]._type._of_type()}) or r if is_filterable(kv) else r,
             self.fields.items(),
             {}
         )

@@ -10,6 +10,7 @@ from py.test import raises
 from .models import Article, Editor, EmbeddedArticle, Player, Reporter
 
 from ..converter import convert_mongoengine_field
+from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
 
@@ -101,9 +102,8 @@ def test_should_one2many_convert_list():
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == A
 
-
 def test_should_self_reference_convert_dynamic():
-
+    # pass
     class P(MongoengineObjectType):
 
         class Meta:
@@ -115,6 +115,9 @@ def test_should_self_reference_convert_dynamic():
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == P
+
+    graphene_field = convert_mongoengine_field(Player._fields['players'], P._meta.registry)
+    assert isinstance(graphene_field, MongoengineConnectionField)
 
 
 def test_should_list_of_self_reference_convert_list():
@@ -133,4 +136,3 @@ def test_should_list_of_self_reference_convert_list():
     assert isinstance(graphene_field, graphene.List)
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == P
-
