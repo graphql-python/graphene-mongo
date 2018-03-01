@@ -78,7 +78,7 @@ To learn more check out the following [examples](examples/):
     - [ ] Advanced filtering
 - [ ] Support more types
     - [x] Self-reference and list-of-self-reference relationship (requester: [mehdiym](https://github.com/mehdiym))
-    - [x] ListField(EmbeddedDocument)
+    - [x] ListField(EmbeddedDocumentField)
     - [ ] Others
 
 ## Contributing
