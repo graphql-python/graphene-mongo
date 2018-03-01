@@ -49,8 +49,7 @@ class Reporter(Document):
     last_name = StringField(required=True)
     email = EmailField()
     articles = ListField(ReferenceField(Article))
-    # FIXME
-    # embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
+    embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
     # FIXME
     # custom_map = MapField(field=StringField())
     awards = ListField(StringField())

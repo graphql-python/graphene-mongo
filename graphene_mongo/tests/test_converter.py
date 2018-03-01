@@ -75,7 +75,7 @@ def test_should_field_convert_list():
     assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
 
 
-def test_should_reference_convert_dynamic():
+def test_should_embedded_convert_dynamic():
 
     class E(MongoengineObjectType):
 
@@ -90,7 +90,7 @@ def test_should_reference_convert_dynamic():
     assert graphene_type.type == E
 
 
-def test_should_one2many_convert_list():
+def test_should_list_of_reference_convert_list():
 
     class A(MongoengineObjectType):
 
@@ -102,8 +102,21 @@ def test_should_one2many_convert_list():
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == A
 
+
+def test_should_list_of_embedded_convert_list():
+
+    class E(MongoengineObjectType):
+
+        class Meta:
+            model = EmbeddedArticle
+
+    graphene_field = convert_mongoengine_field(Reporter._fields['embedded_articles'], E._meta.registry)
+    assert isinstance(graphene_field, graphene.List)
+    dynamic_field = graphene_field.get_type()
+    assert dynamic_field._of_type == E
+
+
 def test_should_self_reference_convert_dynamic():
-    # pass
     class P(MongoengineObjectType):
 
         class Meta:
