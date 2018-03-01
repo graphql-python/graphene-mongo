@@ -76,6 +76,9 @@ def test_should_query_reporter():
                 articles {
                     headline
                 },
+                embeddedArticles {
+                    headline
+                },
                 awards
             }
         }
@@ -88,6 +91,14 @@ def test_should_query_reporter():
             'articles': [
                 {'headline': 'Hello'},
                 {'headline': 'World'}
+            ],
+            'embeddedArticles': [
+                {
+                    'headline': 'Real'
+                },
+                {
+                    'headline': 'World'
+                }
             ],
             'awards': ['2010-mvp']
         }
