@@ -5,7 +5,7 @@ setup(
     version='0.1.4',
 
     description='Graphene Mongoengine integration',
-    # long_description=open('README.md').read(),
+    # long_description=open('README.rst').read(),
 
     url='https://github.com/graphql-python/graphene-mongo',
 
