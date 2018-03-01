@@ -73,12 +73,12 @@ To learn more check out the following [examples](examples/):
     - [x] Flask example
     - [ ] Django example
 - [ ] Filtering & Paging
-    - [x] Default filtering enabled with all model's attributes by equal comparison
-    - [x] Take first, or last n items
+    - [x] Default filtering enabled with all model's attributes by equal comparison (requester: [git-albertomarin](https://github.com/git-albertomarin))
+    - [x] Take first, or last n items (credit: [alexpantyukhin](https://github.com/alexpantyukhin))
     - [ ] Advanced filtering
 - [ ] Support more types
-    - [x] Self-reference and list-of-self-reference relationship
-    - [ ] List(EmbeddedDocument)
+    - [x] Self-reference and list-of-self-reference relationship (requester: [mehdiym](https://github.com/mehdiym))
+    - [x] ListField(EmbeddedDocumentField)
     - [ ] Others
 
 ## Contributing
