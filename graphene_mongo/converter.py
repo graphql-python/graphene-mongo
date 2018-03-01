@@ -60,13 +60,22 @@ def convert_date_to_string(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.ListField)
 def convert_field_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
+
     if isinstance(base_type, (Dynamic)):
-        base_type = base_type.get_type()._type
+        base_type = base_type.get_type()
+        if base_type is None:
+            return
+        base_type = base_type._type
+
     if is_node(base_type):
         return MongoengineConnectionField(base_type)
-    elif not isinstance(base_type, (List, NonNull)) \
-            and not isinstance(field.field, mongoengine.ReferenceField):
+
+    # Non-relationship field
+    relations = (mongoengine.ReferenceField, mongoengine.EmbeddedDocumentField)
+    if not isinstance(base_type, (List, NonNull)) \
+            and not isinstance(field.field, relations):
         base_type = type(base_type)
+
     return List(base_type, description=field.db_field, required=not field.null)
 
 
