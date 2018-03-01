@@ -32,15 +32,22 @@ def test_should_query_reporter():
         query ReporterQuery {
             reporter {
                 firstName,
+                lastName,
+                email,
                 articles {
                     edges {
                         node {
                             headline
                         }
                     }
+                },
+                embeddedArticles {
+                    edges {
+                        node {
+                            headline
+                        }
+                    }
                 }
-                lastName,
-                email
             }
         }
     '''
@@ -48,6 +55,7 @@ def test_should_query_reporter():
         'reporter': {
             'firstName': 'Allen',
             'lastName': 'Iverson',
+            'email': 'ai@gmail.com',
             'articles': {
                 'edges': [
                     {
@@ -62,7 +70,20 @@ def test_should_query_reporter():
                     }
                 ],
             },
-            'email': 'ai@gmail.com'
+            'embeddedArticles': {
+                'edges': [
+                    {
+                        'node': {
+                            'headline': 'Real'
+                        }
+                    },
+                    {
+                        'node': {
+                            'headline': 'World'
+                        }
+                    }
+                ],
+            },
         }
     }
 

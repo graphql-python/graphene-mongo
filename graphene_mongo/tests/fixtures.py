@@ -1,4 +1,4 @@
-from .models import Article, Editor, Player, Reporter
+from .models import Article, Editor, EmbeddedArticle, Player, Reporter
 
 
 def setup_fixtures():
@@ -20,6 +20,15 @@ def setup_fixtures():
     reporter = Reporter(first_name='Allen', last_name='Iverson',
                         email='ai@gmail.com',  awards=['2010-mvp'])
     reporter.articles = [article1, article2]
+    embedded_article1 = EmbeddedArticle(
+        headline='Real',
+        editor=editor1
+    )
+    embedded_article2 = EmbeddedArticle(
+        headline='World',
+        editor=editor2
+    )
+    reporter.embedded_articles = [embedded_article1, embedded_article2]
     reporter.save()
 
     Player.drop_collection()
