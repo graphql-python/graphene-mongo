@@ -2,7 +2,7 @@ from .models import Article, Editor, Player, Reporter
 
 
 def setup_fixtures():
-    print('setup_fixtures' * 10)
+    Editor.drop_collection()
     editor1 = Editor(first_name='Penny', last_name='Hardaway')
     editor1.save()
     editor2 = Editor(first_name='Grant', last_name='Hill')
@@ -10,16 +10,19 @@ def setup_fixtures():
     editor3 = Editor(first_name='Dennis', last_name='Rodman')
     editor3.save()
 
-    reporter = Reporter(first_name='Allen', last_name='Iverson',
-                        email='ai@gmail.com',  awards=['2010-mvp'])
+    Article.drop_collection()
     article1 = Article(headline='Hello', editor=editor1)
     article1.save()
     article2 = Article(headline='World', editor=editor2)
     article2.save()
 
+    Reporter.drop_collection()
+    reporter = Reporter(first_name='Allen', last_name='Iverson',
+                        email='ai@gmail.com',  awards=['2010-mvp'])
     reporter.articles = [article1, article2]
     reporter.save()
 
+    Player.drop_collection()
     player1 = Player(first_name='Michael', last_name='Jordan')
     player1.save()
     player2 = Player(first_name='Magic', last_name='Johnson', opponent=player1)
