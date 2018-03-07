@@ -17,7 +17,7 @@ def setup_fixtures():
     article2.save()
 
     Reporter.drop_collection()
-    reporter = Reporter(first_name='Allen', last_name='Iverson',
+    reporter = Reporter(id='1', first_name='Allen', last_name='Iverson',
                         email='ai@gmail.com',  awards=['2010-mvp'])
     reporter.articles = [article1, article2]
     embedded_article1 = EmbeddedArticle(
