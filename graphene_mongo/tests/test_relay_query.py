@@ -189,7 +189,7 @@ def test_should_mutate():
     schema = graphene.Schema(query=Query, mutation=Mutation)
     result = schema.execute(query)
     assert not result.errors
-    # assert result.data == expected
+    assert result.data == expected
 
 def test_should_filter():
 
@@ -223,6 +223,33 @@ def test_should_filter():
                     }
                 }
             ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_get_node_by_id():
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        reporters = MongoengineConnectionField(ReporterNode)
+
+    query = '''
+        query ReportersQuery {
+            reporter: node(id: "UmVwb3J0ZXJOb2RlOjE=") {
+                id,
+                ... on ReporterNode {
+                    firstName
+                }
+            }
+        }
+    '''
+    expected = {
+        'reporter': {
+            'id': 'UmVwb3J0ZXJOb2RlOjE=',
+            'firstName': 'Allen'
         }
     }
     schema = graphene.Schema(query=Query)
