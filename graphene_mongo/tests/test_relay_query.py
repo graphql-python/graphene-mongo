@@ -232,17 +232,16 @@ def test_should_filter():
 
 
 def test_should_get_node_by_id():
+    # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
-        node = Node.Field()
+        reporter = Node.Field(ReporterNode)
         reporters = MongoengineConnectionField(ReporterNode)
 
     query = '''
         query ReportersQuery {
-            reporter: node(id: "UmVwb3J0ZXJOb2RlOjE=") {
+            reporter (id: "UmVwb3J0ZXJOb2RlOjE=") {
                 id,
-                ... on ReporterNode {
-                    firstName
-                }
+                firstName
             }
         }
     '''
