@@ -127,10 +127,9 @@ class MongoengineObjectType(ObjectType):
             ).format(root))
         return isinstance(root, cls._meta.model)
 
-    # noqa
     @classmethod
-    def get_node(cls, id, context, info):
-        return cls._meta.model.get(id)
+    def get_node(cls, info, id):
+        return cls._meta.model.objects.get(pk=id)
 
     def resolve_id(self, info):
         return str(self.id)
