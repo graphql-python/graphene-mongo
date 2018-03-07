@@ -45,6 +45,7 @@ class EmbeddedArticle(EmbeddedDocument):
 class Reporter(Document):
     meta = {'collection': 'test_repoter'}
 
+    id = StringField(primary_key=True)
     first_name = StringField(required=True)
     last_name = StringField(required=True)
     email = EmailField()
