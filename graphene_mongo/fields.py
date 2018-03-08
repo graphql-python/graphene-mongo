@@ -7,6 +7,7 @@ from graphene import Field, List
 from graphene.relay import ConnectionField
 from graphene.relay.connection import PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphql_relay.node.node import from_global_id
 from graphene.types.argument import to_arguments
 
 
@@ -86,9 +87,16 @@ class MongoengineConnectionField(ConnectionField):
     @classmethod
     def get_query(cls, model, info, **args):
         objs = model.objects()
+
         if args:
             first = args.pop('first', None)
             last = args.pop('last', None)
+            id = args.pop('id', None)
+
+            if id is not None:
+                # https://github.com/graphql-python/graphene/issues/124
+                args['pk'] = from_global_id(id)[-1]
+
             objs = objs.filter(**args)
 
             if first is not None:
@@ -98,6 +106,7 @@ class MongoengineConnectionField(ConnectionField):
 
         return objs
 
+    # noqa
     @classmethod
     def merge_querysets(cls, default_queryset, queryset):
         return queryset & default_queryset

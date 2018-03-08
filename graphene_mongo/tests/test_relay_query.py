@@ -104,6 +104,7 @@ def test_should_query_all_editors():
           allEditors {
             edges {
                 node {
+                    id,
                     firstName,
                     lastName
                 }
@@ -116,12 +117,14 @@ def test_should_query_all_editors():
             'edges': [
                 {
                     'node': {
+                        'id': 'RWRpdG9yTm9kZTox',
                         'firstName': 'Penny',
                         'lastName': 'Hardaway'
                     }
                 },
                 {
                     'node': {
+                        'id': 'RWRpdG9yTm9kZToy',
                         'firstName': 'Grant',
                         'lastName': 'Hill'
                     }
@@ -129,9 +132,49 @@ def test_should_query_all_editors():
                 },
                 {
                     'node': {
+                        'id': 'RWRpdG9yTm9kZToz',
                         'firstName': 'Dennis',
                         'lastName': 'Rodman'
                     }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert dict(result.data['allEditors']) == expected['allEditors']
+
+
+def test_should_filter_editors_by_id():
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        all_editors = MongoengineConnectionField(EditorNode)
+
+    query = '''
+        query EditorQuery {
+          allEditors(id: "RWRpdG9yTm9kZToy") {
+            edges {
+                node {
+                    id,
+                    firstName,
+                    lastName
+                }
+            }
+          }
+        }
+    '''
+    expected = {
+        'allEditors': {
+            'edges': [
+                {
+                    'node': {
+                        'id': 'RWRpdG9yTm9kZToy',
+                        'firstName': 'Grant',
+                        'lastName': 'Hill'
+                    }
+
                 }
             ]
         }
