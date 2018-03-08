@@ -75,6 +75,7 @@ To learn more check out the following [examples](examples/):
 - [ ] Filtering & Paging
     - [x] Default filtering enabled with all model's attributes by equal comparison (requester: [git-albertomarin](https://github.com/git-albertomarin))
     - [x] Take first, or last n items (credit: [alexpantyukhin](https://github.com/alexpantyukhin))
+    - [x] Filter by global id (requester: [bwalsh](https://github.com/bwalsh))
     - [ ] Advanced filtering
 - [ ] Support more types
     - [x] Self-reference and list-of-self-reference relationship (requester: [mehdiym](https://github.com/mehdiym))
