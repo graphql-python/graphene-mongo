@@ -29,7 +29,7 @@ class Employee(MongoengineObjectType):
 class Query(graphene.ObjectType):
     node = Node.Field()
     all_employees = MongoengineConnectionField(Employee)
-    all_role = MongoengineConnectionField(Role)
+    all_roles = MongoengineConnectionField(Role)
     role = graphene.Field(Role)
 
 schema = graphene.Schema(query=Query, types=[Department, Employee, Role])

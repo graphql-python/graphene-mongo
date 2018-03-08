@@ -3,11 +3,11 @@ from .models import Article, Editor, EmbeddedArticle, Player, Reporter
 
 def setup_fixtures():
     Editor.drop_collection()
-    editor1 = Editor(first_name='Penny', last_name='Hardaway')
+    editor1 = Editor(id='1', first_name='Penny', last_name='Hardaway')
     editor1.save()
-    editor2 = Editor(first_name='Grant', last_name='Hill')
+    editor2 = Editor(id='2', first_name='Grant', last_name='Hill')
     editor2.save()
-    editor3 = Editor(first_name='Dennis', last_name='Rodman')
+    editor3 = Editor(id='3', first_name='Dennis', last_name='Rodman')
     editor3.save()
 
     Article.drop_collection()
