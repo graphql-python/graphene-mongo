@@ -13,6 +13,7 @@ connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
 class Editor(Document):
 
     meta = {'collection': 'test_editor'}
+    id = StringField(primary_key=True)
     first_name = StringField(required=True)
     last_name = StringField(required=True)
 
