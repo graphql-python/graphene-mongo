@@ -47,6 +47,13 @@ def test_should_query_reporter():
                             headline
                         }
                     }
+                },
+                embeddedListArticles {
+                    edges {
+                        node {
+                            headline
+                        }
+                    }
                 }
             }
         }
@@ -84,6 +91,20 @@ def test_should_query_reporter():
                     }
                 ],
             },
+            'embeddedListArticles': {
+                'edges': [
+                    {
+                        'node': {
+                            'headline': 'World'
+                        }
+                    },
+                    {
+                        'node': {
+                            'headline': 'Real'
+                        }
+                    }
+                ],
+            }
         }
     }
 
@@ -361,6 +382,13 @@ def test_should_self_reference():
                                     firstName
                                 }
                             }
+                        },
+                        embeddedListArticles {
+                            edges {
+                                node {
+                                    headline
+                                }
+                            }
                         }
                     }
                 }
@@ -381,6 +409,9 @@ def test_should_self_reference():
                                     }
                                 }
                             ]
+                        },
+                        'embeddedListArticles': {
+                            'edges': []
                         }
                     }
                 },
@@ -395,7 +426,11 @@ def test_should_self_reference():
                                     }
                                 }
                             ]
+                        },
+                        'embeddedListArticles': {
+                             'edges': []
                         }
+
                     }
                 },
                 {
@@ -414,6 +449,9 @@ def test_should_self_reference():
                                     }
                                 }
                             ]
+                        },
+                        'embeddedListArticles': {
+                            'edges': []
                         }
                     }
                 }
@@ -424,7 +462,6 @@ def test_should_self_reference():
     result = schema.execute(query)
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
-
 
 # TODO:
 def test_should_paging():

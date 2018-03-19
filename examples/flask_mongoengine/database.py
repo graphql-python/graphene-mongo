@@ -1,6 +1,6 @@
 from mongoengine import connect
 
-from models import Department, Employee, Role
+from models import Department, Employee, Role, Task
 
 connect('graphene-mongo-example', host='mongomock://localhost', alias='default')
 
@@ -19,12 +19,31 @@ def init_db():
     engineer = Role(name='engineer')
     engineer.save()
 
-    peter = Employee(name='Peter', department=engineering, role=engineer)
-    peter.save()
+    debug = Task(name='Debug')
+    test = Task(name='Test')
 
-    roy = Employee(name='Roy', department=engineering, role=engineer)
-    roy.save()
-
-    tracy = Employee(name='Tracy', department=hr, role=manager)
+    tracy = Employee(
+        name='Tracy',
+        department=hr,
+        roles=[engineer, manager],
+        tasks=[]
+    )
     tracy.save()
 
+    peter = Employee(
+        name='Peter',
+        department=engineering,
+        leader=tracy,
+        roles=[engineer],
+        tasks=[debug, test]
+    )
+    peter.save()
+
+    roy = Employee(
+        name='Roy',
+        department=engineering,
+        leader=tracy,
+        roles=[engineer],
+        tasks=[debug]
+    )
+    roy.save()

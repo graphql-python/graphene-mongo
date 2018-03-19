@@ -86,6 +86,10 @@ class MongoengineConnectionField(ConnectionField):
 
     @classmethod
     def get_query(cls, model, info, **args):
+
+        if not callable(getattr(model, 'objects', None)):
+            return []
+
         objs = model.objects()
 
         if args:
