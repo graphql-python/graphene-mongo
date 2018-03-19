@@ -65,3 +65,5 @@ class Player(Document):
     opponent = ReferenceField('Player')
     players = ListField(ReferenceField('Player'))
     articles = ListField(ReferenceField('Article'))
+    embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
+
