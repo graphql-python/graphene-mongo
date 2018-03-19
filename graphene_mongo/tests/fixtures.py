@@ -29,6 +29,7 @@ def setup_fixtures():
         editor=editor2
     )
     reporter.embedded_articles = [embedded_article1, embedded_article2]
+    reporter.embedded_list_articles = [embedded_article2, embedded_article1]
     reporter.save()
 
     Player.drop_collection()

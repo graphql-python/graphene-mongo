@@ -47,6 +47,13 @@ def test_should_query_reporter():
                             headline
                         }
                     }
+                },
+                embeddedListArticles {
+                    edges {
+                        node {
+                            headline
+                        }
+                    }
                 }
             }
         }
@@ -84,6 +91,20 @@ def test_should_query_reporter():
                     }
                 ],
             },
+            'embeddedListArticles': {
+                'edges': [
+                    {
+                        'node': {
+                            'headline': 'World'
+                        }
+                    },
+                    {
+                        'node': {
+                            'headline': 'Real'
+                        }
+                    }
+                ],
+            }
         }
     }
 
