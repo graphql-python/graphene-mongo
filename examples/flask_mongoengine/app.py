@@ -17,9 +17,26 @@ default_query = '''
           id,
           name
         },
-        role {
+        roles {
+          edges {
+            node {
+              id,
+              name
+            }
+          }
+        },
+        leader {
           id,
           name
+        }
+        tasks {
+          edges {
+            node {
+              id,
+              name,
+              deadline
+            }
+          }
         }
       }
     }
