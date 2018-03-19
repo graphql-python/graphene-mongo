@@ -17,9 +17,9 @@ def setup_fixtures():
     article2.save()
 
     Reporter.drop_collection()
-    reporter = Reporter(id='1', first_name='Allen', last_name='Iverson',
+    reporter1 = Reporter(id='1', first_name='Allen', last_name='Iverson',
                         email='ai@gmail.com',  awards=['2010-mvp'])
-    reporter.articles = [article1, article2]
+    reporter1.articles = [article1, article2]
     embedded_article1 = EmbeddedArticle(
         headline='Real',
         editor=editor1
@@ -28,9 +28,9 @@ def setup_fixtures():
         headline='World',
         editor=editor2
     )
-    reporter.embedded_articles = [embedded_article1, embedded_article2]
-    reporter.embedded_list_articles = [embedded_article2, embedded_article1]
-    reporter.save()
+    reporter1.embedded_articles = [embedded_article1, embedded_article2]
+    reporter1.embedded_list_articles = [embedded_article2, embedded_article1]
+    reporter1.save()
 
     Player.drop_collection()
     player1 = Player(first_name='Michael', last_name='Jordan')
