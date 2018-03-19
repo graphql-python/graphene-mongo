@@ -32,7 +32,6 @@ default_query = '''
         tasks {
           edges {
             node {
-              id,
               name,
               deadline
             }
