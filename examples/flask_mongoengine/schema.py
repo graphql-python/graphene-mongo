@@ -4,6 +4,7 @@ from graphene_mongo import MongoengineConnectionField, MongoengineObjectType
 from models import Department as DepartmentModel
 from models import Employee as EmployeeModel
 from models import Role as RoleModel
+from models import Task as TaskModel
 
 class Department(MongoengineObjectType):
 
@@ -18,6 +19,12 @@ class Role(MongoengineObjectType):
         model = RoleModel
         interfaces = (Node,)
 
+
+class Task(MongoengineObjectType):
+
+    class Meta:
+        model = TaskModel
+        interfaces = (Node,)
 
 class Employee(MongoengineObjectType):
 
