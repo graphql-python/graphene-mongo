@@ -116,6 +116,19 @@ def test_should_list_of_embedded_convert_list():
     assert dynamic_field._of_type == E
 
 
+def test_should_embedded_list_convert_list():
+
+    class E(MongoengineObjectType):
+
+        class Meta:
+            model = EmbeddedArticle
+
+    graphene_field = convert_mongoengine_field(Reporter._fields['embedded_list_articles'], E._meta.registry)
+    assert isinstance(graphene_field, graphene.List)
+    dynamic_field = graphene_field.get_type()
+    assert dynamic_field._of_type == E
+
+
 def test_should_self_reference_convert_dynamic():
     class P(MongoengineObjectType):
 

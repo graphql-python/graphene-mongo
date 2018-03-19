@@ -3,7 +3,8 @@ from mongoengine import (
     connect, Document, EmbeddedDocument
 )
 from mongoengine.fields import (
-    DateTimeField, EmailField, EmbeddedDocumentField, ListField,
+    DateTimeField, EmailField, EmbeddedDocumentField,
+    EmbeddedDocumentListField, ListField,
     MapField, ReferenceField, StringField
 )
 
@@ -52,6 +53,7 @@ class Reporter(Document):
     email = EmailField()
     articles = ListField(ReferenceField(Article))
     embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
+    embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
     # FIXME
     # custom_map = MapField(field=StringField())
     awards = ListField(StringField())
