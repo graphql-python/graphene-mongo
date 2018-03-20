@@ -28,7 +28,8 @@ def test_should_query_editor():
     query = '''
         query EditorQuery {
             editor {
-                firstName
+                firstName,
+                metadata
             }
             editors {
                 firstName,
@@ -38,7 +39,8 @@ def test_should_query_editor():
     '''
     expected = {
         'editor': {
-            'firstName': 'Penny'
+            'firstName': 'Penny',
+            'metadata': '{"age": "20", "nickname": "$1"}'
         },
         'editors': [{
             'firstName': 'Penny',

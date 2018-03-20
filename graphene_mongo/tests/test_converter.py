@@ -66,9 +66,9 @@ def test_should_date_convert_string():
 def test_should_dict_convert_json():
     assert_conversion(mongoengine.DictField, graphene.JSONString)
 
-# FIXME
-# def test_should_convert_map_to_json():
-#     assert_conversion(mongoengine.MapField, graphene.JSONString)
+
+def test_should_convert_map_to_json():
+    assert_conversion(mongoengine.MapField, graphene.JSONString, field=mongoengine.StringField())
 
 
 def test_should_field_convert_list():
