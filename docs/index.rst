@@ -4,7 +4,7 @@ Graphene-Mongo
 Contents:
 
 .. toctree::
-   :maxdepth: 0
+    :maxdepth: 0
 
-   tutorial
-
+    tutorial
+    fields
