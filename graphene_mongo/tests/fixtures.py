@@ -3,11 +3,24 @@ from .models import Article, Editor, EmbeddedArticle, Player, Reporter
 
 def setup_fixtures():
     Editor.drop_collection()
-    editor1 = Editor(id='1', first_name='Penny', last_name='Hardaway')
+    editor1 = Editor(
+        id='1',
+        first_name='Penny',
+        last_name='Hardaway',
+        metadata={'age': '20', 'nickname': '$1'}
+    )
     editor1.save()
-    editor2 = Editor(id='2', first_name='Grant', last_name='Hill')
+    editor2 = Editor(
+        id='2',
+        first_name='Grant',
+        last_name='Hill'
+    )
     editor2.save()
-    editor3 = Editor(id='3', first_name='Dennis', last_name='Rodman')
+    editor3 = Editor(
+        id='3',
+        first_name='Dennis',
+        last_name='Rodman'
+    )
     editor3.save()
 
     Article.drop_collection()
@@ -17,8 +30,13 @@ def setup_fixtures():
     article2.save()
 
     Reporter.drop_collection()
-    reporter1 = Reporter(id='1', first_name='Allen', last_name='Iverson',
-                        email='ai@gmail.com',  awards=['2010-mvp'])
+    reporter1 = Reporter(
+        id='1',
+        first_name='Allen',
+        last_name='Iverson',
+        email='ai@gmail.com',
+        awards=['2010-mvp']
+    )
     reporter1.articles = [article1, article2]
     embedded_article1 = EmbeddedArticle(
         headline='Real',
@@ -33,11 +51,22 @@ def setup_fixtures():
     reporter1.save()
 
     Player.drop_collection()
-    player1 = Player(first_name='Michael', last_name='Jordan')
+    player1 = Player(
+        first_name='Michael',
+        last_name='Jordan'
+    )
     player1.save()
-    player2 = Player(first_name='Magic', last_name='Johnson', opponent=player1)
+    player2 = Player(
+        first_name='Magic',
+        last_name='Johnson',
+        opponent=player1
+    )
     player2.save()
-    player3 = Player(first_name='Larry', last_name='Bird', players=[player1, player2])
+    player3 = Player(
+        first_name='Larry',
+        last_name='Bird',
+        players=[player1, player2]
+    )
     player3.save()
 
     player1.players = [player2]

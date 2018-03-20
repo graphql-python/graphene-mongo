@@ -28,7 +28,8 @@ def test_should_query_editor():
     query = '''
         query EditorQuery {
             editor {
-                firstName
+                firstName,
+                metadata
             }
             editors {
                 firstName,
@@ -38,7 +39,8 @@ def test_should_query_editor():
     '''
     expected = {
         'editor': {
-            'firstName': 'Penny'
+            'firstName': 'Penny',
+            'metadata': '{"age": "20", "nickname": "$1"}'
         },
         'editors': [{
             'firstName': 'Penny',
@@ -55,6 +57,9 @@ def test_should_query_editor():
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
+    metadata = result.data['editor'].pop('metadata')
+    expected_metadata = expected['editor'].pop('metadata')
+    assert(json.loads(metadata)) == dict(json.loads(expected_metadata))
     assert dict(result.data['editor']) == expected['editor']
     assert all(item in result.data['editors'] for item in expected['editors'])
 
