@@ -77,10 +77,8 @@ To learn more check out the following [examples](examples/):
     - [x] Take first, or last n items (credit: [alexpantyukhin](https://github.com/alexpantyukhin))
     - [x] Filter by global id (requester: [bwalsh](https://github.com/bwalsh))
     - [ ] Advanced filtering
-- [ ] Support more types
+- [ ] Support more types ([Currently supported](http://graphene-mongo.readthedocs.io/en/latest/fields.html#))
     - [x] Self-reference and list-of-self-reference relationship (requester: [mehdiym](https://github.com/mehdiym))
-    - [x] ListField(EmbeddedDocumentField)
-    - [ ] Others
 
 ## Contributing
 
