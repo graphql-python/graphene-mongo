@@ -17,7 +17,7 @@ class Editor(Document):
     id = StringField(primary_key=True)
     first_name = StringField(required=True)
     last_name = StringField(required=True)
-
+    metadata = MapField(field=StringField())
 
 class Pet(Document):
 
@@ -54,8 +54,6 @@ class Reporter(Document):
     articles = ListField(ReferenceField(Article))
     embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
     embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
-    # FIXME
-    # custom_map = MapField(field=StringField())
     awards = ListField(StringField())
 
 
