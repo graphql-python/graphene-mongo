@@ -113,7 +113,7 @@ class MongoengineConnectionField(ConnectionField):
             if after is not None:
                 _after = from_global_id(after)[-1]
                 objs = objs[_after:]
-                
+
             if before is not None:
                 _before = from_global_id(before)[-1]
                 objs = objs[:_before]
