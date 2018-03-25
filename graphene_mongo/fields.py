@@ -15,7 +15,8 @@ from graphene.types.argument import to_arguments
 class MongoengineListField(Field):
 
     def __init__(self, _type, *args, **kwargs):
-        super(MongoengineListField, self).__init__(List(_type), *args, **kwargs)
+        super(MongoengineListField, self).__init__(
+            List(_type), *args, **kwargs)
 
     @property
     def model(self):
@@ -42,8 +43,10 @@ class MongoengineConnectionField(ConnectionField):
     def type(self):
         from .types import MongoengineObjectType
         _type = super(ConnectionField, self).type
-        assert issubclass(_type, MongoengineObjectType), "MongoengineConnectionField only accepts MongoengineObjectType types"
-        assert _type._meta.connection, "The type {} doesn't have a connection".format(_type.__name__)
+        assert issubclass(
+            _type, MongoengineObjectType), "MongoengineConnectionField only accepts MongoengineObjectType types"
+        assert _type._meta.connection, "The type {} doesn't have a connection".format(
+            _type.__name__)
         return _type._meta.connection
 
     @property
@@ -68,10 +71,11 @@ class MongoengineConnectionField(ConnectionField):
     def default_filter_args(self):
         def is_filterable(kv):
             return hasattr(kv[1], '_type') \
-                    and callable(getattr(kv[1]._type, '_of_type', None))
+                and callable(getattr(kv[1]._type, '_of_type', None))
 
         return reduce(
-            lambda r, kv: r.update({kv[0]: kv[1]._type._of_type()}) or r if is_filterable(kv) else r,
+            lambda r, kv: r.update(
+                {kv[0]: kv[1]._type._of_type()}) or r if is_filterable(kv) else r,
             self.fields.items(),
             {}
         )
@@ -96,6 +100,8 @@ class MongoengineConnectionField(ConnectionField):
             first = args.pop('first', None)
             last = args.pop('last', None)
             id = args.pop('id', None)
+            before = args.pop('before', None)
+            after = args.pop('after', None)
 
             if id is not None:
                 # https://github.com/graphql-python/graphene/issues/124
@@ -103,10 +109,20 @@ class MongoengineConnectionField(ConnectionField):
 
             objs = objs.filter(**args)
 
+            # https://github.com/graphql-python/graphene-mongo/issues/21
+            if after is not None:
+                _after = from_global_id(after)[-1]
+                objs = objs[_after:]
+                
+            if before is not None:
+                _before = from_global_id(before)[-1]
+                objs = objs[:_before]
+
             if first is not None:
                 objs = objs[:first]
             if last is not None:
-                objs = objs[:-last]
+                # fix for https://github.com/graphql-python/graphene-mongo/issues/20
+                objs = objs[-last:]
 
         return objs
 
