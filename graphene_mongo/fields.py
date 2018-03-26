@@ -122,7 +122,7 @@ class MongoengineConnectionField(ConnectionField):
                 objs = objs[:first]
             if last is not None:
                 # fix for https://github.com/graphql-python/graphene-mongo/issues/20
-                objs = objs[-last:]
+                objs = objs[-(last+1):]
 
         return objs
 
