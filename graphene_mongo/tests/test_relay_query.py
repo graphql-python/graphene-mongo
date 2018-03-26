@@ -223,10 +223,8 @@ def test_should_mutate():
 
             return CreateArticle(article=article)
 
-
     class Query(graphene.ObjectType):
         node = Node.Field()
-
 
     class Mutation(graphene.ObjectType):
 
@@ -254,6 +252,7 @@ def test_should_mutate():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
 
 def test_should_filter():
 
@@ -361,7 +360,8 @@ def test_should_first_n():
     result = schema.execute(query)
 
     assert not result.errors
-    assert all(item in get_nodes(result.data, 'editors') for item in get_nodes(expected, 'editors'))
+    assert all(item in get_nodes(result.data, 'editors')
+               for item in get_nodes(expected, 'editors'))
 
 
 def test_should_after():
@@ -403,7 +403,8 @@ def test_should_after():
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
 
 
 def test_should_before():
@@ -445,7 +446,8 @@ def test_should_before():
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
 
 
 def test_should_last_n():
@@ -486,7 +488,8 @@ def test_should_last_n():
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
 
 
 def test_should_self_reference():
@@ -553,7 +556,7 @@ def test_should_self_reference():
                             ]
                         },
                         'embeddedListArticles': {
-                             'edges': []
+                            'edges': []
                         }
 
                     }
@@ -586,7 +589,8 @@ def test_should_self_reference():
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
 
 
 # TODO:
