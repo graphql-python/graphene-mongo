@@ -447,6 +447,48 @@ def test_should_before():
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
+
+def test_should_last_n():
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(PlayerNode)
+
+    query = '''
+        query EditorQuery {
+            players(last: 2) {
+                edges {
+                    cursor,
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'players': {
+            'edges': [
+                {
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
+                    'node': {
+                        'firstName': 'Magic',
+                    }
+                },
+                {
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjI=',
+                    'node': {
+                        'firstName': 'Larry',
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
+
 def test_should_self_reference():
 
     class Query(graphene.ObjectType):
