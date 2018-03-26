@@ -364,6 +364,89 @@ def test_should_first_n():
     assert all(item in get_nodes(result.data, 'editors') for item in get_nodes(expected, 'editors'))
 
 
+def test_should_after():
+    class Query(graphene.ObjectType):
+
+        players = MongoengineConnectionField(PlayerNode)
+
+    query = '''
+        query EditorQuery {
+            players(after: "YXJyYXljb25uZWN0aW9uOjA=") {
+                edges {
+                    cursor,
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'players': {
+            'edges': [
+                {
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
+                    'node': {
+                        'firstName': 'Magic',
+                    }
+                },
+                {
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjI=',
+                    'node': {
+                        'firstName': 'Larry'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
+
+def test_should_before():
+    class Query(graphene.ObjectType):
+
+        players = MongoengineConnectionField(PlayerNode)
+
+    query = '''
+        query EditorQuery {
+            players(before: "YXJyYXljb25uZWN0aW9uOjI=") {
+                edges {
+                    cursor,
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'players': {
+            'edges': [
+                {
+                    'cursor': "YXJyYXljb25uZWN0aW9uOjA=",
+                    'node': {
+                        'firstName': 'Michael',
+                    }
+                },
+                {
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
+                    'node': {
+                        'firstName': 'Magic',
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
 def test_should_self_reference():
 
     class Query(graphene.ObjectType):
@@ -462,6 +545,7 @@ def test_should_self_reference():
     result = schema.execute(query)
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
 
 # TODO:
 def test_should_paging():

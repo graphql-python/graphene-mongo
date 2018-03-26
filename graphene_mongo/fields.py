@@ -111,11 +111,11 @@ class MongoengineConnectionField(ConnectionField):
 
             # https://github.com/graphql-python/graphene-mongo/issues/21
             if after is not None:
-                _after = from_global_id(after)[-1]
+                _after = int(from_global_id(after)[-1])
                 objs = objs[_after:]
 
             if before is not None:
-                _before = from_global_id(before)[-1]
+                _before = int(from_global_id(before)[-1])
                 objs = objs[:_before]
 
             if first is not None:
