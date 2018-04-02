@@ -5,8 +5,7 @@ from graphene.relay import Node, is_node
 
 from .. import registry
 from ..types import MongoengineObjectType
-from .models import Article
-from .models import Reporter
+from .models import Article, EmbeddedArticle, Reporter
 from .utils import with_local_registry
 
 registry.reset_global_registry()
@@ -21,6 +20,12 @@ class Human(MongoengineObjectType):
         registry = registry.get_global_registry()
         interfaces = (Node,)
 
+
+class Being(MongoengineObjectType):
+
+    class Meta:
+        model = EmbeddedArticle
+        interfaces = (Node,)
 
 class Character(MongoengineObjectType):
     class Meta:
@@ -41,8 +46,8 @@ def test_objecttype_registered():
         'first_name',
         'last_name',
         'email',
-        # FIXME
-        # 'embedded_articles',
+        'embedded_articles',
+        'embedded_list_articles',
         'articles',
         'awards'
     ])
