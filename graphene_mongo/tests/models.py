@@ -45,8 +45,8 @@ class EmbeddedArticle(EmbeddedDocument):
 
 
 class Reporter(Document):
-    meta = {'collection': 'test_repoter'}
 
+    meta = {'collection': 'test_repoter'}
     id = StringField(primary_key=True)
     first_name = StringField(required=True)
     last_name = StringField(required=True)
@@ -64,4 +64,19 @@ class Player(Document):
     players = ListField(ReferenceField('Player'))
     articles = ListField(ReferenceField('Article'))
     embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
+
+
+class Parent(Document):
+
+    meta = {
+        'collection': 'test_parent',
+        'allow_inheritance': True
+    }
+    bar = StringField()
+
+
+class Child(Parent):
+
+    meta = {'collection': 'Child'}
+    baz = StringField()
 

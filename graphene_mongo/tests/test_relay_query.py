@@ -9,7 +9,8 @@ from .models import Article, Editor, Player, Reporter
 from .types import (ArticleNode, ArticleType,
                     EditorNode, EditorType,
                     PlayerNode, PlayerType,
-                    ReporterNode, ReporterType)
+                    ReporterNode, ReporterType,
+                    ChildNode, ChildType)
 from ..fields import MongoengineConnectionField
 
 setup_fixtures()
@@ -292,6 +293,43 @@ def test_should_filter():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_should_filter_through_inheritance():
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        children = MongoengineConnectionField(ChildNode)
+
+    query = '''
+        query ChildrenQuery {
+            children(bar: "bar") {
+                edges {
+                    node {
+                        bar,
+                        baz
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'children': {
+            'edges': [
+                {
+                    'node': {
+                        'bar': 'bar',
+                        'baz': 'baz',
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
 
 
 def test_should_get_node_by_id():
