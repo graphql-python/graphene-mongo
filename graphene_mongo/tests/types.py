@@ -1,7 +1,10 @@
 from graphene.relay import Node
 
 from ..types import MongoengineObjectType
-from .models import Article, Editor, EmbeddedArticle, Player, Reporter
+from .models import (
+    Article, Editor, EmbeddedArticle, Player, Reporter,
+    Parent, Child
+)
 
 
 class EditorType(MongoengineObjectType):
@@ -32,6 +35,18 @@ class ReporterType(MongoengineObjectType):
 
     class Meta:
         model = Reporter
+
+
+class ParentType(MongoengineObjectType):
+
+    class Meta:
+        model = Parent
+
+
+class ChildType(MongoengineObjectType):
+
+    class Meta:
+        model = Child
 
 
 class ArticleNode(MongoengineObjectType):
@@ -68,3 +83,15 @@ class ReporterNode(MongoengineObjectType):
         model = Reporter
         interfaces = (Node,)
 
+
+class ParentNode(MongoengineObjectType):
+
+    class Meta:
+        model = Parent
+        interfaces = (Node,)
+
+
+class ChildNode(MongoengineObjectType):
+    class Meta:
+        model = Child
+        interfaces = (Node,)
