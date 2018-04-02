@@ -2,20 +2,16 @@ import inspect
 import mongoengine
 
 from collections import OrderedDict
-from mongoengine.base.fields import BaseField
 
 
 def get_model_fields(model, excluding=None):
     if excluding is None:
         excluding = []
     attributes = dict()
-    for attr_name in vars(model):
+    for attr_name, attr in model._fields.items():
         if attr_name in excluding:
             continue
-        attr = getattr(model, attr_name)
-        if isinstance(attr, BaseField):
-            attributes[attr_name] = attr
-
+        attributes[attr_name] = attr
     return OrderedDict(sorted(attributes.items()))
 
 
