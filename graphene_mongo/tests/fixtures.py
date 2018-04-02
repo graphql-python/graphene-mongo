@@ -1,4 +1,7 @@
-from .models import Article, Editor, EmbeddedArticle, Player, Reporter
+from .models import (
+    Article, Editor, EmbeddedArticle, Player,
+    Reporter, Parent, Child
+)
 
 
 def setup_fixtures():
@@ -74,3 +77,10 @@ def setup_fixtures():
 
     player2.players = [player1]
     player2.save()
+
+    Child.drop_collection()
+    child1 = Child(bar='BAR', baz='BAZ')
+    child1.save()
+
+    child2 = Child(bar='bar', baz='baz')
+    child2.save()
