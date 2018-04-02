@@ -6,6 +6,7 @@ from graphene.relay import Node, is_node
 from .. import registry
 from ..types import MongoengineObjectType
 from .models import Article, EmbeddedArticle, Reporter
+from .models import Parent, Child
 from .utils import with_local_registry
 
 registry.reset_global_registry()
@@ -28,8 +29,23 @@ class Being(MongoengineObjectType):
         interfaces = (Node,)
 
 class Character(MongoengineObjectType):
+
     class Meta:
         model = Reporter
+        registry = registry.get_global_registry()
+
+
+class Dad(MongoengineObjectType):
+
+    class Meta:
+        model = Parent
+        registry = registry.get_global_registry()
+
+
+class Son(MongoengineObjectType):
+
+    class Meta:
+        model = Child
         registry = registry.get_global_registry()
 
 
@@ -52,6 +68,9 @@ def test_objecttype_registered():
         'awards'
     ])
 
+
+def test_mongoengine_inheritance():
+    assert issubclass(Son._meta.model, Dad._meta.model)
 
 def test_node_replacedfield():
     idfield = Human._meta.fields['pub_date']
