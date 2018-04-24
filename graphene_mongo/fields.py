@@ -64,7 +64,7 @@ class MongoengineConnectionField(ConnectionField):
     def args(self):
         return to_arguments(
             self._base_args or OrderedDict(),
-            dict(self.field_args.items() + self.reference_args.items())
+            dict(self.field_args, **self.reference_args)
         )
 
     @args.setter
@@ -109,13 +109,15 @@ class MongoengineConnectionField(ConnectionField):
         objs = model.objects()
         if args:
             reference_fields = get_model_reference_fields(model)
-            for arg_name, arg in args.items():
+            reference_args = {}
+            for arg_name, arg in args.copy().items():
                 if arg_name in reference_fields:
                     reference_model = model._fields[arg_name]
                     pk = from_global_id(args.pop(arg_name))[-1]
                     reference_obj = reference_model.document_type_obj.objects(pk=pk).get()
-                    args[arg_name] = reference_obj
+                    reference_args[arg_name] = reference_obj
 
+            args.update(reference_args)
             first = args.pop('first', None)
             last = args.pop('last', None)
             id = args.pop('id', None)
@@ -143,7 +145,6 @@ class MongoengineConnectionField(ConnectionField):
                 # https://github.com/graphql-python/graphene-mongo/issues/20
                 objs = objs[-(last+1):]
 
-        print(objs)
         return objs
 
     # noqa
