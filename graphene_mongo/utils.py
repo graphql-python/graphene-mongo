@@ -5,14 +5,24 @@ from collections import OrderedDict
 
 
 def get_model_fields(model, excluding=None):
-    if excluding is None:
-        excluding = []
+    excluding = excluding or []
     attributes = dict()
     for attr_name, attr in model._fields.items():
         if attr_name in excluding:
             continue
         attributes[attr_name] = attr
     return OrderedDict(sorted(attributes.items()))
+
+
+def get_model_reference_fields(model, excluding=None):
+    excluding = excluding or []
+    attributes = dict()
+    for attr_name, attr in model._fields.items():
+        if attr_name in excluding \
+                or not isinstance(attr, mongoengine.fields.ReferenceField):
+            continue
+        attributes[attr_name] = attr
+    return attributes
 
 
 def is_valid_mongoengine_model(model):
