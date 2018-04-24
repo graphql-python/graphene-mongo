@@ -60,7 +60,7 @@ class MongoengineConnectionField(ConnectionField):
     @property
     def args(self):
         return to_arguments(
-            self._base_args or OrderedDict(), self.default_filter_args
+            self._base_args or OrderedDict(), dict(self.field_args.items() + self.reference_args.items())
         )
 
     @args.setter
@@ -68,7 +68,7 @@ class MongoengineConnectionField(ConnectionField):
         self._base_args = args
 
     @property
-    def default_filter_args(self):
+    def field_args(self):
         def is_filterable(kv):
             return hasattr(kv[1], '_type') \
                 and callable(getattr(kv[1]._type, '_of_type', None))
@@ -76,9 +76,17 @@ class MongoengineConnectionField(ConnectionField):
         return reduce(
             lambda r, kv: r.update(
                 {kv[0]: kv[1]._type._of_type()}) or r if is_filterable(kv) else r,
-            self.fields.items(),
-            {}
+            self.fields.items(), {}
         )
+
+    @property
+    def reference_args(self):
+        def get_reference_field(r, kv):
+            if callable(getattr(kv[1], 'get_type', None)):
+                node = kv[1].get_type()._type._meta
+                r.update({kv[0]: node.fields['id']._type.of_type()})
+            return r
+        return reduce(get_reference_field, self.fields.items(), {})
 
     @property
     def filter_fields(self):
@@ -121,7 +129,7 @@ class MongoengineConnectionField(ConnectionField):
             if first is not None:
                 objs = objs[:first]
             if last is not None:
-                # fix for https://github.com/graphql-python/graphene-mongo/issues/20
+                # https://github.com/graphql-python/graphene-mongo/issues/20
                 objs = objs[-(last+1):]
 
         return objs
