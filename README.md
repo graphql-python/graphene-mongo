@@ -72,11 +72,11 @@ To learn more check out the following [examples](examples/):
 - [ ] Examples
     - [x] Flask example
     - [ ] Django example
-- [ ] Filtering & Paging
+- [x] Filtering & Paging
     - [x] Default filtering enabled with all model's attributes by equal comparison (requester: [git-albertomarin](https://github.com/git-albertomarin))
     - [x] Take first, or last n items (credit: [alexpantyukhin](https://github.com/alexpantyukhin))
     - [x] Filter by global id (requester: [bwalsh](https://github.com/bwalsh))
-    - [ ] Advanced filtering
+    - [x] Filter by reference model id (requester: [msholty-fd](https://github.com/msholty-fd))
 - [ ] Support more types ([Currently supported](http://graphene-mongo.readthedocs.io/en/latest/fields.html#))
     - [x] Self-reference and list-of-self-reference relationship (requester: [mehdiym](https://github.com/mehdiym))
 

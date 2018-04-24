@@ -1,5 +1,8 @@
-Supported Mongoengine Fields
+Supported Fields
 ============================
+
+Mongoengine Fields
+------------------
 
 - BooleanField
 - DecimalField
@@ -17,3 +20,10 @@ Supported Mongoengine Fields
 - URLField
 - UUIDField
 
+
+Advanced
+--------
+
+- Self-reference relationship
+- List of self-reference relationship
+- Inheritance field
