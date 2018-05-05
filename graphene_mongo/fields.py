@@ -107,6 +107,7 @@ class MongoengineConnectionField(ConnectionField):
             return [], 0
 
         objs = model.objects()
+
         if args:
             reference_fields = get_model_reference_fields(model)
             reference_args = {}
@@ -146,6 +147,8 @@ class MongoengineConnectionField(ConnectionField):
             if last is not None:
                 # https://github.com/graphql-python/graphene-mongo/issues/20
                 objs = objs[-(last+1):]
+        else:
+            list_length = objs.count()
 
         return objs, list_length
 
