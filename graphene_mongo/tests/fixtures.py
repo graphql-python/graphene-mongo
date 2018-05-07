@@ -1,6 +1,6 @@
 from .models import (
     Article, Editor, EmbeddedArticle, Player,
-    Reporter, Parent, Child
+    Reporter, Child
 )
 
 
