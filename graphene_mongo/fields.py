@@ -93,10 +93,6 @@ class MongoengineConnectionField(ConnectionField):
         return reduce(get_reference_field, self.fields.items(), {})
 
     @property
-    def filter_fields(self):
-        return self._type._meta.filter_fields
-
-    @property
     def fields(self):
         return self._type._meta.fields
 
