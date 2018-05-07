@@ -1,5 +1,3 @@
-import pytest
-
 from ..fields import MongoengineConnectionField
 from .types import ArticleNode
 

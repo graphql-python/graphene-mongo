@@ -19,6 +19,7 @@ class Editor(Document):
     last_name = StringField(required=True)
     metadata = MapField(field=StringField())
 
+
 class Pet(Document):
 
     meta = {'collection': 'test_pet'}
@@ -79,4 +80,3 @@ class Child(Parent):
 
     meta = {'collection': 'Child'}
     baz = StringField()
-

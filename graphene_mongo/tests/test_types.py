@@ -28,6 +28,7 @@ class Being(MongoengineObjectType):
         model = EmbeddedArticle
         interfaces = (Node,)
 
+
 class Character(MongoengineObjectType):
 
     class Meta:
@@ -72,6 +73,7 @@ def test_objecttype_registered():
 def test_mongoengine_inheritance():
     assert issubclass(Son._meta.model, Dad._meta.model)
 
+
 def test_node_replacedfield():
     idfield = Human._meta.fields['pub_date']
     assert isinstance(idfield, Field)
@@ -112,7 +114,6 @@ def test_mongoengine_objecttype_only_fields():
             model = Article
             only_fields = ('headline')
 
-
     fields = set(A._meta.fields.keys())
     assert fields == set(['headline'])
 
@@ -125,4 +126,3 @@ def test_mongoengine_objecttype_exclude_fields():
             exclude_fields = ('headline')
 
     assert 'headline' not in list(A._meta.fields.keys())
-

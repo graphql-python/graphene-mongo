@@ -5,12 +5,12 @@ import graphene
 from graphene.relay import Node
 
 from .fixtures import setup_fixtures
-from .models import Article, Editor, Player, Reporter
-from .types import (ArticleNode, ArticleType,
-                    EditorNode, EditorType,
-                    PlayerNode, PlayerType,
-                    ReporterNode, ReporterType,
-                    ChildNode, ChildType)
+from .models import Article, Reporter
+from .types import (ArticleNode,
+                    EditorNode,
+                    PlayerNode,
+                    ReporterNode,
+                    ChildNode,)
 from ..fields import MongoengineConnectionField
 
 setup_fixtures()
