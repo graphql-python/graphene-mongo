@@ -104,9 +104,10 @@ class MongoengineConnectionField(ConnectionField):
     def get_query(cls, model, info, **args):
 
         if not callable(getattr(model, 'objects', None)):
-            return []
+            return [], 0
 
         objs = model.objects()
+
         if args:
             reference_fields = get_model_reference_fields(model)
             reference_args = {}
@@ -138,14 +139,18 @@ class MongoengineConnectionField(ConnectionField):
             if before is not None:
                 _before = int(from_global_id(before)[-1])
                 objs = objs[:_before]
+            # Not sure if this is in the correct place yet
+            list_length = objs.count()
 
             if first is not None:
                 objs = objs[:first]
             if last is not None:
                 # https://github.com/graphql-python/graphene-mongo/issues/20
                 objs = objs[-(last+1):]
+        else:
+            list_length = objs.count()
 
-        return objs
+        return objs, list_length
 
     # noqa
     @classmethod
@@ -159,8 +164,9 @@ class MongoengineConnectionField(ConnectionField):
     def connection_resolver(cls, resolver, connection, model, root, info, **args):
         iterable = resolver(root, info, **args)
         if not iterable:
-            iterable = cls.get_query(model, info, **args)
-        _len = len(iterable)
+            iterable, _len = cls.get_query(model, info, **args)
+        else:
+            _len = len(iterable)
         connection = connection_from_list_slice(
             iterable,
             args,

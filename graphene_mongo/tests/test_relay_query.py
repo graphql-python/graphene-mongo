@@ -413,6 +413,12 @@ def test_should_first_n():
                         firstName
                     }
                 }
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                    endCursor
+                }
             }
         }
     '''
@@ -431,7 +437,13 @@ def test_should_first_n():
                         'firstName': 'Grant'
                     }
                 }
-            ]
+            ],
+            'pageInfo': {
+                'hasNextPage': True,
+                'hasPreviousPage': False,
+                'startCursor': 'xxx',
+                'endCursor': 'xxx'
+            }
         }
     }
     schema = graphene.Schema(query=Query)
