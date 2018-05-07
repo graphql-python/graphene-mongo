@@ -3,12 +3,10 @@ import json
 import graphene
 
 from .fixtures import setup_fixtures
-from .models import Article, Editor, Player, Reporter
-from .types import (ArticleNode, ArticleType,
-                    EditorNode, EditorType,
-                    PlayerNode, PlayerType,
-                    ReporterNode, ReporterType)
-from ..fields import MongoengineConnectionField
+from .models import Editor, Player, Reporter
+from .types import (EditorType,
+                    PlayerType,
+                    ReporterType)
 
 setup_fixtures()
 
@@ -16,14 +14,15 @@ setup_fixtures()
 def test_should_query_editor():
 
     class Query(graphene.ObjectType):
-       editor = graphene.Field(EditorType)
-       editors = graphene.List(EditorType)
 
-       def resolve_editor(self, *args, **kwargs):
-           return Editor.objects.first()
+        editor = graphene.Field(EditorType)
+        editors = graphene.List(EditorType)
 
-       def resolve_editors(self, *args, **kwargs):
-           return list(Editor.objects.all())
+        def resolve_editor(self, *args, **kwargs):
+            return Editor.objects.first()
+
+        def resolve_editors(self, *args, **kwargs):
+            return list(Editor.objects.all())
 
     query = '''
         query EditorQuery {
@@ -147,7 +146,7 @@ def test_should_custom_kwargs():
         }
     '''
     expected = {
-        'editors':[
+        'editors': [
             {
                 'firstName': 'Penny',
                 'lastName': 'Hardaway'
