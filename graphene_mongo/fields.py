@@ -135,7 +135,7 @@ class MongoengineConnectionField(ConnectionField):
             if before is not None:
                 _before = int(from_global_id(before)[-1])
                 objs = objs[:_before]
-            # Not sure if this is in the correct place yet
+
             list_length = objs.count()
 
             if first is not None:
