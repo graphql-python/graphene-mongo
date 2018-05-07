@@ -14,6 +14,19 @@ def test_get_model_fields_no_duplication():
     assert len(reporter_fields) == len(reporter_name_set)
 
 
+def test_get_model_fields_excluding():
+    reporter_fields = get_model_fields(Reporter, excluding=[
+        'first_name', 'last_name'])
+    reporter_name_set = set(reporter_fields)
+    assert all(field in reporter_name_set for field in [
+        'id',
+        'email',
+        'articles',
+        'embedded_articles',
+        'embedded_list_articles',
+        'awards'
+    ])
+
 def test_get_model_relation_fields():
     article_fields = get_model_fields(Article)
     assert all(field in set(article_fields) for field in ['editor', 'reporter'])
