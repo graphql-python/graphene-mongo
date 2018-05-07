@@ -117,6 +117,7 @@ class MongoengineObjectType(ObjectType):
                 cls._meta.fields.update(mongoengine_fields)
                 registry.register(cls)
 
+    # noqa
     @classmethod
     def is_type_of(cls, root, info):
         if isinstance(root, cls):
