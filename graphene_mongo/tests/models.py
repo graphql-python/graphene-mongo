@@ -4,7 +4,7 @@ from mongoengine import (
 )
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField,
-    EmbeddedDocumentListField, ListField,
+    FloatField, EmbeddedDocumentListField, ListField,
     MapField, ReferenceField, StringField
 )
 
@@ -59,6 +59,8 @@ class Reporter(Document):
 
 
 class Player(Document):
+
+    meta = {'collection': 'test_player'}
     first_name = StringField(required=True)
     last_name = StringField(required=True)
     opponent = ReferenceField('Player')
@@ -78,5 +80,22 @@ class Parent(Document):
 
 class Child(Parent):
 
-    meta = {'collection': 'Child'}
+    meta = {'collection': 'test_child'}
     baz = StringField()
+
+
+class ProfessorMetadata(EmbeddedDocument):
+
+    meta = {'collection': 'test_professor_metadata'}
+    # id = StringField()
+    first_name = StringField()
+    last_name = StringField()
+    departments = ListField(StringField())
+
+
+class ProfessorVector(Document):
+
+    meta = {'collection': 'test_professor_vector'}
+    # id = StringField()
+    vec = ListField(FloatField())
+    metadata = EmbeddedDocumentField(ProfessorMetadata)
