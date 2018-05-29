@@ -87,6 +87,7 @@ def setup_fixtures():
 
     ProfessorVector.drop_collection()
     professor_metadata = ProfessorMetadata(
+        id='5e06aa20-6805-4eef-a144-5615dedbe32b',
         first_name='Steven',
         last_name='Curry',
         departments=['NBA', 'MLB']
