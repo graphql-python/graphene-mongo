@@ -3,7 +3,7 @@ from graphene.relay import Node
 from ..types import MongoengineObjectType
 from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
-    Parent, Child
+    Parent, Child, ProfessorMetadata, ProfessorVector,
 )
 
 
@@ -47,6 +47,18 @@ class ChildType(MongoengineObjectType):
 
     class Meta:
         model = Child
+
+
+class ProfessorMetadataType(MongoengineObjectType):
+
+    class Meta:
+        model = ProfessorMetadata
+
+
+class ProfessorVectorType(MongoengineObjectType):
+
+    class Meta:
+        model = ProfessorVector
 
 
 class ArticleNode(MongoengineObjectType):

@@ -87,7 +87,7 @@ class Child(Parent):
 class ProfessorMetadata(EmbeddedDocument):
 
     meta = {'collection': 'test_professor_metadata'}
-    # id = StringField()
+    id = StringField(primary_key=False)
     first_name = StringField()
     last_name = StringField()
     departments = ListField(StringField())
@@ -96,6 +96,5 @@ class ProfessorMetadata(EmbeddedDocument):
 class ProfessorVector(Document):
 
     meta = {'collection': 'test_professor_vector'}
-    # id = StringField()
     vec = ListField(FloatField())
     metadata = EmbeddedDocumentField(ProfessorMetadata)
