@@ -6,8 +6,10 @@ from graphene import Node
 
 from py.test import raises
 
-from .models import Article, Editor, EmbeddedArticle, Player, Reporter
-
+from .models import (
+    Article, Editor, EmbeddedArticle, Player, Reporter,
+    ProfessorMetadata, ProfessorVector,
+)
 from .. import registry
 from ..converter import convert_mongoengine_field
 from ..fields import MongoengineConnectionField
@@ -94,6 +96,22 @@ def test_should_reference_convert_dynamic():
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == E
+
+
+def test_should_embedded_convert_dynamic():
+
+    class PM(MongoengineObjectType):
+
+        class Meta:
+            model = ProfessorMetadata
+            interfaces = (Node,)
+
+    dynamic_field = convert_mongoengine_field(
+        ProfessorVector._fields['metadata'], PM._meta.registry)
+    assert isinstance(dynamic_field, Dynamic)
+    graphene_type = dynamic_field.get_type()
+    assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == PM
 
 
 def test_should_convert_none():
