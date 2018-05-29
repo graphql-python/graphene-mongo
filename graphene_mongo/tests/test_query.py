@@ -3,10 +3,12 @@ import json
 import graphene
 
 from .fixtures import setup_fixtures
-from .models import Editor, Player, Reporter
-from .types import (EditorType,
-                    PlayerType,
-                    ReporterType)
+from .models import (
+    Editor, Player, Reporter, ProfessorVector
+)
+from .types import (
+    EditorType, PlayerType, ReporterType, ProfessorVectorType
+)
 
 setup_fixtures()
 
@@ -227,6 +229,34 @@ def test_should_self_reference():
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
 
-# TODO:
-def test_should_paging():
-    pass
+def test_should_query_with_embedded_document():
+
+    class Query(graphene.ObjectType):
+        professor_vector = graphene.Field(ProfessorVectorType, id=graphene.String())
+
+        def resolve_professor_vector(self, info, id):
+            return ProfessorVector.objects(metadata__id=id).first()
+
+    query = """
+        query {
+          professorVector(id: "5e06aa20-6805-4eef-a144-5615dedbe32b") {
+            vec
+            metadata {
+                firstName
+            }
+          }
+        }
+    """
+
+    expected = {
+        'professorVector': {
+            'vec': [1.0, 2.3],
+            'metadata': {
+                'firstName': 'Steven'
+            }
+        }
+    }
+    schema = graphene.Schema(query=Query, types=[ProfessorVectorType])
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)

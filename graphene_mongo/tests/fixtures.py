@@ -1,6 +1,6 @@
 from .models import (
     Article, Editor, EmbeddedArticle, Player,
-    Reporter, Child
+    Reporter, Child, ProfessorMetadata, ProfessorVector,
 )
 
 
@@ -84,3 +84,16 @@ def setup_fixtures():
 
     child2 = Child(bar='bar', baz='baz')
     child2.save()
+
+    ProfessorVector.drop_collection()
+    professor_metadata = ProfessorMetadata(
+        id='5e06aa20-6805-4eef-a144-5615dedbe32b',
+        first_name='Steven',
+        last_name='Curry',
+        departments=['NBA', 'MLB']
+    )
+    professor_vector = ProfessorVector(
+        vec=[1.0, 2.3],
+        metadata=professor_metadata
+    )
+    professor_vector.save()
