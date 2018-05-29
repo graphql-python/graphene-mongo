@@ -80,7 +80,7 @@ def test_should_field_convert_list():
     assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
 
 
-def test_should_embedded_convert_dynamic():
+def test_should_reference_convert_dynamic():
 
     class E(MongoengineObjectType):
 
