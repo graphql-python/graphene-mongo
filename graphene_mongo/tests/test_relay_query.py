@@ -212,6 +212,7 @@ def test_should_mutate():
     class CreateArticle(graphene.Mutation):
 
         class Arguments:
+
             headline = graphene.String()
 
         article = graphene.Field(ArticleNode)
@@ -225,6 +226,7 @@ def test_should_mutate():
             return CreateArticle(article=article)
 
     class Query(graphene.ObjectType):
+
         node = Node.Field()
 
     class Mutation(graphene.ObjectType):
