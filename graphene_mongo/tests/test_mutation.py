@@ -7,10 +7,7 @@ from .models import (Article, Editor)
 from .types import (ArticleNode, EditorNode)
 
 
-setup_fixtures()
-
-
-def test_should_create():
+def test_should_create(setup_fixtures):
 
     class CreateArticle(graphene.Mutation):
 
@@ -60,7 +57,7 @@ def test_should_create():
     assert result.data == expected
 
 
-def test_should_update():
+def test_should_update(setup_fixtures):
 
     class UpdateEditor(graphene.Mutation):
 
@@ -71,7 +68,6 @@ def test_should_update():
         editor = graphene.Field(EditorNode)
 
         def mutate(self, info, id, first_name):
-            print(id, first_name)
             editor = Editor.objects.get(id=id)
             editor.first_name = first_name
             editor.save()
