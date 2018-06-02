@@ -1,5 +1,6 @@
 coveralls==1.2.0
 flake8==3.5.0
+flake8-per-file-ignores==0.6
 graphene==2.0.1
 iso8601==0.1.12
 mongoengine==0.15.0
