@@ -10,10 +10,8 @@ from .types import (
     EditorType, PlayerType, ReporterType, ProfessorVectorType
 )
 
-setup_fixtures()
 
-
-def test_should_query_editor():
+def test_should_query_editor(setup_fixtures):
 
     class Query(graphene.ObjectType):
 
@@ -65,7 +63,7 @@ def test_should_query_editor():
     assert all(item in result.data['editors'] for item in expected['editors'])
 
 
-def test_should_query_reporter():
+def test_should_query_reporter(setup_fixtures):
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
@@ -127,7 +125,7 @@ def test_should_query_reporter():
     assert dict(result.data['reporter']) == expected['reporter']
 
 
-def test_should_custom_kwargs():
+def test_should_custom_kwargs(setup_fixtures):
 
     class Query(graphene.ObjectType):
 
@@ -165,7 +163,7 @@ def test_should_custom_kwargs():
     assert all(item in result.data['editors'] for item in expected['editors'])
 
 
-def test_should_self_reference():
+def test_should_self_reference(setup_fixtures):
 
     class Query(graphene.ObjectType):
 
@@ -229,7 +227,7 @@ def test_should_self_reference():
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
 
-def test_should_query_with_embedded_document():
+def test_should_query_with_embedded_document(setup_fixtures):
 
     class Query(graphene.ObjectType):
         professor_vector = graphene.Field(ProfessorVectorType, id=graphene.String())
