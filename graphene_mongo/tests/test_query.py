@@ -2,7 +2,7 @@ import json
 
 import graphene
 
-from .fixtures import fixtures
+from .setup import fixtures
 from .models import (
     Editor, Player, Reporter, ProfessorVector
 )

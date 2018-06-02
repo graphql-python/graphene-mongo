@@ -2,7 +2,7 @@ import graphene
 
 from graphene.relay import Node
 
-from .fixtures import fixtures
+from .setup import fixtures
 from .models import (Article, Editor)
 from .types import (ArticleNode, EditorNode)
 
