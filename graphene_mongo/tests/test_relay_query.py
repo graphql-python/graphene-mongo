@@ -4,7 +4,7 @@ import graphene
 
 from graphene.relay import Node
 
-from .fixtures import fixtures
+from .setup import fixtures
 from .models import Article, Reporter
 from .types import (ArticleNode,
                     EditorNode,
