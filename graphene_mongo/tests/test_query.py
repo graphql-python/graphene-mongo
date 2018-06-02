@@ -2,7 +2,7 @@ import json
 
 import graphene
 
-from .fixtures import setup_fixtures
+from .fixtures import fixtures
 from .models import (
     Editor, Player, Reporter, ProfessorVector
 )
@@ -11,7 +11,7 @@ from .types import (
 )
 
 
-def test_should_query_editor(setup_fixtures):
+def test_should_query_editor(fixtures):
 
     class Query(graphene.ObjectType):
 
@@ -63,7 +63,7 @@ def test_should_query_editor(setup_fixtures):
     assert all(item in result.data['editors'] for item in expected['editors'])
 
 
-def test_should_query_reporter(setup_fixtures):
+def test_should_query_reporter(fixtures):
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
@@ -125,7 +125,7 @@ def test_should_query_reporter(setup_fixtures):
     assert dict(result.data['reporter']) == expected['reporter']
 
 
-def test_should_custom_kwargs(setup_fixtures):
+def test_should_custom_kwargs(fixtures):
 
     class Query(graphene.ObjectType):
 
@@ -163,7 +163,7 @@ def test_should_custom_kwargs(setup_fixtures):
     assert all(item in result.data['editors'] for item in expected['editors'])
 
 
-def test_should_self_reference(setup_fixtures):
+def test_should_self_reference(fixtures):
 
     class Query(graphene.ObjectType):
 
@@ -227,7 +227,7 @@ def test_should_self_reference(setup_fixtures):
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
 
-def test_should_query_with_embedded_document(setup_fixtures):
+def test_should_query_with_embedded_document(fixtures):
 
     class Query(graphene.ObjectType):
         professor_vector = graphene.Field(ProfessorVectorType, id=graphene.String())
