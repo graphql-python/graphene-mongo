@@ -4,7 +4,7 @@ import graphene
 
 from graphene.relay import Node
 
-from .fixtures import setup_fixtures
+from .fixtures import fixtures
 from .models import Article, Reporter
 from .types import (ArticleNode,
                     EditorNode,
@@ -18,7 +18,7 @@ def get_nodes(data, key):
     return map(lambda edge: edge['node'], data[key]['edges'])
 
 
-def test_should_query_reporter(setup_fixtures):
+def test_should_query_reporter(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -113,7 +113,7 @@ def test_should_query_reporter(setup_fixtures):
     assert dict(result.data['reporter']) == expected['reporter']
 
 
-def test_should_query_all_editors(setup_fixtures):
+def test_should_query_all_editors(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -166,7 +166,7 @@ def test_should_query_all_editors(setup_fixtures):
     assert dict(result.data['allEditors']) == expected['allEditors']
 
 
-def test_should_filter_editors_by_id(setup_fixtures):
+def test_should_filter_editors_by_id(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -205,7 +205,7 @@ def test_should_filter_editors_by_id(setup_fixtures):
     assert dict(result.data['allEditors']) == expected['allEditors']
 
 
-def test_should_filter(setup_fixtures):
+def test_should_filter(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -245,7 +245,7 @@ def test_should_filter(setup_fixtures):
     assert result.data == expected
 
 
-def test_should_filter_by_reference_field(setup_fixtures):
+def test_should_filter_by_reference_field(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -285,7 +285,7 @@ def test_should_filter_by_reference_field(setup_fixtures):
     assert result.data == expected
 
 
-def test_should_filter_through_inheritance(setup_fixtures):
+def test_should_filter_through_inheritance(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -322,7 +322,7 @@ def test_should_filter_through_inheritance(setup_fixtures):
         expected, sort_keys=True)
 
 
-def test_should_get_node_by_id(setup_fixtures):
+def test_should_get_node_by_id(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
         reporter = Node.Field(ReporterNode)
@@ -348,7 +348,7 @@ def test_should_get_node_by_id(setup_fixtures):
     assert result.data == expected
 
 
-def test_should_first_n(setup_fixtures):
+def test_should_first_n(fixtures):
 
     class Query(graphene.ObjectType):
 
@@ -404,7 +404,7 @@ def test_should_first_n(setup_fixtures):
                for item in get_nodes(expected, 'editors'))
 
 
-def test_should_after(setup_fixtures):
+def test_should_after(fixtures):
     class Query(graphene.ObjectType):
 
         players = MongoengineConnectionField(PlayerNode)
@@ -447,7 +447,7 @@ def test_should_after(setup_fixtures):
         expected, sort_keys=True)
 
 
-def test_should_before(setup_fixtures):
+def test_should_before(fixtures):
     class Query(graphene.ObjectType):
 
         players = MongoengineConnectionField(PlayerNode)
@@ -490,7 +490,7 @@ def test_should_before(setup_fixtures):
         expected, sort_keys=True)
 
 
-def test_should_last_n(setup_fixtures):
+def test_should_last_n(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(PlayerNode)
 
@@ -532,7 +532,7 @@ def test_should_last_n(setup_fixtures):
         expected, sort_keys=True)
 
 
-def test_should_self_reference(setup_fixtures):
+def test_should_self_reference(fixtures):
 
     class Query(graphene.ObjectType):
 

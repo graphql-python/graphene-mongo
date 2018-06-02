@@ -2,12 +2,12 @@ import graphene
 
 from graphene.relay import Node
 
-from .fixtures import setup_fixtures
+from .fixtures import fixtures
 from .models import (Article, Editor)
 from .types import (ArticleNode, EditorNode)
 
 
-def test_should_create(setup_fixtures):
+def test_should_create(fixtures):
 
     class CreateArticle(graphene.Mutation):
 
@@ -57,7 +57,7 @@ def test_should_create(setup_fixtures):
     assert result.data == expected
 
 
-def test_should_update(setup_fixtures):
+def test_should_update(fixtures):
 
     class UpdateEditor(graphene.Mutation):
 

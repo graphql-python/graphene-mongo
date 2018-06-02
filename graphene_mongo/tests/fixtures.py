@@ -5,8 +5,8 @@ from .models import (
 )
 
 @pytest.fixture(scope='module')
-def setup_fixtures():
-    print('setup_fixtures')
+def fixtures():
+    print('fixtures')
     Editor.drop_collection()
     editor1 = Editor(
         id='1',
