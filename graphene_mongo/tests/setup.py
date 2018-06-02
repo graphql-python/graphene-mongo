@@ -1,10 +1,12 @@
+import pytest
 from .models import (
     Article, Editor, EmbeddedArticle, Player,
     Reporter, Child, ProfessorMetadata, ProfessorVector,
 )
 
 
-def setup_fixtures():
+@pytest.fixture(scope='module')
+def fixtures():
     Editor.drop_collection()
     editor1 = Editor(
         id='1',
