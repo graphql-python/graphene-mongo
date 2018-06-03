@@ -31,6 +31,7 @@ def convert_field_to_id(field, registry=None):
 
 
 @convert_mongoengine_field.register(mongoengine.IntField)
+@convert_mongoengine_field.register(mongoengine.LongField)
 def convert_field_to_int(field, registry=None):
     return Int(description=field.db_field, required=not field.null)
 
