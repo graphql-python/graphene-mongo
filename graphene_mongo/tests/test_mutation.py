@@ -2,9 +2,11 @@ import graphene
 
 from graphene.relay import Node
 
+from ..mutation import generate_create_mutation
 from .setup import fixtures
 from .models import (Article, Editor)
-from .types import (ArticleNode, EditorNode)
+from .types import (
+    ArticleNode, EditorNode, EditorType)
 
 
 def test_should_create(fixtures):
@@ -102,6 +104,41 @@ def test_should_update(fixtures):
     }
     schema = graphene.Schema(query=Query, mutation=Mutation)
     result = schema.execute(query)
-    # print(result.data)
     assert not result.errors
     assert result.data == expected
+
+
+def test_default_create(fixtures):
+
+    class Query(graphene.ObjectType):
+
+        node = Node.Field()
+
+    mutation = generate_create_mutation(EditorType)
+    query = '''
+        mutation EditorCreator {
+            createEditor(
+                id: "1"
+                firstName: "Tony"
+                lastName: "Stark"
+            ) {
+                editor {
+                    firstName,
+                    lastName
+                }
+            }
+        }
+    '''
+    expected = {
+        'updateEditor': {
+            'editor': {
+                'firstName': 'Tony',
+                'lastName': 'Stark'
+            }
+        }
+    }
+    schema = graphene.Schema(query=Query, mutation=mutation)
+    result = schema.execute(query)
+    print(result.errors)
+    # assert not result.errors
+    # assert result.data == expected
