@@ -54,7 +54,6 @@ class MongoengineObjectTypeOptions(ObjectTypeOptions):
     model = None  # type: Model
     registry = None  # type: Registry
     connection = None  # type: Type[Connection]
-    filter_fields = ()
 
 
 class MongoengineObjectType(ObjectType):
@@ -134,7 +133,3 @@ class MongoengineObjectType(ObjectType):
 
     def resolve_id(self, info):
         return str(self.id)
-
-    # @classmethod
-    # def get_connection(cls):
-    #     return connection_for_type(cls)
