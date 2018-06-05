@@ -1,52 +1,48 @@
 import graphene
 from functools import partial
-from .types import MongoengineObjectType
+
+from .utils import fields_to_args
 
 
-def _create_input_factory(model, exclude_fields=('id', 'idempotency_key'), only_fields=()):
-    return type(
-        "Create{}Input".format(model.__name__),
-        # (MongoengineInputObjectType,),
-        (MongoengineObjectType,),
-        {"Meta": type('Meta', (), dict(model=model, exclude_fields=exclude_fields, only_fields=only_fields))}
-    )
+def get_model_args(resolvable, only_fields, exclude_fields):
+    def filter(kv):
+        name = kv[0]
+        is_in_only_in = not only_fields or name in only_fields
+        is_excluded = name in exclude_fields
+        return is_in_only_in and not is_excluded
+
+    fields = resolvable._meta.fields
+    args = fields_to_args(fields.items(), filter)
+    return args
 
 
 def generate_create_mutation(resolvable, only_fields=(), exclude_fields=()):
-    model = resolvable._meta.model
-    # assert hasattr(model, "idempotency_key")
 
-    # if not only_fields and not exclude_fields:
-    #     only_fields = get_fields_from_resolvable(resolvable)
-
-    def create_mutate(**kwargs):
-        print("there" * 20)
+    def create_mutate(self, info, **kwargs):
         resolvable = kwargs.pop('resolvable')
-        instance = kwargs.pop('klass')()
-        model = resolvable._meta.model(**kwargs)
-        model.save()
-        instance.success = True
-        return instance
+        mutation = kwargs.pop('klass')
+        instance = resolvable._meta.model(**kwargs)
+        instance.save()
+        data = {
+            model.__name__.lower(): instance,
+            'success': True
+        }
+        return mutation(**data)
 
-    CreateInput = _create_input_factory(
-        model, only_fields=only_fields, exclude_fields=exclude_fields)
-
+    model = resolvable._meta.model
     CreateMutation = type(
         "Create{}".format(model.__name__),
         (graphene.Mutation,),
         {
-            "mutate": partial(create_mutate, resolvable=resolvable, klass=lambda: CreateMutation),
+            "mutate": partial(create_mutate, resolvable=resolvable, klass=lambda **kwargs: CreateMutation(**kwargs)),
             "success": graphene.Boolean(required=True),
-            "create_{}".format(model.__name__.lower()): graphene.Field(resolvable),
+            "{}".format(model.__name__.lower()): graphene.Field(resolvable),
             "Arguments": type(
                 "Arguments",
                 (),
-                dict(
-                    idempotency_key=graphene.ID(),
-                    input=CreateInput()
-                ))
+                dict(get_model_args(resolvable, only_fields, exclude_fields))
+            )
         }
     )
 
-    # get_global_mutation_registry().register(CreateMutation, resolvable)
     return CreateMutation

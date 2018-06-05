@@ -6,7 +6,7 @@ from ..mutation import generate_create_mutation
 from .setup import fixtures
 from .models import (Article, Editor)
 from .types import (
-    ArticleNode, EditorNode, EditorType)
+    ArticleNode, ArticleType, EditorNode, EditorType)
 
 
 def test_should_create(fixtures):
@@ -17,7 +17,7 @@ def test_should_create(fixtures):
 
             headline = graphene.String()
 
-        article = graphene.Field(ArticleNode)
+        article = graphene.Field(ArticleType)
 
         def mutate(self, info, headline):
             article = Article(
@@ -114,31 +114,35 @@ def test_default_create(fixtures):
 
         node = Node.Field()
 
-    mutation = generate_create_mutation(EditorType)
+    class Mutation(graphene.ObjectType):
+
+        create_editor = generate_create_mutation(EditorType).Field()
+
     query = '''
         mutation EditorCreator {
             createEditor(
-                id: "1"
+                id: "99"
                 firstName: "Tony"
                 lastName: "Stark"
             ) {
                 editor {
                     firstName,
                     lastName
-                }
+                },
+                success
             }
         }
     '''
     expected = {
-        'updateEditor': {
+        'createEditor': {
             'editor': {
                 'firstName': 'Tony',
                 'lastName': 'Stark'
-            }
+            },
+            'success': True
         }
     }
-    schema = graphene.Schema(query=Query, mutation=mutation)
+    schema = graphene.Schema(query=Query, mutation=Mutation)
     result = schema.execute(query)
-    print(result.errors)
-    # assert not result.errors
-    # assert result.data == expected
+    assert not result.errors
+    assert result.data == expected
