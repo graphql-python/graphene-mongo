@@ -11,11 +11,10 @@ from graphql_relay.node.node import from_global_id
 from graphene.types.argument import to_arguments
 
 
-from .utils import get_model_reference_fields
+from .utils import get_model_reference_fields, fields_to_args
 
 
-# noqa
-class MongoengineListField(Field):
+class MongoengineListField(Field): # noqa
 
     def __init__(self, _type, *args, **kwargs):
         super(MongoengineListField, self).__init__(
@@ -62,35 +61,32 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def args(self):
-        return to_arguments(
-            self._base_args or OrderedDict(),
-            dict(self.field_args, **self.reference_args)
-        )
+        args = to_arguments(self._base_args or OrderedDict())
+        args.update(self.fields_to_args)
+        args.update(self.references_to_args)
+        return args
 
     @args.setter
     def args(self, args):
         self._base_args = args
 
     @property
-    def field_args(self):
+    def fields_to_args(self):
         def is_filterable(kv):
             return hasattr(kv[1], '_type') \
                 and callable(getattr(kv[1]._type, '_of_type', None))
 
-        return reduce(
-            lambda r, kv: r.update(
-                {kv[0]: kv[1]._type._of_type()}) or r if is_filterable(kv) else r,
-            self.fields.items(), {}
-        )
+        return fields_to_args(self.fields.items(), is_filterable)
 
     @property
-    def reference_args(self):
+    def references_to_args(self):
         def get_reference_field(r, kv):
             if callable(getattr(kv[1], 'get_type', None)):
                 node = kv[1].get_type()._type._meta
                 r.update({kv[0]: node.fields['id']._type.of_type()})
             return r
-        return reduce(get_reference_field, self.fields.items(), {})
+        return to_arguments(
+            reduce(get_reference_field, self.fields.items(), {}))
 
     @property
     def fields(self):

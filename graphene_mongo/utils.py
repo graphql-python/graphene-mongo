@@ -2,6 +2,8 @@ import inspect
 import mongoengine
 
 from collections import OrderedDict
+from functools import reduce
+from graphene.types.argument import to_arguments
 
 
 def get_model_fields(model, excluding=None):
@@ -23,6 +25,14 @@ def get_model_reference_fields(model, excluding=None):
             continue
         attributes[attr_name] = attr
     return attributes
+
+
+def fields_to_args(fields, filter=lambda x: True):
+    fields = reduce(
+        lambda r, kv: r.update({kv[0]: kv[1]._type._of_type()}) or r if filter(kv) else r,
+        fields, {}
+    )
+    return to_arguments(fields)
 
 
 def is_valid_mongoengine_model(model):
