@@ -24,7 +24,7 @@ def generate_create_mutation(resolvable, only_fields=(), exclude_fields=()):
         instance = resolvable._meta.model(**kwargs)
         instance.save()
         data = {
-            model.__name__.lower(): instance,
+            resolvable._meta.model.__name__.lower(): instance,
             'success': True
         }
         return mutation(**data)
