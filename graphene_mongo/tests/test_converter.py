@@ -50,6 +50,10 @@ def test_sould_int_convert_int():
     assert_conversion(mongoengine.IntField, graphene.Int)
 
 
+def test_sould_long_convert_int():
+    assert_conversion(mongoengine.LongField, graphene.Int)
+    
+
 def test_should_object_id_convert_id():
     assert_conversion(mongoengine.ObjectIdField, graphene.ID)
 
