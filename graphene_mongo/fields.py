@@ -142,7 +142,7 @@ class MongoengineConnectionField(ConnectionField):
                 objs = objs[:first]
             if last is not None:
                 # https://github.com/graphql-python/graphene-mongo/issues/20
-                objs = objs[-(last+1):]
+                objs = objs[list_length - last:]
         else:
             list_length = objs.count()
 
