@@ -435,6 +435,12 @@ def test_should_after(fixtures):
                     'node': {
                         'firstName': 'Larry'
                     }
+                },
+                {
+                     'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
+                     'node': {
+                        'firstName': 'Chris'
+                     }
                 }
             ]
         }
@@ -510,16 +516,16 @@ def test_should_last_n(fixtures):
         'players': {
             'edges': [
                 {
-                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
-                    'node': {
-                        'firstName': 'Magic',
-                    }
-                },
-                {
                     'cursor': 'YXJyYXljb25uZWN0aW9uOjI=',
                     'node': {
                         'firstName': 'Larry',
                     }
+                },
+                {
+                     'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
+                     'node': {
+                          'firstName': 'Chris'
+                     }
                 }
             ]
         }
@@ -528,8 +534,8 @@ def test_should_last_n(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == \
+        json.dumps(expected, sort_keys=True)
 
 
 def test_should_self_reference(fixtures):
@@ -622,6 +628,17 @@ def test_should_self_reference(fixtures):
                             'edges': []
                         }
                     }
+                },
+                {
+                     'node': {
+                          'firstName': 'Chris',
+                          'players': {
+                              'edges': []
+                          },
+                          'embeddedListArticles': {
+                               'edges': []
+                          }
+                     }
                 }
             ]
         }
