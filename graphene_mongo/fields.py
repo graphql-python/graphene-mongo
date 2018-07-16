@@ -10,7 +10,6 @@ from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from graphql_relay.node.node import from_global_id
 from graphene.types.argument import to_arguments
 
-
 from .utils import get_model_reference_fields
 
 
@@ -142,7 +141,7 @@ class MongoengineConnectionField(ConnectionField):
                 objs = objs[:first]
             if last is not None:
                 # https://github.com/graphql-python/graphene-mongo/issues/20
-                objs = objs[-(last+1):]
+                objs = objs[max(0, list_length - last):]
         else:
             list_length = objs.count()
 
@@ -159,10 +158,16 @@ class MongoengineConnectionField(ConnectionField):
     @classmethod
     def connection_resolver(cls, resolver, connection, model, root, info, **args):
         iterable = resolver(root, info, **args)
+
         if not iterable:
             iterable, _len = cls.get_query(model, info, **args)
+
+            if root:
+                # If we have a root, we must be at least 1 layer in, right?
+                _len = 0
         else:
             _len = len(iterable)
+
         connection = connection_from_list_slice(
             iterable,
             args,
