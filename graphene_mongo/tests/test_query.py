@@ -218,13 +218,19 @@ def test_should_self_reference(fixtures):
                         'firstName': 'Magic'
                     }
                 ]
+            },
+            {
+                 'firstName': 'Chris',
+                 'opponent': None,
+                 'players': []
             }
         ]
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == \
+        json.dumps(expected, sort_keys=True)
 
 
 def test_should_query_with_embedded_document(fixtures):
@@ -257,4 +263,5 @@ def test_should_query_with_embedded_document(fixtures):
     schema = graphene.Schema(query=Query, types=[ProfessorVectorType])
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == \
+        json.dumps(expected, sort_keys=True)
