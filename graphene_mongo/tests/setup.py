@@ -80,6 +80,12 @@ def fixtures():
     player2.players = [player1]
     player2.save()
 
+    player4 = Player(
+        first_name='Chris',
+        last_name='Webber'
+    )
+    player4.save()
+
     Child.drop_collection()
     child1 = Child(bar='BAR', baz='BAZ')
     child1.save()
