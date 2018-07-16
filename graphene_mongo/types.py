@@ -80,7 +80,6 @@ class MongoengineObjectType(ObjectType):
             model, registry, only_fields, exclude_fields
         )
         mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
-
         if use_connection is None and interfaces:
             use_connection = any((issubclass(interface, Node) for interface in interfaces))
 
@@ -103,6 +102,9 @@ class MongoengineObjectType(ObjectType):
         _meta.fields = mongoengine_fields
         _meta.filter_fields = filter_fields
         _meta.connection = connection
+        # Save them for later
+        _meta.only_fields = only_fields
+        _meta.exclude_fields = exclude_fields
 
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
@@ -116,6 +118,16 @@ class MongoengineObjectType(ObjectType):
                 mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
                 cls._meta.fields.update(mongoengine_fields)
                 registry.register(cls)
+
+    @classmethod
+    def rescan_fields(cls):
+        converted_fields, self_referenced = construct_fields(
+            cls._meta.model, cls._meta.registry, cls._meta.only_fields,
+            cls._meta.exclude_fields
+        )
+        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
+        cls._meta.fields.update(mongoengine_fields)
+
 
     # noqa
     @classmethod

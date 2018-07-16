@@ -11,6 +11,10 @@ class Registry(object):
         assert cls._meta.registry == self, 'Registry for a Model have to match.'
         self._registry[cls._meta.model] = cls
 
+        # Rescan all fields
+        for model, cls in self._registry.items():
+            cls.rescan_fields()
+
     def get_type_for_model(self, model):
         return self._registry.get(model)
 

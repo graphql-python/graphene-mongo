@@ -89,7 +89,6 @@ def convert_field_to_dynamic(field, registry=None):
         _type = registry.get_type_for_model(model)
         if not _type:
             return None
-
         return Field(_type)
 
     return Dynamic(dynamic_type)
