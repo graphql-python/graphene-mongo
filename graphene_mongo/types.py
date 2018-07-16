@@ -121,12 +121,20 @@ class MongoengineObjectType(ObjectType):
 
     @classmethod
     def rescan_fields(cls):
+        """Attempts to rescan fields and will insert any not converted initially"""
+
         converted_fields, self_referenced = construct_fields(
-            cls._meta.model, cls._meta.registry, cls._meta.only_fields,
-            cls._meta.exclude_fields
+            cls._meta.model, cls._meta.registry,
+            cls._meta.only_fields, cls._meta.exclude_fields
         )
+
         mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
-        cls._meta.fields.update(mongoengine_fields)
+
+        # The initial scan should take precidence
+        for field in mongoengine_fields:
+            if field not in cls._meta.fields:
+                cls._meta.fields.update({field: mongoengine_fields[field]})
+        # Self-referenced fields can't change between scans!
 
 
     # noqa
