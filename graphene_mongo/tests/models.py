@@ -103,8 +103,8 @@ class ProfessorVector(Document):
 class ParentWithRelationship(Document):
 
     meta = {'collection': 'test_parent_reference'}
-    before_child = ReferenceField("ChildRegisteredBefore")
-    after_child = ReferenceField("ChildRegisteredAfter")
+    before_child = ListField(ReferenceField("ChildRegisteredBefore"))
+    after_child = ListField(ReferenceField("ChildRegisteredAfter"))
     name = StringField()
 
 
