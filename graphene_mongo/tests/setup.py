@@ -120,7 +120,12 @@ def fixtures():
     child3.save()
     child4.save()
 
-    parent = ParentWithRelationship(name="Yui", before_child=child3, after_child=child4)
+    parent = ParentWithRelationship(
+        name="Yui",
+        before_child=[child3],
+        after_child=[child4]
+    )
+
     parent.save()
 
     child3.parent = child4.parent = parent

@@ -665,12 +665,20 @@ def test_should_lazy_reference(fixtures):
             edges {
                 node {
                     beforeChild {
-                        name,
-                        parent { name }
+                        edges {
+                            node {
+                                name,
+                                parent { name }
+                            }
+                        }
                     },
                     afterChild {
-                        name,
-                        parent { name }
+                        edges {
+                            node {
+                                name,
+                                parent { name }
+                            }
+                        }
                     }
                 }
             }
@@ -683,12 +691,20 @@ def test_should_lazy_reference(fixtures):
             "edges": [
                 {"node": {
                     "beforeChild": {
-                        "name": "Akari",
-                        "parent": {"name": "Yui"}
+                        "edges": [
+                            {"node": {
+                                "name": "Akari",
+                                "parent": {"name": "Yui"}
+                            }}
+                        ]
                     },
                     "afterChild": {
-                        "name": "Kyouko",
-                        "parent": {"name": "Yui"}
+                        "edges": [
+                            {"node": {
+                                "name": "Kyouko",
+                                "parent": {"name": "Yui"}
+                            }}
+                        ]
                     }
                 }}
             ]
