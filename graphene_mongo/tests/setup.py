@@ -2,6 +2,8 @@ import pytest
 from .models import (
     Article, Editor, EmbeddedArticle, Player,
     Reporter, Child, ProfessorMetadata, ProfessorVector,
+    ChildRegisteredBefore, ChildRegisteredAfter,
+    ParentWithRelationship
 )
 
 
@@ -105,3 +107,22 @@ def fixtures():
         metadata=professor_metadata
     )
     professor_vector.save()
+
+    ParentWithRelationship.drop_collection()
+    ChildRegisteredAfter.drop_collection()
+    ChildRegisteredBefore.drop_collection()
+
+    # This is one messed up family
+
+    # She'd better have presence this time
+    child3 = ChildRegisteredBefore(name="Akari")
+    child4 = ChildRegisteredAfter(name="Kyouko")
+    child3.save()
+    child4.save()
+
+    parent = ParentWithRelationship(name="Yui", before_child=child3, after_child=child4)
+    parent.save()
+
+    child3.parent = child4.parent = parent
+    child3.save()
+    child4.save()
