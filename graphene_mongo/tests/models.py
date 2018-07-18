@@ -98,3 +98,25 @@ class ProfessorVector(Document):
     meta = {'collection': 'test_professor_vector'}
     vec = ListField(FloatField())
     metadata = EmbeddedDocumentField(ProfessorMetadata)
+
+
+class ParentWithRelationship(Document):
+
+    meta = {'collection': 'test_parent_reference'}
+    before_child = ReferenceField("ChildRegisteredBefore")
+    after_child = ReferenceField("ChildRegisteredAfter")
+    name = StringField()
+
+
+class ChildRegisteredBefore(Document):
+
+    meta = {'collection': 'test_child_before_reference'}
+    parent = ReferenceField(ParentWithRelationship)
+    name = StringField()
+
+
+class ChildRegisteredAfter(Document):
+
+    meta = {'collection': 'test_child_after_reference'}
+    parent = ReferenceField(ParentWithRelationship)
+    name = StringField()
