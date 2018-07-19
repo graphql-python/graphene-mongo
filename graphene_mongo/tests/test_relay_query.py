@@ -10,7 +10,8 @@ from .types import (ArticleNode,
                     EditorNode,
                     PlayerNode,
                     ReporterNode,
-                    ChildNode,)
+                    ChildNode,
+                    ParentWithRelationshipNode)
 from ..fields import MongoengineConnectionField
 
 
@@ -644,6 +645,72 @@ def test_should_self_reference(fixtures):
         }
     }
     schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
+
+
+def test_should_lazy_reference(fixtures):
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        parents = MongoengineConnectionField(ParentWithRelationshipNode)
+
+    schema = graphene.Schema(query=Query)
+
+    query = """
+    query {
+        parents {
+            edges {
+                node {
+                    beforeChild {
+                        edges {
+                            node {
+                                name,
+                                parent { name }
+                            }
+                        }
+                    },
+                    afterChild {
+                        edges {
+                            node {
+                                name,
+                                parent { name }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    """
+
+    expected = {
+        "parents": {
+            "edges": [
+                {"node": {
+                    "beforeChild": {
+                        "edges": [
+                            {"node": {
+                                "name": "Akari",
+                                "parent": {"name": "Yui"}
+                            }}
+                        ]
+                    },
+                    "afterChild": {
+                        "edges": [
+                            {"node": {
+                                "name": "Kyouko",
+                                "parent": {"name": "Yui"}
+                            }}
+                        ]
+                    }
+                }}
+            ]
+        }
+    }
+
     result = schema.execute(query)
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(
