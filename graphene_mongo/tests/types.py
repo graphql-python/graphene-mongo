@@ -4,6 +4,8 @@ from ..types import MongoengineObjectType
 from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
     Parent, Child, ProfessorMetadata, ProfessorVector,
+    ParentWithRelationship, ChildRegisteredBefore,
+    ChildRegisteredAfter
 )
 
 
@@ -107,3 +109,21 @@ class ChildNode(MongoengineObjectType):
     class Meta:
         model = Child
         interfaces = (Node,)
+
+
+class ChildRegisteredBeforeNode(MongoengineObjectType):
+    class Meta:
+        model = ChildRegisteredBefore
+        interfaces = (Node, )
+
+
+class ParentWithRelationshipNode(MongoengineObjectType):
+    class Meta:
+        model = ParentWithRelationship
+        interfaces = (Node, )
+
+
+class ChildRegisteredAfterNode(MongoengineObjectType):
+    class Meta:
+        model = ChildRegisteredAfter
+        interfaces = (Node, )
