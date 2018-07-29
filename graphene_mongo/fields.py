@@ -93,7 +93,7 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def fields(self):
-        return self._type._meta.fields
+        return self.type._meta.fields
 
     @classmethod
     def get_query(cls, model, info, **args):
