@@ -39,12 +39,9 @@ setup(
     ],
     python_requires='>=2.7',
     zip_safe=True,
-    setup_requires=['pytest-runner'],
     tests_require=[
         'pytest>=3.3.2',
         'mongomock',
         'mock'
     ],
-    test_suite="graphene_mongo.tests",
-
 )
