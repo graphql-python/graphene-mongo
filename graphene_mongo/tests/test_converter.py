@@ -58,8 +58,8 @@ def test_should_object_id_convert_id():
     assert_conversion(mongoengine.ObjectIdField, graphene.ID)
 
 
-def test_should_boolean_convert_non_null():
-    assert_conversion(mongoengine.BooleanField, graphene.NonNull)
+def test_should_boolean_convert_boolean():
+    assert_conversion(mongoengine.BooleanField, graphene.Boolean)
 
 
 def test_should_decimal_convert_float():
