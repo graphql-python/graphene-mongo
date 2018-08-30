@@ -38,7 +38,7 @@ def convert_field_to_int(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.BooleanField)
 def convert_field_to_boolean(field, registry=None):
-    return NonNull(Boolean, description=field.db_field)
+    return Boolean(description=field.db_field, required=not field.null)
 
 
 @convert_mongoengine_field.register(mongoengine.DecimalField)
