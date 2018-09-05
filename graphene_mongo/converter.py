@@ -21,41 +21,41 @@ def convert_mongoengine_field(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.StringField)
 @convert_mongoengine_field.register(mongoengine.URLField)
 def convert_field_to_string(field, registry=None):
-    return String(description=field.db_field, required=not field.null)
+    return String(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.UUIDField)
 @convert_mongoengine_field.register(mongoengine.ObjectIdField)
 def convert_field_to_id(field, registry=None):
-    return ID(description=field.db_field, required=not field.null)
+    return ID(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.IntField)
 @convert_mongoengine_field.register(mongoengine.LongField)
 def convert_field_to_int(field, registry=None):
-    return Int(description=field.db_field, required=not field.null)
+    return Int(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.BooleanField)
 def convert_field_to_boolean(field, registry=None):
-    return Boolean(description=field.db_field, required=not field.null)
+    return Boolean(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.DecimalField)
 @convert_mongoengine_field.register(mongoengine.FloatField)
 def convert_field_to_float(field, registry=None):
-    return Float(description=field.db_field, required=not field.null)
+    return Float(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.DictField)
 @convert_mongoengine_field.register(mongoengine.MapField)
 def convert_dict_to_jsonstring(field, registry=None):
-    return JSONString(description=field.db_field, required=not field.null)
+    return JSONString(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.DateTimeField)
 def convert_date_to_string(field, registry=None):
-    return String(description=field.db_field, required=not field.null)
+    return String(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
@@ -77,7 +77,7 @@ def convert_field_to_list(field, registry=None):
             and not isinstance(field.field, relations):
         base_type = type(base_type)
 
-    return List(base_type, description=field.db_field, required=not field.null)
+    return List(base_type, description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)

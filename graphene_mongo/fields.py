@@ -9,6 +9,8 @@ from graphene.relay.connection import PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from graphql_relay.node.node import from_global_id
 from graphene.types.argument import to_arguments
+from graphene.types.dynamic import Dynamic
+from graphene.types.structures import Structure
 
 from .utils import get_model_reference_fields
 
@@ -72,15 +74,16 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def field_args(self):
-        def is_filterable(kv):
-            return hasattr(kv[1], '_type') \
-                and callable(getattr(kv[1]._type, '_of_type', None))
+        def is_filterable(v):
+            return not isinstance(v, (ConnectionField, Dynamic))
 
-        return reduce(
-            lambda r, kv: r.update(
-                {kv[0]: kv[1]._type._of_type()}) or r if is_filterable(kv) else r,
-            self.fields.items(), {}
-        )
+        def get_type(v):
+            if isinstance(v.type, Structure):
+                return v.type.of_type()
+            return v.type()
+
+        return {k: get_type(v) for k, v in self.fields.items()
+                if is_filterable(v)}
 
     @property
     def reference_args(self):
