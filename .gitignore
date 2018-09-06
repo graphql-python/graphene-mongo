@@ -1,6 +1,7 @@
 .coverage
 .cache/
 .eggs/
+.idea/
 _build/
 build/
 dist/
