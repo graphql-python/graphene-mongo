@@ -70,8 +70,8 @@ def test_should_float_convert_float():
     assert_conversion(mongoengine.FloatField, graphene.Float)
 
 
-def test_should_date_convert_string():
-    assert_conversion(mongoengine.DateTimeField, graphene.String)
+def test_should_datetime_convert_datetime():
+    assert_conversion(mongoengine.DateTimeField, graphene.DateTime)
 
 
 def test_should_dict_convert_json():
