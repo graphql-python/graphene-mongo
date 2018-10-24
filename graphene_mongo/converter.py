@@ -1,5 +1,16 @@
-from graphene import (ID, Boolean, Dynamic, Field, Float, Int, List,
-                      NonNull, String, is_node)
+from graphene import (
+    ID,
+    Boolean,
+    DateTime,
+    Dynamic,
+    Field,
+    Float,
+    Int,
+    List,
+    NonNull,
+    String,
+    is_node
+)
 from graphene.types.json import JSONString
 
 import mongoengine
@@ -54,8 +65,8 @@ def convert_dict_to_jsonstring(field, registry=None):
 
 
 @convert_mongoengine_field.register(mongoengine.DateTimeField)
-def convert_date_to_string(field, registry=None):
-    return String(description=field.db_field, required=field.required)
+def convert_field_to_datetime(field, registry=None):
+    return DateTime(description=field.db_field, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
