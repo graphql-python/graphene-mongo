@@ -1,4 +1,6 @@
 import pytest
+
+from datetime import datetime
 from .models import (
     Article, Editor, EmbeddedArticle, Player,
     Reporter, Child, ProfessorMetadata, ProfessorVector,
@@ -31,9 +33,10 @@ def fixtures():
     editor3.save()
 
     Article.drop_collection()
-    article1 = Article(headline='Hello', editor=editor1)
+    pub_date = datetime.strptime('2020-01-01', '%Y-%m-%d')
+    article1 = Article(headline='Hello', editor=editor1, pub_date=pub_date)
     article1.save()
-    article2 = Article(headline='World', editor=editor2)
+    article2 = Article(headline='World', editor=editor2, pub_date=pub_date)
     article2.save()
 
     Reporter.drop_collection()
