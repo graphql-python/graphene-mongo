@@ -20,7 +20,6 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -32,7 +31,7 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     install_requires=[
-        'graphene >=2.0',
+        'graphene>=2.1.3,<3',
         'mongoengine>=0.15.0',
         'singledispatch>=3.4.0.3',
         'iso8601>=0.1.12'
