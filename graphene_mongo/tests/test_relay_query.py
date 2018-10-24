@@ -218,6 +218,7 @@ def test_should_filter(fixtures):
                 edges {
                     node {
                         headline,
+                        pubDate,
                         editor {
                             firstName
                         }
@@ -234,7 +235,8 @@ def test_should_filter(fixtures):
                         'headline': 'World',
                         'editor': {
                             'firstName': 'Grant'
-                        }
+                        },
+                        'pubDate': '2020-01-01T00:00:00'
                     }
                 }
             ]
