@@ -57,6 +57,9 @@ def fixtures():
     article2 = Article(headline='World', editor=editor2, pub_date=pub_date)
     article2.save()
 
+    article3 = Article(headline='Bye', editor=editor2, pub_date=pub_date)
+    article3.save()
+
     Reporter.drop_collection()
     reporter1 = Reporter(
         id='1',

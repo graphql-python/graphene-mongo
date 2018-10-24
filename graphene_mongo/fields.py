@@ -135,6 +135,7 @@ class MongoengineConnectionField(ConnectionField):
                     reference_obj = get_node_from_global_id(reference_fields[arg_name], info, args.pop(arg_name))
                     hydrated_references[arg_name] = reference_obj
             args.update(hydrated_references)
+
         if self._get_queryset:
             queryset_or_filters = self._get_queryset(model, info, **args)
             if isinstance(queryset_or_filters, mongoengine.QuerySet):

@@ -126,7 +126,60 @@ def test_should_query_reporter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['reporter']) == expected['reporter']
+    assert json.dumps(result.data['reporter'], sort_keys=True) \
+        == json.dumps(expected['reporter'], sort_keys=True)
+    # assert dict(result.data['reporter']) == expected['reporter']
+
+
+def test_should_query_reporters_with_nested_document(fixtures):
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        reporters = MongoengineConnectionField(ReporterNode)
+
+    query = '''
+        query ReporterQuery {
+            reporters(firstName: "Allen") {
+                edges {
+                    node {
+                        firstName,
+                        lastName,
+                        email,
+                        articles(headline: "Hello") {
+                             edges {
+                                  node {
+                                       headline
+                                  }
+                             }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'reporter': {
+            'firstName': 'Allen',
+            'lastName': 'Iverson',
+            'email': 'ai@gmail.com',
+            'articles': {
+                'edges': [
+                    {
+                        'node': {
+                            'headline': 'Hello'
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    # assert not result.errors
+    # print(dict(result.data['reporters']))
+    # assert json.dumps(result.data['reporter'], sort_keys=True) \
+    #     == json.dumps(expected['reporter'], sort_keys=True)
 
 
 def test_should_query_all_editors(fixtures, fixtures_dirname):
