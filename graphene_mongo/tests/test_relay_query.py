@@ -314,17 +314,24 @@ def test_should_filter_through_inheritance(fixtures):
                     'node': {
                         'bar': 'bar',
                         'baz': 'baz',
-                        'loc': '{"type": "Point", "coordinates": [10, 20]}'
                     }
                 }
             ]
         }
     }
+    loc = {
+         'type': 'Point',
+         'coordinates': [10, 20]
+    }
+    loc_json_string = json.dumps(loc, sort_keys=True)
     schema = graphene.Schema(query=Query)
+
     result = schema.execute(query)
+    result_loc = json.loads(result.data['children']['edges'][0]['node'].pop('loc'))
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(
         expected, sort_keys=True)
+    assert json.dumps(result_loc, sort_keys=True) == loc_json_string
 
 
 def test_should_get_node_by_id(fixtures):
