@@ -5,7 +5,7 @@ from .models import (
     Article, Editor, EmbeddedArticle, Player,
     Reporter, Child, ProfessorMetadata, ProfessorVector,
     ChildRegisteredBefore, ChildRegisteredAfter,
-    ParentWithRelationship
+    ParentWithRelationship,
 )
 
 
@@ -95,7 +95,7 @@ def fixtures():
     child1 = Child(bar='BAR', baz='BAZ')
     child1.save()
 
-    child2 = Child(bar='bar', baz='baz')
+    child2 = Child(bar='bar', baz='baz', loc=[10, 20])
     child2.save()
 
     ProfessorVector.drop_collection()
