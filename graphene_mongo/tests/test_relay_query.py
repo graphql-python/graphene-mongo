@@ -300,7 +300,8 @@ def test_should_filter_through_inheritance(fixtures):
                 edges {
                     node {
                         bar,
-                        baz
+                        baz,
+                        loc
                     }
                 }
             }
@@ -313,6 +314,7 @@ def test_should_filter_through_inheritance(fixtures):
                     'node': {
                         'bar': 'bar',
                         'baz': 'baz',
+                        'loc': '{"type": "Point", "coordinates": [10, 20]}'
                     }
                 }
             ]

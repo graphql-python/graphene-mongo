@@ -5,7 +5,7 @@ from mongoengine import (
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField,
     FloatField, EmbeddedDocumentListField, ListField,
-    MapField, ReferenceField, StringField
+    MapField, PointField, ReferenceField, StringField
 )
 
 connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
@@ -18,13 +18,6 @@ class Editor(Document):
     first_name = StringField(required=True)
     last_name = StringField(required=True)
     metadata = MapField(field=StringField())
-
-
-class Pet(Document):
-
-    meta = {'collection': 'test_pet'}
-    name = StringField(max_length=16, required=True)
-    reporter_id = StringField()
 
 
 class Article(Document):
@@ -82,6 +75,7 @@ class Child(Parent):
 
     meta = {'collection': 'test_child'}
     baz = StringField()
+    loc = PointField()
 
 
 class ProfessorMetadata(EmbeddedDocument):
