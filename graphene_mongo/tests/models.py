@@ -91,6 +91,7 @@ class ProfessorVector(Document):
 
     meta = {'collection': 'test_professor_vector'}
     vec = ListField(FloatField())
+    last_name = StringField()
     metadata = EmbeddedDocumentField(ProfessorMetadata)
 
 

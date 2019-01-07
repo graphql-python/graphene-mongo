@@ -72,8 +72,7 @@ class MongoengineConnectionField(ConnectionField):
     def args(self, args):
         self._base_args = args
 
-    @property
-    def field_args(self):
+    def _field_args(self, items):
         def is_filterable(v):
             return not isinstance(v, (ConnectionField, Dynamic))
 
@@ -82,16 +81,35 @@ class MongoengineConnectionField(ConnectionField):
                 return v.type.of_type()
             return v.type()
 
-        return {k: get_type(v) for k, v in self.fields.items()
-                if is_filterable(v)}
+        return {k: get_type(v) for k, v in items if is_filterable(v)}
+
+    @property
+    def field_args(self):
+        return self._field_args(self.fields.items())
 
     @property
     def reference_args(self):
         def get_reference_field(r, kv):
             if callable(getattr(kv[1], 'get_type', None)):
                 node = kv[1].get_type()._type._meta
+                # print('abaw', kv[0], node)
+                # print(node.__dict__)
+                # print(node.fields['id'])
+                # print(type(node.fields['id']))
+                # print(node.fields['id']._type)
+                # print(node.fields['id']._type.of_type())
+                # print('?')
                 r.update({kv[0]: node.fields['id']._type.of_type()})
+                """
+                print('a', node.__dict__)
+                print('b', kv[1])
+                print('c', node)
+                print('d', node.__dict__)
+                """
+                # r.update({kv[0]: kv[1]._type.of_type()})
             return r
+        print('waw', self.fields.items())
+        # return {}
         return reduce(get_reference_field, self.fields.items(), {})
 
     @property
@@ -107,6 +125,7 @@ class MongoengineConnectionField(ConnectionField):
         objs = model.objects()
 
         if args:
+            print('here!!!!')
             reference_fields = get_model_reference_fields(model)
             reference_args = {}
             for arg_name, arg in args.copy().items():
@@ -115,6 +134,7 @@ class MongoengineConnectionField(ConnectionField):
                     pk = from_global_id(args.pop(arg_name))[-1]
                     reference_obj = reference_model.document_type_obj.objects(pk=pk).get()
                     reference_args[arg_name] = reference_obj
+            print('reference_args', reference_args)
 
             args.update(reference_args)
             first = args.pop('first', None)
