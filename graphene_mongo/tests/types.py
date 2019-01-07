@@ -106,24 +106,35 @@ class ParentNode(MongoengineObjectType):
 
 
 class ChildNode(MongoengineObjectType):
+
     class Meta:
         model = Child
         interfaces = (Node,)
 
 
 class ChildRegisteredBeforeNode(MongoengineObjectType):
+
     class Meta:
         model = ChildRegisteredBefore
         interfaces = (Node, )
 
 
 class ParentWithRelationshipNode(MongoengineObjectType):
+
     class Meta:
         model = ParentWithRelationship
         interfaces = (Node, )
 
 
 class ChildRegisteredAfterNode(MongoengineObjectType):
+
     class Meta:
         model = ChildRegisteredAfter
+        interfaces = (Node, )
+
+
+class ProfessorVectorNode(MongoengineObjectType):
+
+    class Meta:
+        model = ProfessorVector
         interfaces = (Node, )
