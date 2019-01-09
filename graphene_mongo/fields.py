@@ -63,10 +63,13 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def args(self):
-        return to_arguments(
+        args = to_arguments(
             self._base_args or OrderedDict(),
             dict(self.field_args, **self.reference_args)
         )
+        print('args', args)
+        return args
+
 
     @args.setter
     def args(self, args):
@@ -92,24 +95,11 @@ class MongoengineConnectionField(ConnectionField):
         def get_reference_field(r, kv):
             if callable(getattr(kv[1], 'get_type', None)):
                 node = kv[1].get_type()._type._meta
-                # print('abaw', kv[0], node)
-                # print(node.__dict__)
-                # print(node.fields['id'])
-                # print(type(node.fields['id']))
-                # print(node.fields['id']._type)
-                # print(node.fields['id']._type.of_type())
-                # print('?')
-                r.update({kv[0]: node.fields['id']._type.of_type()})
-                """
-                print('a', node.__dict__)
-                print('b', kv[1])
-                print('c', node)
-                print('d', node.__dict__)
-                """
-                # r.update({kv[0]: kv[1]._type.of_type()})
+                if isinstance(kv[1], Dynamic):
+                    r.update({kv[0]: self._field_args(node.fields.items())})
+                else:
+                    r.update({kv[0]: node.fields['id']._type.of_type()})
             return r
-        print('waw', self.fields.items())
-        # return {}
         return reduce(get_reference_field, self.fields.items(), {})
 
     @property
@@ -123,9 +113,8 @@ class MongoengineConnectionField(ConnectionField):
             return [], 0
 
         objs = model.objects()
-
+        print('hahaha', args)
         if args:
-            print('here!!!!')
             reference_fields = get_model_reference_fields(model)
             reference_args = {}
             for arg_name, arg in args.copy().items():
@@ -134,7 +123,6 @@ class MongoengineConnectionField(ConnectionField):
                     pk = from_global_id(args.pop(arg_name))[-1]
                     reference_obj = reference_model.document_type_obj.objects(pk=pk).get()
                     reference_args[arg_name] = reference_obj
-            print('reference_args', reference_args)
 
             args.update(reference_args)
             first = args.pop('first', None)
