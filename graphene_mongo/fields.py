@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import mongoengine
 from collections import OrderedDict
 from functools import partial, reduce
 
@@ -69,7 +70,6 @@ class MongoengineConnectionField(ConnectionField):
         )
         return args
 
-
     @args.setter
     def args(self, args):
         self._base_args = args
@@ -94,7 +94,7 @@ class MongoengineConnectionField(ConnectionField):
         def get_reference_field(r, kv):
             if callable(getattr(kv[1], 'get_type', None)):
                 node = kv[1].get_type()._type._meta
-                if not isinstance(kv[1], Dynamic):
+                if not issubclass(node.model, mongoengine.EmbeddedDocument):
                     r.update({kv[0]: node.fields['id']._type.of_type()})
             return r
         return reduce(get_reference_field, self.fields.items(), {})
