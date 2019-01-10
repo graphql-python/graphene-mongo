@@ -67,7 +67,6 @@ class MongoengineConnectionField(ConnectionField):
             self._base_args or OrderedDict(),
             dict(self.field_args, **self.reference_args)
         )
-        print('args', args)
         return args
 
 
@@ -95,9 +94,7 @@ class MongoengineConnectionField(ConnectionField):
         def get_reference_field(r, kv):
             if callable(getattr(kv[1], 'get_type', None)):
                 node = kv[1].get_type()._type._meta
-                if isinstance(kv[1], Dynamic):
-                    r.update({kv[0]: self._field_args(node.fields.items())})
-                else:
+                if not isinstance(kv[1], Dynamic):
                     r.update({kv[0]: node.fields['id']._type.of_type()})
             return r
         return reduce(get_reference_field, self.fields.items(), {})
@@ -113,7 +110,6 @@ class MongoengineConnectionField(ConnectionField):
             return [], 0
 
         objs = model.objects()
-        print('hahaha', args)
         if args:
             reference_fields = get_model_reference_fields(model)
             reference_args = {}

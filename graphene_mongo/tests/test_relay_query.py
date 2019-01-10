@@ -738,7 +738,7 @@ def test_should_query_with_embedded_document(fixtures):
 
     query = '''
     query {
-      allProfessors(lastName: "5e06aa20-6805-4eef-a144-5615dedbe32b") {
+      allProfessors {
         edges {
             node {
                 vec
