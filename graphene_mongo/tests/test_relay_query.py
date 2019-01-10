@@ -729,7 +729,7 @@ def test_should_lazy_reference(fixtures):
     assert json.dumps(result.data, sort_keys=True) == json.dumps(
         expected, sort_keys=True)
 
-# @pytest.mark.skip(reason="no way of currently testing this")
+
 def test_should_query_with_embedded_document(fixtures):
 
     class Query(graphene.ObjectType):
@@ -741,7 +741,10 @@ def test_should_query_with_embedded_document(fixtures):
       allProfessors {
         edges {
             node {
-                vec
+                vec,
+                metadata {
+                     firstName
+                }
             }
         }
       }
@@ -752,7 +755,10 @@ def test_should_query_with_embedded_document(fixtures):
             'edges': [
                 {
                     'node': {
-                        'vec': [1.0, 2.3]
+                        'vec': [1.0, 2.3],
+                        'metadata': {
+                             'firstName': 'Steven'
+                        }
                     }
 
                 }
@@ -761,6 +767,5 @@ def test_should_query_with_embedded_document(fixtures):
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
-    print(result.data)
-    # assert not result.errors
-    # assert dict(result.data['allProfessors']) == expected['allProfessors']
+    assert not result.errors
+    assert dict(result.data['allProfessors']) == expected['allProfessors']
