@@ -1,4 +1,5 @@
 import json
+import pytest
 
 import graphene
 
@@ -11,7 +12,8 @@ from .types import (ArticleNode,
                     PlayerNode,
                     ReporterNode,
                     ChildNode,
-                    ParentWithRelationshipNode)
+                    ParentWithRelationshipNode,
+                    ProfessorVectorNode,)
 from ..fields import MongoengineConnectionField
 
 
@@ -726,3 +728,44 @@ def test_should_lazy_reference(fixtures):
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(
         expected, sort_keys=True)
+
+
+def test_should_query_with_embedded_document(fixtures):
+
+    class Query(graphene.ObjectType):
+
+        all_professors = MongoengineConnectionField(ProfessorVectorNode)
+
+    query = '''
+    query {
+      allProfessors {
+        edges {
+            node {
+                vec,
+                metadata {
+                     firstName
+                }
+            }
+        }
+      }
+    }
+    '''
+    expected = {
+        'allProfessors': {
+            'edges': [
+                {
+                    'node': {
+                        'vec': [1.0, 2.3],
+                        'metadata': {
+                             'firstName': 'Steven'
+                        }
+                    }
+
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert dict(result.data['allProfessors']) == expected['allProfessors']
