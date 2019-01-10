@@ -64,11 +64,10 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def args(self):
-        args = to_arguments(
+        return to_arguments(
             self._base_args or OrderedDict(),
             dict(self.field_args, **self.reference_args)
         )
-        return args
 
     @args.setter
     def args(self, args):
