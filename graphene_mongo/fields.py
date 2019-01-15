@@ -4,7 +4,6 @@ import mongoengine
 from collections import OrderedDict
 from functools import partial, reduce
 
-from graphene import Field, List
 from graphene.relay import ConnectionField
 from graphene.relay.connection import PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
@@ -14,25 +13,6 @@ from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
 
 from .utils import get_model_reference_fields
-
-
-# noqa
-class MongoengineListField(Field):
-
-    def __init__(self, _type, *args, **kwargs):
-        super(MongoengineListField, self).__init__(
-            List(_type), *args, **kwargs)
-
-    @property
-    def model(self):
-        return self.type.of_type._meta.node._meta.model
-
-    # @staticmethod
-    # def list_resolver(resolver, root, info, **args):
-    #    return maybe_queryset(resolver(root, info, **args))
-
-    def get_resolver(self, parent_resolver):
-        return partial(self.list_resolver, parent_resolver)
 
 
 class MongoengineConnectionField(ConnectionField):
