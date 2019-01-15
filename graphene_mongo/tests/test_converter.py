@@ -78,7 +78,7 @@ def test_should_dict_convert_json():
     assert_conversion(mongoengine.DictField, graphene.JSONString)
 
 
-def test_should_map_convertjson():
+def test_should_map_convert_json():
     assert_conversion(mongoengine.MapField, graphene.JSONString, field=mongoengine.StringField())
 
 
