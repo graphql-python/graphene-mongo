@@ -12,11 +12,11 @@ from graphene import (
     String,
     is_node
 )
-from graphene.types.resolver import dict_resolver
 from graphene.types.json import JSONString
 
 import mongoengine
 
+from .advanced_types import PointType
 from .fields import MongoengineConnectionField
 from .utils import import_single_dispatch
 
@@ -66,25 +66,9 @@ def convert_dict_to_jsonstring(field, registry=None):
     return JSONString(description=field.db_field, required=field.required)
 
 
-def resolve_type(self, info):
-    return self['type']
-
-def resolve_cooridinates(self, info):
-    return self['coordinates']
-
-
 @convert_mongoengine_field.register(mongoengine.PointField)
 def convert_point_to_field(field, register=None):
-    class Point(ObjectType):
-        type = String(resolver=resolve_type)
-        coordinates = List(Float,resolver=resolve_cooridinates)
-        def resolve_type(self, info):
-            return self['type']
-
-        def resolve_cooridinates(self, info):
-            return self['coordinates']
-
-    return Field(Point)
+    return Field(PointType)
 
 
 @convert_mongoengine_field.register(mongoengine.DateTimeField)
