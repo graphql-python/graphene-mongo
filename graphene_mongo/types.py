@@ -9,7 +9,7 @@ from mongoengine import ListField
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry
 from .utils import (get_model_fields, is_valid_mongoengine_model)
-
+from .tests.models import Child
 
 def construct_fields(model, registry, only_fields, exclude_fields):
     _model_fields = get_model_fields(model)
@@ -35,6 +35,9 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             continue
         fields[name] = converted
 
+    # print(model, model == Child)
+    # if model == Child:
+    #     print(fields)
     return fields, self_referenced
 
 
