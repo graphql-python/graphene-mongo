@@ -289,19 +289,24 @@ def test_should_query_child(fixtures):
         }
     '''
     expected = {
-        'editors': [{
-        }]
+        'children': [
+            {
+                'bar': 'BAR',
+                'baz': 'BAZ',
+                'loc': None
+            }, {
+                'bar': 'bar',
+                'baz': 'baz',
+                'loc': {
+                    'type': 'Point',
+                    'coordinates': [10.0, 20.0]
+                }
+            }
+        ]
     }
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
-    # assert not result.errors
-    print('result.data', result.data)
-    # print('abaw')
-    print(ChildType._meta.fields)
-    # metadata = result.data['editor'].pop('metadata')
-    # expected_metadata = expected['editor'].pop('metadata')
-    # assert(json.loads(metadata)) == dict(json.loads(expected_metadata))
-    # assert dict(result.data['editor']) == expected['editor']
-    # assert all(item in result.data['editors'] for item in expected['editors'])
-
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == \
+        json.dumps(expected, sort_keys=True)
