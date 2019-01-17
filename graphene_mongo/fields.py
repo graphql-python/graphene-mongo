@@ -4,7 +4,6 @@ import mongoengine
 from collections import OrderedDict
 from functools import partial, reduce
 
-from graphene import Field, List
 from graphene.relay import ConnectionField
 from graphene.relay.connection import PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
@@ -13,26 +12,8 @@ from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
 
+from .advanced_types import PointFieldType
 from .utils import get_model_reference_fields
-
-
-# noqa
-class MongoengineListField(Field):
-
-    def __init__(self, _type, *args, **kwargs):
-        super(MongoengineListField, self).__init__(
-            List(_type), *args, **kwargs)
-
-    @property
-    def model(self):
-        return self.type.of_type._meta.node._meta.model
-
-    # @staticmethod
-    # def list_resolver(resolver, root, info, **args):
-    #    return maybe_queryset(resolver(root, info, **args))
-
-    def get_resolver(self, parent_resolver):
-        return partial(self.list_resolver, parent_resolver)
 
 
 class MongoengineConnectionField(ConnectionField):
@@ -75,7 +56,13 @@ class MongoengineConnectionField(ConnectionField):
 
     def _field_args(self, items):
         def is_filterable(v):
-            return not isinstance(v, (ConnectionField, Dynamic))
+            if isinstance(v, (ConnectionField, Dynamic)):
+                return False
+            # FIXME: Skip PointTypeField at this moment.
+            if not isinstance(v.type, Structure) \
+                    and isinstance(v.type(), PointFieldType):
+                return False
+            return True
 
         def get_type(v):
             if isinstance(v.type, Structure):
