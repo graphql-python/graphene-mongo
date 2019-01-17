@@ -92,6 +92,12 @@ def convert_field_to_datetime(field, registry=None):
     return DateTime(description=get_field_description(field, registry), required=field.required)
 
 
+@convert_mongoengine_field.register(mongoengine.FileField)
+def convert_field_to_none(field, register=None):
+    # FIXME
+    return None
+
+
 @convert_mongoengine_field.register(mongoengine.ListField)
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentListField)
 def convert_field_to_list(field, registry=None):
