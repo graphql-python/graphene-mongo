@@ -1,11 +1,16 @@
 import graphene
 
 
+__all__ = [
+    'PointFieldType'
+]
+
+
 def _resolve_point_type_coordinates(self, info):
     return self['coordinates']
 
 
-class PointType(graphene.ObjectType):
+class PointFieldType(graphene.ObjectType):
 
     type = graphene.String()
     coordinates = graphene.List(
