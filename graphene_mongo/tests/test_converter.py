@@ -1,8 +1,9 @@
 import graphene
 import mongoengine
 
-from graphene import Dynamic
-from graphene import Node
+from graphene import (
+    Dynamic, Node
+)
 
 from py.test import raises
 
@@ -78,12 +79,15 @@ def test_should_dict_convert_json():
     assert_conversion(mongoengine.DictField, graphene.JSONString)
 
 
-def test_should_map_convertjson():
+def test_should_map_convert_json():
     assert_conversion(mongoengine.MapField, graphene.JSONString, field=mongoengine.StringField())
 
 
-def test_should_point_convert_json():
-    assert_conversion(mongoengine.PointField, graphene.JSONString)
+def test_should_point_convert_field():
+    graphene_type = convert_mongoengine_field(mongoengine.PointField())
+    assert isinstance(graphene_type, graphene.Field)
+    assert isinstance(graphene_type.type.type, graphene.String)
+    assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
 def test_should_field_convert_list():

@@ -4,10 +4,10 @@ import graphene
 
 from .setup import fixtures
 from .models import (
-    Editor, Player, Reporter, ProfessorVector
+    Child, Editor, Player, Reporter, ProfessorVector
 )
 from .types import (
-    EditorType, PlayerType, ReporterType, ProfessorVectorType
+    ChildType, EditorType, PlayerType, ReporterType, ProfessorVectorType
 )
 
 
@@ -261,6 +261,51 @@ def test_should_query_with_embedded_document(fixtures):
         }
     }
     schema = graphene.Schema(query=Query, types=[ProfessorVectorType])
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == \
+        json.dumps(expected, sort_keys=True)
+
+
+def test_should_query_child(fixtures):
+
+    class Query(graphene.ObjectType):
+
+        children = graphene.List(ChildType)
+
+        def resolve_children(self, *args, **kwargs):
+            return list(Child.objects.all())
+
+    query = '''
+        query Query {
+            children {
+                bar,
+                baz,
+                loc {
+                     type,
+                     coordinates
+                }
+            }
+        }
+    '''
+    expected = {
+        'children': [
+            {
+                'bar': 'BAR',
+                'baz': 'BAZ',
+                'loc': None
+            }, {
+                'bar': 'bar',
+                'baz': 'baz',
+                'loc': {
+                    'type': 'Point',
+                    'coordinates': [10.0, 20.0]
+                }
+            }
+        ]
+    }
+
+    schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == \
