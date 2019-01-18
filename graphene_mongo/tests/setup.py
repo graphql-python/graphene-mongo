@@ -30,7 +30,7 @@ def fixtures():
     with open(image_filename, 'r') as f:
         editor1.avatar.put(f, content_type='image/jpeg')
     editor1.save()
-    print('hey:', editor1)
+
     editor2 = Editor(
         id='2',
         first_name='Grant',
