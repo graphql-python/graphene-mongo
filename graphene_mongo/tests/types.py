@@ -5,7 +5,7 @@ from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
     Parent, Child, ProfessorMetadata, ProfessorVector,
     ParentWithRelationship, ChildRegisteredBefore,
-    ChildRegisteredAfter
+    ChildRegisteredAfter, CellTower
 )
 
 
@@ -49,6 +49,12 @@ class ChildType(MongoengineObjectType):
 
     class Meta:
         model = Child
+
+
+class CellTowerType(MongoengineObjectType):
+
+    class Meta:
+        model = CellTower
 
 
 class ProfessorMetadataType(MongoengineObjectType):

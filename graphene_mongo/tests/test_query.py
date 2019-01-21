@@ -4,10 +4,10 @@ import graphene
 
 from .setup import fixtures
 from .models import (
-    Child, Editor, Player, Reporter, ProfessorVector
+    Child, Editor, Player, Reporter, ProfessorVector, Parent, CellTower
 )
 from .types import (
-    ChildType, EditorType, PlayerType, ReporterType, ProfessorVectorType
+    ChildType, EditorType, PlayerType, ReporterType, ProfessorVectorType, ParentType, CellTowerType
 )
 
 
@@ -300,6 +300,51 @@ def test_should_query_child(fixtures):
                 'loc': {
                     'type': 'Point',
                     'coordinates': [10.0, 20.0]
+                }
+            }
+        ]
+    }
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == \
+        json.dumps(expected, sort_keys=True)
+
+
+def test_should_query_cell_tower(fixtures):
+
+    class Query(graphene.ObjectType):
+
+        cell_towers = graphene.List(CellTowerType)
+
+        def resolve_cell_towers(self, *args, **kwargs):
+            return list(CellTower.objects.all())
+
+    query = '''
+        query Query {
+            cellTowers {
+                code,
+                coverageArea {
+                     type,
+                     coordinates
+                }
+            }
+        }
+    '''
+    expected = {
+        'cellTowers': [
+            {
+                'code': 'bar',
+                'coverageArea': {
+                    'type': 'MultiPolygon',
+                    'coordinates': [[[
+                        [-43.36556, -22.99669],
+                        [-43.36539, -23.01928],
+                        [-43.26583, -23.01802],
+                        [-43.36717, -22.98855],
+                        [-43.36636, -22.99351],
+                        [-43.36556, -22.99669]]]]
                 }
             }
         ]
