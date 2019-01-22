@@ -2,11 +2,12 @@ import graphene
 
 
 __all__ = [
-    'PointFieldType'
+    'PointFieldType',
+    'MultiPolygonFieldType'
 ]
 
 
-def _resolve_point_type_coordinates(self, info):
+def _resolve_type_coordinates(self, info):
     return self['coordinates']
 
 
@@ -14,7 +15,20 @@ class PointFieldType(graphene.ObjectType):
 
     type = graphene.String()
     coordinates = graphene.List(
-        graphene.Float, resolver=_resolve_point_type_coordinates)
+        graphene.Float, resolver=_resolve_type_coordinates)
+
+    def resolve_type(self, info):
+        return self['type']
+
+
+class MultiPolygonFieldType(graphene.ObjectType):
+
+    type = graphene.String()
+    coordinates = graphene.List(
+                    graphene.List(
+                        graphene.List(
+                            graphene.List(graphene.Float))),
+                    resolver=_resolve_type_coordinates)
 
     def resolve_type(self, info):
         return self['type']

@@ -5,7 +5,8 @@ from mongoengine import (
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField,
     FloatField, EmbeddedDocumentListField, ListField,
-    MapField, PointField, ReferenceField, StringField
+    MapField, PointField, ReferenceField, StringField,
+    MultiPolygonField
 )
 
 connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
@@ -69,6 +70,16 @@ class Parent(Document):
         'allow_inheritance': True
     }
     bar = StringField()
+    loc = MultiPolygonField()
+
+
+class CellTower(Document):
+
+    meta = {
+        'collection': 'test_cell_tower',
+    }
+    code = StringField()
+    coverage_area = MultiPolygonField()
 
 
 class Child(Parent):
