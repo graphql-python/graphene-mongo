@@ -5,7 +5,7 @@ from .models import (
     Article, Editor, EmbeddedArticle, Player,
     Reporter, Child, ProfessorMetadata, ProfessorVector,
     ChildRegisteredBefore, ChildRegisteredAfter,
-    ParentWithRelationship,
+    ParentWithRelationship, CellTower
 )
 
 
@@ -98,6 +98,15 @@ def fixtures():
     child2 = Child(bar='bar', baz='baz', loc=[10, 20])
     child2.save()
 
+    CellTower.drop_collection()
+    ct = CellTower(code='bar', coverage_area=[[[
+                        [-43.36556, -22.99669],
+                        [-43.36539, -23.01928],
+                        [-43.26583, -23.01802],
+                        [-43.36717, -22.98855],
+                        [-43.36636, -22.99351],
+                        [-43.36556, -22.99669]]]])
+    ct.save()
     ProfessorVector.drop_collection()
     professor_metadata = ProfessorMetadata(
         id='5e06aa20-6805-4eef-a144-5615dedbe32b',

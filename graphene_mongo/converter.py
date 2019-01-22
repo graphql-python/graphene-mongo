@@ -15,7 +15,7 @@ from graphene.types.json import JSONString
 
 import mongoengine
 
-from .advanced_types import PointFieldType
+from .advanced_types import PointFieldType, MultiPolygonFieldType
 from .fields import MongoengineConnectionField
 from .utils import import_single_dispatch
 
@@ -68,6 +68,11 @@ def convert_dict_to_jsonstring(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.PointField)
 def convert_point_to_field(field, register=None):
     return Field(PointFieldType)
+
+
+@convert_mongoengine_field.register(mongoengine.MultiPolygonField)
+def convert_multipolygon_to_field(field, register=None):
+    return Field(MultiPolygonFieldType)
 
 
 @convert_mongoengine_field.register(mongoengine.DateTimeField)

@@ -12,7 +12,7 @@ from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
 
-from .advanced_types import PointFieldType
+from .advanced_types import PointFieldType, MultiPolygonFieldType
 from .utils import get_model_reference_fields
 
 
@@ -60,7 +60,7 @@ class MongoengineConnectionField(ConnectionField):
                 return False
             # FIXME: Skip PointTypeField at this moment.
             if not isinstance(v.type, Structure) \
-                    and isinstance(v.type(), PointFieldType):
+                    and isinstance(v.type(), (PointFieldType, MultiPolygonFieldType)):
                 return False
             return True
 
