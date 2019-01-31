@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from collections.abc import Mapping
 
 from graphene import Field
 from graphene.relay import Connection, Node
@@ -11,7 +12,7 @@ from .registry import Registry, get_global_registry
 from .utils import (get_model_fields, is_valid_mongoengine_model)
 
 
-def construct_fields(model, registry, only_fields, exclude_fields):
+def construct_fields(model, registry, only_fields, exclude_fields, map_fields):
     _model_fields = get_model_fields(model)
     fields = OrderedDict()
     self_referenced = OrderedDict()
@@ -33,7 +34,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
         converted = convert_mongoengine_field(field, registry)
         if not converted:
             continue
-        fields[name] = converted
+        fields[map_fields.get(name, name)] = converted
 
     return fields, self_referenced
 
@@ -61,8 +62,9 @@ class MongoengineObjectType(ObjectType):
 
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
-                                    only_fields=(), exclude_fields=(), filter_fields=None, connection=None,
-                                    connection_class=None, use_connection=None, interfaces=(), **options):
+                                    only_fields=(), exclude_fields=(), filter_fields=None,
+                                    map_fields={}, connection=None, connection_class=None,
+                                    use_connection=None, interfaces=(), **options):
 
         assert is_valid_mongoengine_model(model), (
             'You need to pass a valid Mongoengine Model in {}.Meta, received "{}".'
@@ -76,8 +78,12 @@ class MongoengineObjectType(ObjectType):
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
 
+        assert isinstance(map_fields, Mapping), (
+            'The attribute map_fields in {}.Meta needs to be a mapping, received "{}".'
+        ).format(cls.__name__, type(map_fields).__name__)
+
         converted_fields, self_referenced = construct_fields(
-            model, registry, only_fields, exclude_fields
+            model, registry, only_fields, exclude_fields, map_fields
         )
         mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
         if use_connection is None and interfaces:
@@ -105,6 +111,7 @@ class MongoengineObjectType(ObjectType):
         # Save them for later
         _meta.only_fields = only_fields
         _meta.exclude_fields = exclude_fields
+        _meta.map_fields = map_fields
 
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
@@ -125,7 +132,7 @@ class MongoengineObjectType(ObjectType):
 
         converted_fields, self_referenced = construct_fields(
             cls._meta.model, cls._meta.registry,
-            cls._meta.only_fields, cls._meta.exclude_fields
+            cls._meta.only_fields, cls._meta.exclude_fields, cls._meta.map_fields
         )
 
         mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
