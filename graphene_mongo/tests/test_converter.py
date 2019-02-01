@@ -10,7 +10,7 @@ from py.test import raises
 from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
     ProfessorMetadata, ProfessorVector,
-)
+    Publisher)
 from .. import registry
 from ..converter import convert_mongoengine_field
 from ..fields import MongoengineConnectionField
@@ -115,6 +115,23 @@ def test_should_reference_convert_dynamic():
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == E
+
+
+def test_should_lazy_reference_convert_dynamic():
+
+    class P(MongoengineObjectType):
+
+        class Meta:
+            model = Publisher
+            interfaces = (Node,)
+
+    dynamic_field = convert_mongoengine_field(
+        Editor._fields['company'], P._meta.registry)
+
+    assert isinstance(dynamic_field, Dynamic)
+    graphene_type = dynamic_field.get_type()
+    assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == P
 
 
 def test_should_embedded_convert_dynamic():

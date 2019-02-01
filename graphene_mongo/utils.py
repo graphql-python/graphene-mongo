@@ -22,7 +22,7 @@ def get_model_reference_fields(model, excluding=None):
     attributes = dict()
     for attr_name, attr in model._fields.items():
         if attr_name in excluding \
-                or not isinstance(attr, mongoengine.fields.ReferenceField):
+                or not isinstance(attr, (mongoengine.fields.ReferenceField, mongoengine.fields.LazyReferenceField)):
             continue
         attributes[attr_name] = attr
     return attributes

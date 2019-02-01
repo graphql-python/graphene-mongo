@@ -4,12 +4,18 @@ from mongoengine import (
 )
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField,
-    FloatField, EmbeddedDocumentListField, ListField,
+    FloatField, EmbeddedDocumentListField, ListField, LazyReferenceField,
     MapField, PointField, ReferenceField, StringField,
     MultiPolygonField
 )
 
 connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
+
+
+class Publisher(Document):
+
+    meta = {'collection': 'test_publisher'}
+    name = StringField()
 
 
 class Editor(Document):
@@ -22,6 +28,7 @@ class Editor(Document):
     first_name = StringField(required=True, help_text="Editor's first name.", db_field='fname')
     last_name = StringField(required=True, help_text="Editor's last name.")
     metadata = MapField(field=StringField(), help_text="Arbitrary metadata.")
+    company = LazyReferenceField(Publisher)
 
 
 class Article(Document):

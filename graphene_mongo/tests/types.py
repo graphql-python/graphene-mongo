@@ -5,8 +5,14 @@ from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
     Parent, Child, ProfessorMetadata, ProfessorVector,
     ParentWithRelationship, ChildRegisteredBefore,
-    ChildRegisteredAfter, CellTower
-)
+    ChildRegisteredAfter, CellTower,
+    Publisher)
+
+
+class PublisherType(MongoengineObjectType):
+
+    class Meta:
+        model = Publisher
 
 
 class EditorType(MongoengineObjectType):
@@ -67,6 +73,13 @@ class ProfessorVectorType(MongoengineObjectType):
 
     class Meta:
         model = ProfessorVector
+
+
+class PublisherNode(MongoengineObjectType):
+
+    class Meta:
+        model = Publisher
+        interfaces = (Node,)
 
 
 class ArticleNode(MongoengineObjectType):
