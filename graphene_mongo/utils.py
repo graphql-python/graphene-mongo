@@ -1,7 +1,10 @@
-import inspect
-import mongoengine
+from __future__ import unicode_literals
 
+import inspect
 from collections import OrderedDict
+
+import mongoengine
+from graphene.utils.trim_docstring import trim_docstring
 
 
 def get_model_fields(model, excluding=None):
@@ -62,3 +65,25 @@ def get_type_for_document(schema, document):
             _type._meta, 'document', None)
         if document == type_document:
             return _type
+
+
+def get_field_description(field, registry=None):
+    """
+    Common metadata includes verbose_name and help_text.
+
+    http://docs.mongoengine.org/apireference.html#fields
+    """
+    parts = []
+    if hasattr(field, 'document_type'):
+        doc = trim_docstring(field.document_type.__doc__)
+        if doc:
+            parts.append(doc)
+    if hasattr(field, 'verbose_name'):
+        parts.append(field.verbose_name.title())
+    if hasattr(field, 'help_text'):
+        parts.append(field.help_text)
+    if field.db_field != field.name:
+        name_format = "(%s)" if parts else "%s"
+        parts.append(name_format % field.db_field)
+
+    return "\n".join(parts)
