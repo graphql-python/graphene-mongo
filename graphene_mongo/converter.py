@@ -114,3 +114,20 @@ def convert_field_to_dynamic(field, registry=None):
         return Field(_type, description=get_field_description(field, registry))
 
     return Dynamic(dynamic_type)
+
+
+@convert_mongoengine_field.register(mongoengine.LazyReferenceField)
+def convert_lazy_field_to_dynamic(field, registry=None):
+    model = field.document_type
+
+    def lazy_resolver(root, *args, **kwargs):
+        if getattr(root, field.name or field.db_name):
+            return getattr(root, field.name or field.db_name).fetch()
+
+    def dynamic_type():
+        _type = registry.get_type_for_model(model)
+        if not _type:
+            return None
+        return Field(_type, resolver=lazy_resolver, description=get_field_description(field, registry))
+
+    return Dynamic(dynamic_type)
