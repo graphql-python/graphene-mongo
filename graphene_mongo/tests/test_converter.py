@@ -221,3 +221,49 @@ def test_should_list_of_self_reference_convert_list():
     assert isinstance(graphene_field, graphene.List)
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == P
+
+
+def test_should_description_convert_common_metadata():
+
+    class A(MongoengineObjectType):
+
+        class Meta:
+            model = Article
+
+    headline_field = convert_mongoengine_field(
+        Article._fields['headline'], A._meta.registry
+    )
+    assert headline_field.kwargs['description'] == "The article headline."
+
+    pubDate_field = convert_mongoengine_field(
+        Article._fields['pub_date'], A._meta.registry
+    )
+    assert pubDate_field.kwargs['description'] == "Publication Date\nThe date of first press."
+
+    firstName_field = convert_mongoengine_field(
+        Editor._fields['first_name'], A._meta.registry
+    )
+    assert firstName_field.kwargs['description'] == "Editor's first name.\n(fname)"
+
+    metadata_field = convert_mongoengine_field(
+        Editor._fields['metadata'], A._meta.registry
+    )
+    assert metadata_field.kwargs['description'] == "Arbitrary metadata."
+
+
+def test_should_description_convert_reference_metadata():
+
+    class A(MongoengineObjectType):
+
+        class Meta:
+            model = Article
+
+    class E(MongoengineObjectType):
+
+        class Meta:
+            model = Editor
+
+    editor_field = convert_mongoengine_field(
+        Article._fields['editor'], A._meta.registry
+    ).get_type()
+    assert editor_field.description == "An Editor of a publication."
