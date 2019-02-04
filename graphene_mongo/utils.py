@@ -4,7 +4,9 @@ import inspect
 from collections import OrderedDict
 
 import mongoengine
+from graphene import Node
 from graphene.utils.trim_docstring import trim_docstring
+from graphql_relay import from_global_id
 
 
 def get_model_fields(model, excluding=None):
@@ -87,3 +89,12 @@ def get_field_description(field, registry=None):
         parts.append(name_format % field.db_field)
 
     return "\n".join(parts)
+
+
+def node_from_global_id(connection, _id):
+    try:
+        for interface in connection._meta.node._meta.interfaces:
+            if issubclass(interface, Node):
+                return interface.from_global_id(_id)
+    except AttributeError:
+        return from_global_id(_id)

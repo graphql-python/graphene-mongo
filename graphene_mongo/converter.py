@@ -16,15 +16,18 @@ from graphene.types.json import JSONString
 import mongoengine
 
 from .advanced_types import PointFieldType, MultiPolygonFieldType
-from .fields import MongoengineConnectionField
 from .utils import import_single_dispatch, get_field_description
 
 singledispatch = import_single_dispatch()
 
 
+class MongoEngineConversionError(Exception):
+    pass
+
+
 @singledispatch
 def convert_mongoengine_field(field, registry=None):
-    raise Exception(
+    raise MongoEngineConversionError(
         "Don't know how to convert the MongoEngine field %s (%s)" %
         (field, field.__class__))
 
@@ -83,6 +86,8 @@ def convert_field_to_datetime(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.ListField)
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentListField)
 def convert_field_to_list(field, registry=None):
+    from .fields import MongoengineConnectionField
+
     base_type = convert_mongoengine_field(field.field, registry=registry)
     if isinstance(base_type, (Dynamic)):
         base_type = base_type.get_type()
