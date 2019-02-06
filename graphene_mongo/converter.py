@@ -86,8 +86,6 @@ def convert_field_to_datetime(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.ListField)
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentListField)
 def convert_field_to_list(field, registry=None):
-    from .fields import MongoengineConnectionField
-
     base_type = convert_mongoengine_field(field.field, registry=registry)
     if isinstance(base_type, (Dynamic)):
         base_type = base_type.get_type()
@@ -96,7 +94,7 @@ def convert_field_to_list(field, registry=None):
         base_type = base_type._type
 
     if is_node(base_type):
-        return MongoengineConnectionField(base_type)
+        return base_type._meta.connection_field_class(base_type)
 
     # Non-relationship field
     relations = (mongoengine.ReferenceField, mongoengine.EmbeddedDocumentField)
