@@ -143,3 +143,4 @@ def fixtures():
     child3.parent = child4.parent = parent
     child3.save()
     child4.save()
+    return True

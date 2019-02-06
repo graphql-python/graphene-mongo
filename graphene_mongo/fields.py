@@ -4,23 +4,26 @@ from collections import OrderedDict
 from functools import partial, reduce
 
 import mongoengine
+from graphene import PageInfo
 from graphene.relay import ConnectionField
-from graphene.relay.connection import PageInfo
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure, List
-from graphql_relay import from_global_id
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .advanced_types import PointFieldType, MultiPolygonFieldType
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
-from .utils import get_model_reference_fields, node_from_global_id
+from .utils import get_model_reference_fields, global_id_via_node
 
 
 class MongoengineConnectionField(ConnectionField):
 
     def __init__(self, type, *args, **kwargs):
+        get_queryset = kwargs.pop('get_queryset', None)
+        if get_queryset:
+            assert callable(get_queryset), "Attribute `get_queryset` on {} must be callable.".format(self)
+        self._get_queryset = get_queryset
         super(MongoengineConnectionField, self).__init__(
             type,
             *args,
@@ -109,91 +112,65 @@ class MongoengineConnectionField(ConnectionField):
     def fields(self):
         return self._type._meta.fields
 
-    @classmethod
-    def get_query(cls, model, connection, info, **args):
+    def get_queryset(self, model, info, **args):
+        if self._get_queryset:
+            queryset_or_filters = self._get_queryset(model, info, **args)
+            if isinstance(queryset_or_filters, mongoengine.QuerySet):
+                return queryset_or_filters
+            else:
+                return model.objects(**queryset_or_filters)
+        return model.objects()
 
-        if not callable(getattr(model, 'objects', None)):
+    def default_resolver(self, _root, info, **args):
+        if not callable(getattr(self.model, 'objects', None)):
             return [], 0
 
-        objs = model.objects()
+        args = args or {}
+
+        connection_args = {
+            'first': args.pop('first', None),
+            'last': args.pop('last', None),
+            'before': args.pop('before', None),
+            'after': args.pop('after', None)
+        }
+
+        objs = self.get_queryset(self.model, info, **args)
+
         if args:
-            reference_fields = get_model_reference_fields(model)
+            reference_fields = get_model_reference_fields(self.model)
             reference_args = {}
             for arg_name, arg in args.copy().items():
                 if arg_name in reference_fields:
-                    reference_model = model._fields[arg_name]
-                    pk = node_from_global_id(connection, args.pop(arg_name))[-1]
+                    reference_model = self.model._fields[arg_name]
+                    pk = global_id_via_node(self.node_type, args.pop(arg_name))[-1]
                     reference_obj = reference_model.document_type_obj.objects(pk=pk).get()
                     reference_args[arg_name] = reference_obj
 
             args.update(reference_args)
-            first = args.pop('first', None)
-            last = args.pop('last', None)
             _id = args.pop('id', None)
-            before = args.pop('before', None)
-            after = args.pop('after', None)
-
             if _id is not None:
-                # https://github.com/graphql-python/graphene/issues/124
-                args['pk'] = node_from_global_id(connection, _id)[-1]
+                args['pk'] = global_id_via_node(self.node_type, _id)[-1]
 
             objs = objs.filter(**args)
 
-            # https://github.com/graphql-python/graphene-mongo/issues/21
-            if after is not None:
-                _after = int(from_global_id(after)[-1])
-                objs = objs[_after:]
-
-            if before is not None:
-                _before = int(from_global_id(before)[-1])
-                objs = objs[:_before]
-
-            list_length = objs.count()
-
-            if first is not None:
-                objs = objs[:first]
-            if last is not None:
-                # https://github.com/graphql-python/graphene-mongo/issues/20
-                objs = objs[max(0, list_length - last):]
-        else:
-            list_length = objs.count()
-
-        return objs, list_length
-
-    # noqa
-    @classmethod
-    def merge_querysets(cls, default_queryset, queryset):
-        return queryset & default_queryset
-
-    """
-    Notes: Not sure how does this work :(
-    """
-    @classmethod
-    def connection_resolver(cls, resolver, connection, model, root, info, **args):
-        iterable = resolver(root, info, **args)
-
-        if iterable or iterable == []:
-            _len = len(iterable)
-        else:
-            iterable, _len = cls.get_query(model, connection, info, **args)
-
-            if root:
-                # If we have a root, we must be at least 1 layer in, right?
-                _len = 0
-
         connection = connection_from_list_slice(
-            iterable,
-            args,
-            slice_start=0,
-            list_length=_len,
-            list_slice_length=_len,
-            connection_type=connection,
+            list_slice=objs,
+            args=connection_args,
+            list_length=objs.count(),
+            connection_type=self.type,
+            edge_type=self.type.Edge,
             pageinfo_type=PageInfo,
-            edge_type=connection.Edge,
         )
-        connection.iterable = iterable
-        connection.length = _len
+        connection.iterable = objs
         return connection
 
+    def chained_resolver(self, resolver, root, info, **args):
+        resolved = resolver(root, info, **args)
+        if resolved is not None:
+            return resolved
+        return self.default_resolver(root, info, **args)
+
     def get_resolver(self, parent_resolver):
-        return partial(self.connection_resolver, parent_resolver, self.type, self.model)
+        super_resolver = self.resolver or parent_resolver
+        resolver = partial(self.chained_resolver, super_resolver)
+        return partial(self.connection_resolver, resolver, self.type)

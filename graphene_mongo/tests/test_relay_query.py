@@ -514,7 +514,7 @@ def test_should_last_n(fixtures):
         players = MongoengineConnectionField(PlayerNode)
 
     query = '''
-        query EditorQuery {
+        query PlayerQuery {
             players(last: 2) {
                 edges {
                     cursor,

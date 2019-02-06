@@ -1,11 +1,12 @@
 from collections import OrderedDict
 
-from graphene import Field
+from graphene import Field, ConnectionField
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
 from mongoengine import ListField
 
+from graphene_mongo import MongoengineConnectionField
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry
 from .utils import (get_model_fields, is_valid_mongoengine_model)
@@ -61,18 +62,20 @@ class MongoengineObjectType(ObjectType):
 
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
-                                    only_fields=(), exclude_fields=(), filter_fields=None, connection=None,
-                                    connection_class=None, use_connection=None, interfaces=(), **options):
+                                    only_fields=(), exclude_fields=(), filter_fields=None,
+                                    connection=None, connection_class=None, use_connection=None,
+                                    connection_field_class=None, interfaces=(), **options):
 
         assert is_valid_mongoengine_model(model), (
-            'You need to pass a valid Mongoengine Model in {}.Meta, received "{}".'
-        ).format(cls.__name__, model)
+            'The attribute model in {}.Meta must be a valid Mongoengine Model. '
+            'Received "{}" instead.'
+        ).format(cls.__name__, type(model))
 
         if not registry:
             registry = get_global_registry()
 
         assert isinstance(registry, Registry), (
-            'The attribute registry in {} needs to be an instance of '
+            'The attribute registry in {}.Meta needs to be an instance of '
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
 
@@ -93,8 +96,17 @@ class MongoengineObjectType(ObjectType):
 
         if connection is not None:
             assert issubclass(connection, Connection), (
-                'The connection must be a Connection. Received {}'
-            ).format(connection.__name__)
+                'The attribute connection in {}.Meta must be of type Connection. '
+                'Received "{}" instead.'
+            ).format(cls.__name__, type(connection))
+
+        if connection_field_class is not None:
+            assert issubclass(connection_field_class, ConnectionField), (
+                'The attribute connection_field_class in {}.Meta must be of type ConnectionField. '
+                'Received "{}" instead.'
+            ).format(cls.__name__, type(connection_field_class))
+        else:
+            connection_field_class = MongoengineConnectionField
 
         _meta = MongoengineObjectTypeOptions(cls)
         _meta.model = model
@@ -102,6 +114,7 @@ class MongoengineObjectType(ObjectType):
         _meta.fields = mongoengine_fields
         _meta.filter_fields = filter_fields
         _meta.connection = connection
+        _meta.connection_field_class = connection_field_class
         # Save them for later
         _meta.only_fields = only_fields
         _meta.exclude_fields = exclude_fields

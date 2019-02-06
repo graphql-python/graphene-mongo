@@ -91,9 +91,9 @@ def get_field_description(field, registry=None):
     return "\n".join(parts)
 
 
-def node_from_global_id(connection, _id):
+def global_id_via_node(node, _id):
     try:
-        for interface in connection._meta.node._meta.interfaces:
+        for interface in node._meta.interfaces:
             if issubclass(interface, Node):
                 return interface.from_global_id(_id)
     except AttributeError:
