@@ -159,6 +159,15 @@ def test_should_convert_none():
     assert graphene_type is None
 
 
+def test_should_convert_none_lazily():
+    registry.reset_global_registry()
+    dynamic_field = convert_mongoengine_field(
+        Editor._fields['company'], registry.get_global_registry())
+    assert isinstance(dynamic_field, Dynamic)
+    graphene_type = dynamic_field.get_type()
+    assert graphene_type is None
+
+
 def test_should_list_of_reference_convert_list():
 
     class A(MongoengineObjectType):
