@@ -117,7 +117,13 @@ class MongoengineConnectionField(ConnectionField):
                 # https://github.com/graphql-python/graphene/issues/124
                 args['pk'] = from_global_id(id)[-1]
 
+            if getattr(cls, "before_get_query_filter", None):
+                args, before_filter_setup = cls.before_get_query_filter(args)
             objs = objs.filter(**args)
+            if getattr(cls, "after_get_query_filter", None):
+                objs, args = cls.after_get_query_filter(objs,
+                                                        args,
+                                                        before_filter_setup)
 
             # https://github.com/graphql-python/graphene-mongo/issues/21
             if after is not None:
