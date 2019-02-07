@@ -14,7 +14,7 @@ from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from .advanced_types import PointFieldType, MultiPolygonFieldType
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
-from .utils import get_model_reference_fields, global_id_via_node
+from .utils import get_model_reference_fields, get_node_from_global_id
 
 
 class MongoengineConnectionField(ConnectionField):
@@ -113,18 +113,24 @@ class MongoengineConnectionField(ConnectionField):
         return self._type._meta.fields
 
     def get_queryset(self, model, info, **args):
+
+        if args:
+            reference_fields = get_model_reference_fields(self.model)
+            hydrated_references = {}
+            for arg_name, arg in args.copy().items():
+                if arg_name in reference_fields:
+                    reference_obj = get_node_from_global_id(reference_fields[arg_name], info, args.pop(arg_name))
+                    hydrated_references[arg_name] = reference_obj
+            args.update(hydrated_references)
         if self._get_queryset:
             queryset_or_filters = self._get_queryset(model, info, **args)
             if isinstance(queryset_or_filters, mongoengine.QuerySet):
                 return queryset_or_filters
             else:
-                return model.objects(**queryset_or_filters)
-        return model.objects()
+                args.update(queryset_or_filters)
+        return model.objects(**args)
 
     def default_resolver(self, _root, info, **args):
-        if not callable(getattr(self.model, 'objects', None)):
-            return [], 0
-
         args = args or {}
 
         connection_args = {
@@ -134,29 +140,22 @@ class MongoengineConnectionField(ConnectionField):
             'after': args.pop('after', None)
         }
 
-        objs = self.get_queryset(self.model, info, **args)
+        _id = args.pop('id', None)
 
-        if args:
-            reference_fields = get_model_reference_fields(self.model)
-            reference_args = {}
-            for arg_name, arg in args.copy().items():
-                if arg_name in reference_fields:
-                    reference_model = self.model._fields[arg_name]
-                    pk = global_id_via_node(self.node_type, args.pop(arg_name))[-1]
-                    reference_obj = reference_model.document_type_obj.objects(pk=pk).get()
-                    reference_args[arg_name] = reference_obj
-
-            args.update(reference_args)
-            _id = args.pop('id', None)
-            if _id is not None:
-                args['pk'] = global_id_via_node(self.node_type, _id)[-1]
-
-            objs = objs.filter(**args)
+        if _id is not None:
+            objs = [get_node_from_global_id(self.node_type, info, _id)]
+            list_length = 1
+        elif callable(getattr(self.model, 'objects', None)):
+            objs = self.get_queryset(self.model, info, **args)
+            list_length = objs.count()
+        else:
+            objs = []
+            list_length = 0
 
         connection = connection_from_list_slice(
             list_slice=objs,
             args=connection_args,
-            list_length=objs.count(),
+            list_length=list_length,
             connection_type=self.type,
             edge_type=self.type.Edge,
             pageinfo_type=PageInfo,

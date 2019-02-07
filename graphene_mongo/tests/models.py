@@ -17,6 +17,13 @@ class Publisher(Document):
     meta = {'collection': 'test_publisher'}
     name = StringField()
 
+    @property
+    def legal_name(self):
+        return self.name + " Inc."
+
+    def bad_field(self):
+        return None
+
 
 class Editor(Document):
     """
@@ -137,3 +144,9 @@ class ChildRegisteredAfter(Document):
     meta = {'collection': 'test_child_after_reference'}
     parent = ReferenceField(ParentWithRelationship)
     name = StringField()
+
+
+class ErroneousModel(Document):
+    meta = {'collection': 'test_colliding_objects_model'}
+
+    objects = ListField(StringField())
