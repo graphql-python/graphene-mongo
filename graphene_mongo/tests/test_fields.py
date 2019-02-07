@@ -38,4 +38,3 @@ def test_before_and_after_hooks(fixtures):
                                             **{'my_headline_arg': 'World'})
     assert list_length == 1
     assert queryset[0].headline == 'World'
-    print(list_length)
