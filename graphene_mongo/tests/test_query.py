@@ -42,7 +42,6 @@ def test_should_query_editor(fixtures):
     expected = {
         'editor': {
             'firstName': 'Penny',
-            'metadata': '{"age": "20", "nickname": "$1"}',
             'company': {"name": "Newsco"}
         },
         'editors': [{
@@ -56,10 +55,13 @@ def test_should_query_editor(fixtures):
             'lastName': 'Rodman'
         }]
     }
+    expected_metadata = '{"age": "20", "nickname": "$1"}'
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
+    metadata = result.data['editor'].pop('metadata')
+    assert (json.loads(metadata)) == dict(json.loads(expected_metadata))
     assert json.dumps(result.data, sort_keys=True) == \
         json.dumps(expected, sort_keys=True)
 
