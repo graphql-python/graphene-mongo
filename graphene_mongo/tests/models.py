@@ -4,7 +4,7 @@ from mongoengine import (
 )
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField,
-    FloatField, EmbeddedDocumentListField, ListField,
+    FloatField, EmbeddedDocumentListField, ListField, LazyReferenceField,
     MapField, PointField, ReferenceField, StringField,
     MultiPolygonField
 )
@@ -12,20 +12,39 @@ from mongoengine.fields import (
 connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
 
 
+class Publisher(Document):
+
+    meta = {'collection': 'test_publisher'}
+    name = StringField()
+
+    @property
+    def legal_name(self):
+        return self.name + " Inc."
+
+    def bad_field(self):
+        return None
+
+
 class Editor(Document):
+    """
+    An Editor of a publication.
+    """
 
     meta = {'collection': 'test_editor'}
     id = StringField(primary_key=True)
-    first_name = StringField(required=True)
-    last_name = StringField(required=True)
-    metadata = MapField(field=StringField())
+    first_name = StringField(required=True, help_text="Editor's first name.", db_field='fname')
+    last_name = StringField(required=True, help_text="Editor's last name.")
+    metadata = MapField(field=StringField(), help_text="Arbitrary metadata.")
+    company = LazyReferenceField(Publisher)
 
 
 class Article(Document):
 
     meta = {'collection': 'test_article'}
-    headline = StringField(required=True)
-    pub_date = DateTimeField(default=datetime.now)
+    headline = StringField(required=True, help_text="The article headline.")
+    pub_date = DateTimeField(default=datetime.now,
+                             verbose_name="publication date",
+                             help_text="The date of first press.")
     editor = ReferenceField(Editor)
     reporter = ReferenceField('Reporter')
 
@@ -41,7 +60,7 @@ class EmbeddedArticle(EmbeddedDocument):
 
 class Reporter(Document):
 
-    meta = {'collection': 'test_repoter'}
+    meta = {'collection': 'test_reporter'}
     id = StringField(primary_key=True)
     first_name = StringField(required=True)
     last_name = StringField(required=True)
@@ -125,3 +144,9 @@ class ChildRegisteredAfter(Document):
     meta = {'collection': 'test_child_after_reference'}
     parent = ReferenceField(ParentWithRelationship)
     name = StringField()
+
+
+class ErroneousModel(Document):
+    meta = {'collection': 'test_colliding_objects_model'}
+
+    objects = ListField(StringField())

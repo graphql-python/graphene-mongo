@@ -247,7 +247,8 @@ def test_should_filter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data == expected
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
 
 
 def test_should_filter_by_reference_field(fixtures):
@@ -287,7 +288,8 @@ def test_should_filter_by_reference_field(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data == expected
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
 
 
 def test_should_filter_through_inheritance(fixtures):
@@ -514,7 +516,7 @@ def test_should_last_n(fixtures):
         players = MongoengineConnectionField(PlayerNode)
 
     query = '''
-        query EditorQuery {
+        query PlayerQuery {
             players(last: 2) {
                 edges {
                     cursor,
@@ -768,3 +770,92 @@ def test_should_query_with_embedded_document(fixtures):
     result = schema.execute(query)
     assert not result.errors
     assert dict(result.data['allProfessors']) == expected['allProfessors']
+
+
+def test_should_get_queryset_returns_dict_filters(fixtures):
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        articles = MongoengineConnectionField(ArticleNode, get_queryset=lambda *_, **__: {"headline": "World"})
+
+    query = '''
+           query ArticlesQuery {
+               articles {
+                   edges {
+                       node {
+                           headline,
+                           pubDate,
+                           editor {
+                               firstName
+                           }
+                       }
+                   }
+               }
+           }
+       '''
+    expected = {
+        'articles': {
+            'edges': [
+                {
+                    'node': {
+                        'headline': 'World',
+                        'editor': {
+                            'firstName': 'Grant'
+                        },
+                        'pubDate': '2020-01-01T00:00:00'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
+
+
+def test_should_get_queryset_returns_qs_filters(fixtures):
+
+    def get_queryset(model, info, **args):
+        return model.objects(headline="World")
+
+    class Query(graphene.ObjectType):
+        node = Node.Field()
+        articles = MongoengineConnectionField(ArticleNode, get_queryset=get_queryset)
+
+    query = '''
+           query ArticlesQuery {
+               articles {
+                   edges {
+                       node {
+                           headline,
+                           pubDate,
+                           editor {
+                               firstName
+                           }
+                       }
+                   }
+               }
+           }
+       '''
+    expected = {
+        'articles': {
+            'edges': [
+                {
+                    'node': {
+                        'headline': 'World',
+                        'editor': {
+                            'firstName': 'Grant'
+                        },
+                        'pubDate': '2020-01-01T00:00:00'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
