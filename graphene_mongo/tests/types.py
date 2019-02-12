@@ -1,3 +1,4 @@
+import graphene
 from graphene.relay import Node
 
 from ..types import MongoengineObjectType
@@ -5,8 +6,14 @@ from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
     Parent, Child, ProfessorMetadata, ProfessorVector,
     ParentWithRelationship, ChildRegisteredBefore,
-    ChildRegisteredAfter, CellTower
-)
+    ChildRegisteredAfter, CellTower,
+    Publisher, ErroneousModel)
+
+
+class PublisherType(MongoengineObjectType):
+
+    class Meta:
+        model = Publisher
 
 
 class EditorType(MongoengineObjectType):
@@ -67,6 +74,16 @@ class ProfessorVectorType(MongoengineObjectType):
 
     class Meta:
         model = ProfessorVector
+
+
+class PublisherNode(MongoengineObjectType):
+    legal_name = graphene.String()
+    bad_field = graphene.String()
+
+    class Meta:
+        model = Publisher
+        only_fields = ('id', 'name')
+        interfaces = (Node,)
 
 
 class ArticleNode(MongoengineObjectType):
@@ -144,3 +161,9 @@ class ProfessorVectorNode(MongoengineObjectType):
     class Meta:
         model = ProfessorVector
         interfaces = (Node, )
+
+
+class ErroneousModelNode(MongoengineObjectType):
+    class Meta:
+        model = ErroneousModel
+        interfaces = (Node,)

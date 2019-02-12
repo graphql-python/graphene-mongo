@@ -5,18 +5,23 @@ from .models import (
     Article, Editor, EmbeddedArticle, Player,
     Reporter, Child, ProfessorMetadata, ProfessorVector,
     ChildRegisteredBefore, ChildRegisteredAfter,
-    ParentWithRelationship, CellTower
-)
+    ParentWithRelationship, CellTower,
+    Publisher)
 
 
 @pytest.fixture(scope='module')
 def fixtures():
+    Publisher.drop_collection()
+    publisher1 = Publisher(name="Newsco")
+    publisher1.save()
+
     Editor.drop_collection()
     editor1 = Editor(
         id='1',
         first_name='Penny',
         last_name='Hardaway',
-        metadata={'age': '20', 'nickname': '$1'}
+        metadata={'age': '20', 'nickname': '$1'},
+        company=publisher1
     )
     editor1.save()
     editor2 = Editor(
@@ -143,3 +148,4 @@ def fixtures():
     child3.parent = child4.parent = parent
     child3.save()
     child4.save()
+    return True
