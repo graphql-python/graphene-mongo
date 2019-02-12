@@ -779,16 +779,16 @@ def test_should_query_with_embedded_document(fixtures):
 
     query = '''
     query {
-      allProfessors {
-        edges {
-            node {
-                vec,
-                metadata {
-                     firstName
+        allProfessors {
+            edges {
+                node {
+                    vec,
+                    metadata {
+                        firstName
+                    }
                 }
             }
         }
-      }
     }
     '''
     expected = {
