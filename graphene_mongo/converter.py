@@ -111,6 +111,7 @@ def convert_field_to_list(field, registry=None):
 
 
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
+@convert_mongoengine_field.register(mongoengine.GenericReferenceField)
 @convert_mongoengine_field.register(mongoengine.ReferenceField)
 def convert_field_to_dynamic(field, registry=None):
     model = field.document_type
