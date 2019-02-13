@@ -1,5 +1,6 @@
 from ..fields import MongoengineConnectionField
 from .types import ArticleNode, PublisherNode, ErroneousModelNode
+from .setup import fixtures
 
 
 def test_field_args():
@@ -35,3 +36,11 @@ def test_default_resolver_with_colliding_objects_field():
 
     connection = field.default_resolver(None, {})
     assert 0 == len(connection.iterable)
+
+
+def test_default_resolver_connection_list_length(fixtures):
+    field = MongoengineConnectionField(ArticleNode)
+
+    connection = field.default_resolver(None, {}, **{'first': 1})
+    assert hasattr(connection, 'list_length')
+    assert connection.list_length == 2

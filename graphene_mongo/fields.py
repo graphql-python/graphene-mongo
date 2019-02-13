@@ -161,6 +161,7 @@ class MongoengineConnectionField(ConnectionField):
             pageinfo_type=PageInfo,
         )
         connection.iterable = objs
+        connection.list_length = list_length
         return connection
 
     def chained_resolver(self, resolver, root, info, **args):
