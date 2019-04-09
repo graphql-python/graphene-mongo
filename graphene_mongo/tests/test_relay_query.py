@@ -36,6 +36,7 @@ def test_should_query_reporter(fixtures):
                 firstName,
                 lastName,
                 email,
+                awards,
                 articles {
                     edges {
                         node {
@@ -65,6 +66,7 @@ def test_should_query_reporter(fixtures):
             'firstName': 'Allen',
             'lastName': 'Iverson',
             'email': 'ai@gmail.com',
+            'awards': ['2010-mvp'],
             'articles': {
                 'edges': [
                     {
@@ -337,24 +339,62 @@ def test_should_filter_through_inheritance(fixtures):
         expected, sort_keys=True)
 
 
-def test_should_get_node_by_id(fixtures):
+def test_should_filter_by_list_of_string(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
-        reporter = Node.Field(ReporterNode)
         reporters = MongoengineConnectionField(ReporterNode)
 
     query = '''
         query ReportersQuery {
+            reporters (awards: "2010") {
+                edges {
+                    node {
+                        id,
+                        firstName,
+                        awards
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'reporters': {
+            'edges': [
+                {
+                    'node': {
+                        'id': 'UmVwb3J0ZXJOb2RlOjE=',
+                        'firstName': 'Allen',
+                        'awards': ['2010-mvp']
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_filter_by_id(fixtures):
+    # Notes: https://goo.gl/hMNRgs
+    class Query(graphene.ObjectType):
+        reporter = Node.Field(ReporterNode)
+
+    query = '''
+        query ReporterQuery {
             reporter (id: "UmVwb3J0ZXJOb2RlOjE=") {
                 id,
-                firstName
+                firstName,
+                awards
             }
         }
     '''
     expected = {
         'reporter': {
             'id': 'UmVwb3J0ZXJOb2RlOjE=',
-            'firstName': 'Allen'
+            'firstName': 'Allen',
+            'awards': ['2010-mvp']
         }
     }
     schema = graphene.Schema(query=Query)

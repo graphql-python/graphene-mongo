@@ -65,6 +65,7 @@ class MongoengineConnectionField(ConnectionField):
 
     def _field_args(self, items):
         def is_filterable(k):
+            print(k)
             if not hasattr(self.model, k):
                 return False
             if isinstance(getattr(self.model, k), property):
@@ -73,7 +74,7 @@ class MongoengineConnectionField(ConnectionField):
                 converted = convert_mongoengine_field(getattr(self.model, k), self.registry)
             except MongoEngineConversionError:
                 return False
-            if isinstance(converted, (ConnectionField, Dynamic, List)):
+            if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
             if callable(getattr(converted, 'type', None)) and isinstance(converted.type(),
                                                                          (PointFieldType, MultiPolygonFieldType)):
@@ -81,6 +82,7 @@ class MongoengineConnectionField(ConnectionField):
             return True
 
         def get_type(v):
+            print(v)
             if isinstance(v.type, Structure):
                 return v.type.of_type()
             return v.type()
@@ -128,6 +130,7 @@ class MongoengineConnectionField(ConnectionField):
                 return queryset_or_filters
             else:
                 args.update(queryset_or_filters)
+        print(args)
         return model.objects(**args)
 
     def default_resolver(self, _root, info, **args):
