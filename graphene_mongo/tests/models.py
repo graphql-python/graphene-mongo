@@ -65,10 +65,10 @@ class Reporter(Document):
     first_name = StringField(required=True)
     last_name = StringField(required=True)
     email = EmailField()
+    awards = ListField(StringField())
     articles = ListField(ReferenceField(Article))
     embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
     embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
-    awards = ListField(StringField())
 
 
 class Player(Document):

@@ -8,7 +8,7 @@ from graphene import PageInfo
 from graphene.relay import ConnectionField
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
-from graphene.types.structures import Structure, List
+from graphene.types.structures import Structure
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .advanced_types import PointFieldType, MultiPolygonFieldType
@@ -73,7 +73,7 @@ class MongoengineConnectionField(ConnectionField):
                 converted = convert_mongoengine_field(getattr(self.model, k), self.registry)
             except MongoEngineConversionError:
                 return False
-            if isinstance(converted, (ConnectionField, Dynamic, List)):
+            if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
             if callable(getattr(converted, 'type', None)) and isinstance(converted.type(),
                                                                          (PointFieldType, MultiPolygonFieldType)):
