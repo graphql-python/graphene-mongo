@@ -8,7 +8,7 @@ from graphene import PageInfo
 from graphene.relay import ConnectionField
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
-from graphene.types.structures import Structure, List
+from graphene.types.structures import Structure
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .advanced_types import PointFieldType, MultiPolygonFieldType
@@ -65,7 +65,6 @@ class MongoengineConnectionField(ConnectionField):
 
     def _field_args(self, items):
         def is_filterable(k):
-            print(k)
             if not hasattr(self.model, k):
                 return False
             if isinstance(getattr(self.model, k), property):
@@ -82,7 +81,6 @@ class MongoengineConnectionField(ConnectionField):
             return True
 
         def get_type(v):
-            print(v)
             if isinstance(v.type, Structure):
                 return v.type.of_type()
             return v.type()
@@ -130,7 +128,6 @@ class MongoengineConnectionField(ConnectionField):
                 return queryset_or_filters
             else:
                 args.update(queryset_or_filters)
-        print(args)
         return model.objects(**args)
 
     def default_resolver(self, _root, info, **args):

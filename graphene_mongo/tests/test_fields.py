@@ -21,7 +21,6 @@ def test_reporter_field_args():
     field = MongoengineConnectionField(ReporterNode)
 
     field_args = ['id', 'first_name', 'last_name', 'email', 'awards']
-    print(field.field_args['awards'])
     assert set(field.field_args.keys()) == set(field_args)
 
 

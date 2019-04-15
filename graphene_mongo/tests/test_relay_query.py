@@ -346,7 +346,7 @@ def test_should_filter_by_list_of_string(fixtures):
 
     query = '''
         query ReportersQuery {
-            reporters (awards: "2010") {
+            reporters (awards: "2010-mvp") {
                 edges {
                     node {
                         id,
