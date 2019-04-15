@@ -1,15 +1,10 @@
 import graphene
-import mongoengine
-
-from graphene import (
-    Dynamic, Node
-)
-
+from mongoengine import fields
 from py.test import raises
 
 from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
-    ProfessorMetadata, ProfessorVector,
+    Parent, ProfessorMetadata, ProfessorVector,
     Publisher)
 from .. import registry
 from ..converter import convert_mongoengine_field
@@ -32,80 +27,80 @@ def test_should_unknown_mongoengine_field_raise_exception():
 
 
 def test_should_email_convert_string():
-    assert_conversion(mongoengine.EmailField, graphene.String)
+    assert_conversion(fields.EmailField, graphene.String)
 
 
 def test_should_string_convert_string():
-    assert_conversion(mongoengine.StringField, graphene.String)
+    assert_conversion(fields.StringField, graphene.String)
 
 
 def test_should_url_convert_string():
-    assert_conversion(mongoengine.URLField, graphene.String)
+    assert_conversion(fields.URLField, graphene.String)
 
 
 def test_should_uuid_convert_id():
-    assert_conversion(mongoengine.UUIDField, graphene.ID)
+    assert_conversion(fields.UUIDField, graphene.ID)
 
 
 def test_sould_int_convert_int():
-    assert_conversion(mongoengine.IntField, graphene.Int)
+    assert_conversion(fields.IntField, graphene.Int)
 
 
 def test_sould_long_convert_int():
-    assert_conversion(mongoengine.LongField, graphene.Int)
+    assert_conversion(fields.LongField, graphene.Int)
 
 
 def test_should_object_id_convert_id():
-    assert_conversion(mongoengine.ObjectIdField, graphene.ID)
+    assert_conversion(fields.ObjectIdField, graphene.ID)
 
 
 def test_should_boolean_convert_boolean():
-    assert_conversion(mongoengine.BooleanField, graphene.Boolean)
+    assert_conversion(fields.BooleanField, graphene.Boolean)
 
 
 def test_should_decimal_convert_float():
-    assert_conversion(mongoengine.DecimalField, graphene.Float)
+    assert_conversion(fields.DecimalField, graphene.Float)
 
 
 def test_should_float_convert_float():
-    assert_conversion(mongoengine.FloatField, graphene.Float)
+    assert_conversion(fields.FloatField, graphene.Float)
 
 
 def test_should_datetime_convert_datetime():
-    assert_conversion(mongoengine.DateTimeField, graphene.DateTime)
+    assert_conversion(fields.DateTimeField, graphene.DateTime)
 
 
 def test_should_dict_convert_json():
-    assert_conversion(mongoengine.DictField, graphene.JSONString)
+    assert_conversion(fields.DictField, graphene.JSONString)
 
 
 def test_should_map_convert_json():
-    assert_conversion(mongoengine.MapField, graphene.JSONString, field=mongoengine.StringField())
+    assert_conversion(fields.MapField, graphene.JSONString, field=fields.StringField())
 
 
 def test_should_point_convert_field():
-    graphene_type = convert_mongoengine_field(mongoengine.PointField())
+    graphene_type = convert_mongoengine_field(fields.PointField())
     assert isinstance(graphene_type, graphene.Field)
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
 def test_should_polygon_covert_field():
-    graphene_type = convert_mongoengine_field(mongoengine.PolygonField())
+    graphene_type = convert_mongoengine_field(fields.PolygonField())
     assert isinstance(graphene_type, graphene.Field)
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
 def test_should_multipolygon_convert_field():
-    graphene_type = convert_mongoengine_field(mongoengine.MultiPolygonField())
+    graphene_type = convert_mongoengine_field(fields.MultiPolygonField())
     assert isinstance(graphene_type, graphene.Field)
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
 def test_should_field_convert_list():
-    assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
+    assert_conversion(fields.ListField, graphene.List, field=fields.StringField())
 
 
 def test_should_reference_convert_dynamic():
@@ -114,11 +109,11 @@ def test_should_reference_convert_dynamic():
 
         class Meta:
             model = Editor
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         EmbeddedArticle._fields['editor'], E._meta.registry)
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == E
@@ -130,12 +125,12 @@ def test_should_lazy_reference_convert_dynamic():
 
         class Meta:
             model = Publisher
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         Editor._fields['company'], P._meta.registry)
 
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == P
@@ -147,11 +142,11 @@ def test_should_embedded_convert_dynamic():
 
         class Meta:
             model = ProfessorMetadata
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         ProfessorVector._fields['metadata'], PM._meta.registry)
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == PM
@@ -161,7 +156,7 @@ def test_should_convert_none():
     registry.reset_global_registry()
     dynamic_field = convert_mongoengine_field(
         EmbeddedArticle._fields['editor'], registry.get_global_registry())
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert graphene_type is None
 
@@ -170,7 +165,7 @@ def test_should_convert_none_lazily():
     registry.reset_global_registry()
     dynamic_field = convert_mongoengine_field(
         Editor._fields['company'], registry.get_global_registry())
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert graphene_type is None
 
@@ -223,11 +218,11 @@ def test_should_self_reference_convert_dynamic():
 
         class Meta:
             model = Player
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         Player._fields['opponent'], P._meta.registry)
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == P
@@ -300,3 +295,30 @@ def test_should_description_convert_reference_metadata():
         Article._fields['editor'], A._meta.registry
     ).get_type()
     assert editor_field.description == "An Editor of a publication."
+
+
+def test_should_generic_reference_convert_union():
+
+    class A(MongoengineObjectType):
+
+        class Meta:
+            model = Article
+
+    class E(MongoengineObjectType):
+
+        class Meta:
+            model = Editor
+
+    class P(MongoengineObjectType):
+
+        class Meta:
+            model = Parent
+
+    generic_reference_field = convert_mongoengine_field(
+        Parent._fields['generic_reference'], None
+    )
+    print(generic_reference_field)
+    """
+    # print(Parent._fields['generic_reference'].__dict__)
+    assert isinstance(generic_reference_field, graphene.Field)
+    """

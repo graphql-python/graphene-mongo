@@ -93,7 +93,7 @@ class Parent(mongoengine.Document):
     bar = fields.StringField()
     loc = fields.MultiPolygonField()
     generic_reference = fields.GenericReferenceField(
-        choices=[Article, Reporter, ]
+        choices=[Article, Editor, ]
     )
 
 

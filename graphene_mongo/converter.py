@@ -1,3 +1,4 @@
+import mongoengine
 from graphene import (
     ID,
     Boolean,
@@ -9,14 +10,18 @@ from graphene import (
     List,
     NonNull,
     String,
+    Union,
     is_node
 )
 from graphene.types.json import JSONString
-
-import mongoengine
+from mongoengine import fields
+from mongoengine.base import get_document
 
 from . import advanced_types
-from .utils import import_single_dispatch, get_field_description
+from .utils import (
+    import_single_dispatch, get_field_description,
+    ClassFactory, add_method,
+)
 
 singledispatch = import_single_dispatch()
 
@@ -112,7 +117,40 @@ def convert_field_to_list(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.GenericReferenceField)
 def convert_field_to_union(field, registry=None):
-    pass
+    # pass
+    # print(field.__dict__)
+    # print(type(field.choices[0]))
+    # print(get_document(field.choices[0]))
+    from graphene_mongo import MongoengineObjectType
+    from .registry import Registry, get_global_registry
+    _types = []
+    for choice in field.choices:
+        model = get_document(choice)
+        # cls = ClassFactory(choice, BaseClass=MongoengineObjectType)
+        # Meta = ClassFactory('Meta', argnames={'model': model})
+        # t = add_method(type(choice + 'Type', {'Meta': Meta}, cls))
+        # print(t)
+        # Meta = type('Meta', (object, ), {'model': model})
+        # class Meta:
+        #    model = get_document(choice)
+        ## print(Meta.__dict__)
+        """
+        class Q(MongoengineObjectType):
+            class Meta:
+                model = get_document(choice)
+        """
+        # cls = ClassFactory(choice + 'Type', BaseClass=MongoengineObjectType, Meta=Meta)
+        # cls = type(choice + 'Type', (MongoengineObjectType, ), {'Meta': Meta})
+        # _types.append(cls)
+        field = fields.ReferenceField(get_document(choice))
+        _field = convert_mongoengine_field(field, get_global_registry())
+        _type = _field.get_type()
+        _types.append(_type.type)
+    class U(Union):
+        class Meta:
+            types = tuple(_types)
+
+    return Field(U)
 
 
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
