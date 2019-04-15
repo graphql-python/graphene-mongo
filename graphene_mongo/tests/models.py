@@ -1,11 +1,6 @@
 import mongoengine
 from datetime import datetime
-from mongoengine.fields import (
-    DateTimeField, EmailField, EmbeddedDocumentField,
-    FloatField, EmbeddedDocumentListField, ListField, LazyReferenceField,
-    MapField, MultiPolygonField, PointField, PolygonField,
-    ReferenceField, StringField,
-)
+from mongoengine import fields
 
 mongoengine.connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
 
@@ -13,7 +8,7 @@ mongoengine.connect('graphene-mongo-test', host='mongomock://localhost', alias='
 class Publisher(mongoengine.Document):
 
     meta = {'collection': 'test_publisher'}
-    name = mongoengine.StringField()
+    name = fields.StringField()
 
     @property
     def legal_name(self):
@@ -29,54 +24,53 @@ class Editor(mongoengine.Document):
     """
 
     meta = {'collection': 'test_editor'}
-    id = mongoengine.StringField(primary_key=True)
-    first_name = mongoengine.StringField(required=True, help_text="Editor's first name.", db_field='fname')
-    last_name = mongoengine.StringField(required=True, help_text="Editor's last name.")
-    metadata = mongoengine.MapField(field=mongoengine.StringField(), help_text="Arbitrary metadata.")
-    company = mongoengine.LazyReferenceField(Publisher)
+    id = fields.StringField(primary_key=True)
+    first_name = fields.StringField(required=True, help_text="Editor's first name.", db_field='fname')
+    last_name = fields.StringField(required=True, help_text="Editor's last name.")
+    metadata = fields.MapField(field=fields.StringField(), help_text="Arbitrary metadata.")
+    company = fields.LazyReferenceField(Publisher)
 
 
 class Article(mongoengine.Document):
 
     meta = {'collection': 'test_article'}
-    headline = mongoengine.StringField(required=True, help_text="The article headline.")
-    pub_date = mongoengine.DateTimeField(
+    headline = fields.StringField(required=True, help_text="The article headline.")
+    pub_date = fields.DateTimeField(
         default=datetime.now,
         verbose_name="publication date",
         help_text="The date of first press.")
-    editor = mongoengine.ReferenceField(Editor)
-    reporter = mongoengine.ReferenceField('Reporter')
+    editor = fields.ReferenceField(Editor)
+    reporter = fields.ReferenceField('Reporter')
 
 
 class EmbeddedArticle(mongoengine.EmbeddedDocument):
 
     meta = {'collection': 'test_embedded_article'}
-    headline = mongoengine.StringField(required=True)
-    pub_date = mongoengine.DateTimeField(default=datetime.now)
-    editor = mongoengine.ReferenceField(Editor)
-    reporter = mongoengine.ReferenceField('Reporter')
+    headline = fields.StringField(required=True)
+    pub_date = fields.DateTimeField(default=datetime.now)
+    editor = fields.ReferenceField(Editor)
+    reporter = fields.ReferenceField('Reporter')
 
 
 class Reporter(mongoengine.Document):
 
     meta = {'collection': 'test_reporter'}
-<<<<<<< HEAD
-    id = StringField(primary_key=True)
-    first_name = StringField(required=True)
-    last_name = StringField(required=True)
-    email = EmailField()
-    awards = ListField(StringField())
-    articles = ListField(ReferenceField(Article))
-    embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
-    embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
-    id = StringField(primary_key=True)
-    first_name = StringField(required=True)
-    last_name = StringField(required=True)
-    email = EmailField()
-    articles = ListField(ReferenceField(Article))
-    embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
-    embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
-    awards = ListField(StringField())
+    id = fields.StringField(primary_key=True)
+    first_name = fields.StringField(required=True)
+    last_name = fields.StringField(required=True)
+    email = fields.EmailField()
+    awards = fields.ListField(fields.StringField())
+    articles = fields.ListField(fields.ReferenceField(Article))
+    embedded_articles = fields.ListField(fields.EmbeddedDocumentField(EmbeddedArticle))
+    embedded_list_articles = fields.EmbeddedDocumentListField(EmbeddedArticle)
+    id = fields.StringField(primary_key=True)
+    first_name = fields.StringField(required=True)
+    last_name = fields.StringField(required=True)
+    email = fields.EmailField()
+    articles = fields.ListField(fields.ReferenceField(Article))
+    embedded_articles = fields.ListField(fields.EmbeddedDocumentField(EmbeddedArticle))
+    embedded_list_articles = fields.EmbeddedDocumentListField(EmbeddedArticle)
+    awards = fields.ListField(fields.StringField())
 
 
 class Player(mongoengine.Document):
@@ -106,9 +100,9 @@ class CellTower(mongoengine.Document):
     meta = {
         'collection': 'test_cell_tower',
     }
-    code = StringField()
-    base = PolygonField()
-    coverage_area = MultiPolygonField()
+    code = fields.StringField()
+    base = fields.PolygonField()
+    coverage_area = fields.MultiPolygonField()
 
 
 class Child(Parent):
