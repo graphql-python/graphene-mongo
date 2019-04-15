@@ -90,6 +90,13 @@ def test_should_point_convert_field():
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
+def test_should_polygon_covert_field():
+    graphene_type = convert_mongoengine_field(mongoengine.PolygonField())
+    assert isinstance(graphene_type, graphene.Field)
+    assert isinstance(graphene_type.type.type, graphene.String)
+    assert isinstance(graphene_type.type.coordinates, graphene.List)
+
+
 def test_should_multipolygon_convert_field():
     graphene_type = convert_mongoengine_field(mongoengine.MultiPolygonField())
     assert isinstance(graphene_type, graphene.Field)

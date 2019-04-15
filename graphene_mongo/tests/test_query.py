@@ -328,6 +328,10 @@ def test_should_query_cell_tower(fixtures):
         query Query {
             cellTowers {
                 code,
+                base {
+                    type,
+                    coordinates
+                },
                 coverageArea {
                      type,
                      coordinates
@@ -339,6 +343,17 @@ def test_should_query_cell_tower(fixtures):
         'cellTowers': [
             {
                 'code': 'bar',
+                'base': {
+                    'type': 'Polygon',
+                    'coordinates': [[
+                        [-43.36556, -22.99669],
+                        [-43.36539, -23.01928],
+                        [-43.26583, -23.01802],
+                        [-43.36717, -22.98855],
+                        [-43.36636, -22.99351],
+                        [-43.36556, -22.99669]
+                    ]]
+                },
                 'coverageArea': {
                     'type': 'MultiPolygon',
                     'coordinates': [[[
@@ -347,7 +362,8 @@ def test_should_query_cell_tower(fixtures):
                         [-43.26583, -23.01802],
                         [-43.36717, -22.98855],
                         [-43.36636, -22.99351],
-                        [-43.36556, -22.99669]]]]
+                        [-43.36556, -22.99669]
+                    ]]]
                 }
             }
         ]

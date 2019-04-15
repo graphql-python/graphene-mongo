@@ -5,8 +5,8 @@ from mongoengine import (
 from mongoengine.fields import (
     DateTimeField, EmailField, EmbeddedDocumentField,
     FloatField, EmbeddedDocumentListField, ListField, LazyReferenceField,
-    MapField, PointField, ReferenceField, StringField,
-    MultiPolygonField
+    MapField, MultiPolygonField, PointField, PolygonField,
+    ReferenceField, StringField,
 )
 
 connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
@@ -98,6 +98,7 @@ class CellTower(Document):
         'collection': 'test_cell_tower',
     }
     code = StringField()
+    base = PolygonField()
     coverage_area = MultiPolygonField()
 
 
