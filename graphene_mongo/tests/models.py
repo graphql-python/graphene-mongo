@@ -67,21 +67,21 @@ class Reporter(mongoengine.Document):
     first_name = fields.StringField(required=True)
     last_name = fields.StringField(required=True)
     email = fields.EmailField()
+    awards = fields.ListField(fields.StringField())
     articles = fields.ListField(fields.ReferenceField(Article))
     embedded_articles = fields.ListField(fields.EmbeddedDocumentField(EmbeddedArticle))
     embedded_list_articles = fields.EmbeddedDocumentListField(EmbeddedArticle)
-    awards = fields.ListField(fields.StringField())
 
 
 class Player(mongoengine.Document):
 
     meta = {'collection': 'test_player'}
-    first_name = mongoengine.StringField(required=True)
-    last_name = mongoengine.StringField(required=True)
-    opponent = mongoengine.ReferenceField('Player')
-    players = mongoengine.ListField(mongoengine.ReferenceField('Player'))
-    articles = mongoengine.ListField(mongoengine.ReferenceField('Article'))
-    embedded_list_articles = mongoengine.EmbeddedDocumentListField(EmbeddedArticle)
+    first_name = fields.StringField(required=True)
+    last_name = fields.StringField(required=True)
+    opponent = fields.ReferenceField('Player')
+    players = fields.ListField(fields.ReferenceField('Player'))
+    articles = fields.ListField(fields.ReferenceField('Article'))
+    embedded_list_articles = fields.EmbeddedDocumentListField(EmbeddedArticle)
 
 
 class Parent(mongoengine.Document):
@@ -90,9 +90,11 @@ class Parent(mongoengine.Document):
         'collection': 'test_parent',
         'allow_inheritance': True
     }
-    bar = mongoengine.StringField()
-    loc = mongoengine.MultiPolygonField()
-    # reference = GenericReferenceField()
+    bar = fields.StringField()
+    loc = fields.MultiPolygonField()
+    generic_reference = fields.GenericReferenceField(
+        choices=[Article, Reporter, ]
+    )
 
 
 class CellTower(mongoengine.Document):

@@ -110,8 +110,12 @@ def convert_field_to_list(field, registry=None):
     return List(base_type, description=get_field_description(field, registry), required=field.required)
 
 
-@convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
 @convert_mongoengine_field.register(mongoengine.GenericReferenceField)
+def convert_field_to_union(field, registry=None):
+    pass
+
+
+@convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
 @convert_mongoengine_field.register(mongoengine.ReferenceField)
 def convert_field_to_dynamic(field, registry=None):
     model = field.document_type
