@@ -339,7 +339,7 @@ def test_should_filter_through_inheritance(fixtures):
         expected, sort_keys=True)
 
 
-def test_should_filter_by_list_of_string(fixtures):
+def test_should_filter_by_list_contains(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
         reporters = MongoengineConnectionField(ReporterNode)
