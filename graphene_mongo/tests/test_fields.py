@@ -1,9 +1,9 @@
 from ..fields import MongoengineConnectionField
-from .types import ArticleNode, PublisherNode, ErroneousModelNode
+from .types import ArticleNode, PublisherNode, ReporterNode, ErroneousModelNode
 from .setup import fixtures
 
 
-def test_field_args():
+def test_article_field_args():
     field = MongoengineConnectionField(ArticleNode)
 
     field_args = ['id', 'headline', 'pub_date']
@@ -15,6 +15,13 @@ def test_field_args():
     default_args = ['after', 'last', 'first', 'before']
     args = field_args + reference_args + default_args
     assert set(field.args) == set(args)
+
+
+def test_reporter_field_args():
+    field = MongoengineConnectionField(ReporterNode)
+
+    field_args = ['id', 'first_name', 'last_name', 'email', 'awards']
+    assert set(field.field_args.keys()) == set(field_args)
 
 
 def test_field_args_with_property():
