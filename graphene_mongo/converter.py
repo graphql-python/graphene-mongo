@@ -14,16 +14,16 @@ from graphene import (
     is_node
 )
 from graphene.types.json import JSONString
-from mongoengine import fields
 from mongoengine.base import get_document
 
 from . import advanced_types
-from .registry import get_global_registry
 from .utils import (
     import_single_dispatch, get_field_description,
 )
 
 singledispatch = import_single_dispatch()
+
+_union_registry = {}
 
 
 class MongoEngineConversionError(Exception):
@@ -120,8 +120,8 @@ def convert_field_to_union(field, registry=None):
 
     _types = []
     for choice in field.choices:
-        field = fields.ReferenceField(get_document(choice))
-        _field = convert_mongoengine_field(field, get_global_registry())
+        _field = mongoengine.ReferenceField(get_document(choice))
+        _field = convert_mongoengine_field(_field, registry)
         _type = _field.get_type()
         if _type:
             _types.append(_type.type)
@@ -132,11 +132,12 @@ def convert_field_to_union(field, registry=None):
     if len(_types) == 0:
         return None
 
-    class U(Union):
-        class Meta:
-            types = tuple(_types)
-
-    return Field(U)
+    print('*' * 50)
+    print(field.__dict__)
+    name = field._owner_document.__name__ + '_' + field.db_field + '_union'
+    Meta = type('Meta', (object, ), {'types': tuple(_types)})
+    _union_registry[name] = type(name, (Union, ), {'Meta': Meta})
+    return Field(_union_registry.get(name))
 
 
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
