@@ -41,6 +41,7 @@ class Article(mongoengine.Document):
         help_text="The date of first press.")
     editor = fields.ReferenceField(Editor)
     reporter = fields.ReferenceField('Reporter')
+    # generic_reference = fields.GenericReferenceField(choices=[Editor])
 
 
 class EmbeddedArticle(mongoengine.EmbeddedDocument):
