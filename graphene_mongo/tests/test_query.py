@@ -122,12 +122,10 @@ def test_should_query_reporter(fixtures):
         }
     }
 
-    """
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
     assert dict(result.data['reporter']) == expected['reporter']
-    """
 
 def test_should_custom_kwargs(fixtures):
 

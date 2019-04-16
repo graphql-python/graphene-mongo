@@ -1,5 +1,5 @@
 import graphene
-from mongoengine import fields
+import mongoengine
 from py.test import raises
 
 from .models import (
@@ -26,80 +26,80 @@ def test_should_unknown_mongoengine_field_raise_exception():
 
 
 def test_should_email_convert_string():
-    assert_conversion(fields.EmailField, graphene.String)
+    assert_conversion(mongoengine.EmailField, graphene.String)
 
 
 def test_should_string_convert_string():
-    assert_conversion(fields.StringField, graphene.String)
+    assert_conversion(mongoengine.StringField, graphene.String)
 
 
 def test_should_url_convert_string():
-    assert_conversion(fields.URLField, graphene.String)
+    assert_conversion(mongoengine.URLField, graphene.String)
 
 
 def test_should_uuid_convert_id():
-    assert_conversion(fields.UUIDField, graphene.ID)
+    assert_conversion(mongoengine.UUIDField, graphene.ID)
 
 
 def test_sould_int_convert_int():
-    assert_conversion(fields.IntField, graphene.Int)
+    assert_conversion(mongoengine.IntField, graphene.Int)
 
 
 def test_sould_long_convert_int():
-    assert_conversion(fields.LongField, graphene.Int)
+    assert_conversion(mongoengine.LongField, graphene.Int)
 
 
 def test_should_object_id_convert_id():
-    assert_conversion(fields.ObjectIdField, graphene.ID)
+    assert_conversion(mongoengine.ObjectIdField, graphene.ID)
 
 
 def test_should_boolean_convert_boolean():
-    assert_conversion(fields.BooleanField, graphene.Boolean)
+    assert_conversion(mongoengine.BooleanField, graphene.Boolean)
 
 
 def test_should_decimal_convert_float():
-    assert_conversion(fields.DecimalField, graphene.Float)
+    assert_conversion(mongoengine.DecimalField, graphene.Float)
 
 
 def test_should_float_convert_float():
-    assert_conversion(fields.FloatField, graphene.Float)
+    assert_conversion(mongoengine.FloatField, graphene.Float)
 
 
 def test_should_datetime_convert_datetime():
-    assert_conversion(fields.DateTimeField, graphene.DateTime)
+    assert_conversion(mongoengine.DateTimeField, graphene.DateTime)
 
 
 def test_should_dict_convert_json():
-    assert_conversion(fields.DictField, graphene.JSONString)
+    assert_conversion(mongoengine.DictField, graphene.JSONString)
 
 
 def test_should_map_convert_json():
-    assert_conversion(fields.MapField, graphene.JSONString, field=fields.StringField())
+    assert_conversion(mongoengine.MapField, graphene.JSONString, field=mongoengine.StringField())
 
 
 def test_should_point_convert_field():
-    graphene_type = convert_mongoengine_field(fields.PointField())
+    graphene_type = convert_mongoengine_field(mongoengine.PointField())
     assert isinstance(graphene_type, graphene.Field)
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
 def test_should_polygon_covert_field():
-    graphene_type = convert_mongoengine_field(fields.PolygonField())
+    graphene_type = convert_mongoengine_field(mongoengine.PolygonField())
     assert isinstance(graphene_type, graphene.Field)
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
 def test_should_multipolygon_convert_field():
-    graphene_type = convert_mongoengine_field(fields.MultiPolygonField())
+    graphene_type = convert_mongoengine_field(mongoengine.MultiPolygonField())
     assert isinstance(graphene_type, graphene.Field)
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
 def test_should_field_convert_list():
-    assert_conversion(fields.ListField, graphene.List, field=fields.StringField())
+    assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
 
 
 def test_should_reference_convert_dynamic():
