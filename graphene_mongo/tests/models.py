@@ -71,6 +71,9 @@ class Reporter(mongoengine.Document):
     articles = fields.ListField(fields.ReferenceField(Article))
     embedded_articles = fields.ListField(fields.EmbeddedDocumentField(EmbeddedArticle))
     embedded_list_articles = fields.EmbeddedDocumentListField(EmbeddedArticle)
+    generic_reference = fields.GenericReferenceField(
+        choices=[Article, Editor, ]
+    )
 
 
 class Player(mongoengine.Document):
@@ -92,9 +95,6 @@ class Parent(mongoengine.Document):
     }
     bar = fields.StringField()
     loc = fields.MultiPolygonField()
-    generic_reference = fields.GenericReferenceField(
-        choices=[Article, Editor, ]
-    )
 
 
 class CellTower(mongoengine.Document):

@@ -4,8 +4,7 @@ from py.test import raises
 
 from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
-    Parent, ProfessorMetadata, ProfessorVector,
-    Publisher)
+    ProfessorMetadata, ProfessorVector, Publisher)
 from .. import registry
 from ..converter import convert_mongoengine_field
 from ..fields import MongoengineConnectionField
@@ -309,16 +308,12 @@ def test_should_generic_reference_convert_union():
         class Meta:
             model = Editor
 
-    class P(MongoengineObjectType):
+    class R(MongoengineObjectType):
 
         class Meta:
-            model = Parent
+            model = Reporter
 
     generic_reference_field = convert_mongoengine_field(
-        Parent._fields['generic_reference'], None
-    )
-    print(generic_reference_field)
-    """
-    # print(Parent._fields['generic_reference'].__dict__)
+        Reporter._fields['generic_reference'])
     assert isinstance(generic_reference_field, graphene.Field)
-    """
+    assert isinstance(generic_reference_field.type(), graphene.Union)
