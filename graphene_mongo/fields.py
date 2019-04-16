@@ -3,8 +3,8 @@ from __future__ import absolute_import
 from collections import OrderedDict
 from functools import partial, reduce
 
+import graphene
 import mongoengine
-from graphene import PageInfo
 from graphene.relay import ConnectionField
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
@@ -65,6 +65,13 @@ class MongoengineConnectionField(ConnectionField):
 
     def _field_args(self, items):
         def is_filterable(k):
+            """
+            Args:
+                k (str): field name.
+            Returns:
+                bool
+            """
+
             if not hasattr(self.model, k):
                 return False
             if isinstance(getattr(self.model, k), property):
@@ -75,8 +82,10 @@ class MongoengineConnectionField(ConnectionField):
                 return False
             if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
-            if callable(getattr(converted, 'type', None)) and isinstance(converted.type(),
-                                                                         (PointFieldType, MultiPolygonFieldType)):
+            if callable(getattr(converted, 'type', None)) \
+                    and isinstance(
+                        converted.type(),
+                        (PointFieldType, MultiPolygonFieldType, graphene.Union)):
                 return False
             return True
 
@@ -158,7 +167,7 @@ class MongoengineConnectionField(ConnectionField):
             list_length=list_length,
             connection_type=self.type,
             edge_type=self.type.Edge,
-            pageinfo_type=PageInfo,
+            pageinfo_type=graphene.PageInfo,
         )
         connection.iterable = objs
         connection.list_length = list_length

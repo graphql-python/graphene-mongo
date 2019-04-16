@@ -57,6 +57,12 @@ def test_should_query_reporter(fixtures):
                             headline
                         }
                     }
+                },
+                genericReference {
+                    __typename
+                    ... on ArticleNode {
+                        headline
+                    }
                 }
             }
         }
@@ -108,6 +114,10 @@ def test_should_query_reporter(fixtures):
                         }
                     }
                 ],
+            },
+            'genericReference': {
+                '__typename': 'ArticleNode',
+                'headline': 'Hello'
             }
         }
     }
