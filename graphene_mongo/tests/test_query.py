@@ -127,6 +127,7 @@ def test_should_query_reporter(fixtures):
     assert not result.errors
     assert dict(result.data['reporter']) == expected['reporter']
 
+
 def test_should_custom_kwargs(fixtures):
 
     class Query(graphene.ObjectType):
