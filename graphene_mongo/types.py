@@ -1,10 +1,10 @@
-from collections import OrderedDict
+import graphene
+import mongoengine
 
-from graphene import Field, ConnectionField
-from graphene.relay import Connection, Node
+from collections import OrderedDict
+from graphene.relay import Connection, Node, is_node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
-from mongoengine import ListField
 
 from graphene_mongo import MongoengineConnectionField
 from .converter import convert_mongoengine_field
@@ -23,7 +23,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # We skip this field if we specify only_fields and is not
             # in there. Or when we exclude this field in exclude_fields
             continue
-        if isinstance(field, ListField):
+        if isinstance(field, mongoengine.ListField):
             # Take care of list of self-reference.
             document_type_obj = field.field.__dict__.get('document_type_obj', None)
             if document_type_obj == model._class_name \
@@ -78,11 +78,10 @@ class MongoengineObjectType(ObjectType):
             'The attribute registry in {}.Meta needs to be an instance of '
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
-
         converted_fields, self_referenced = construct_fields(
             model, registry, only_fields, exclude_fields
         )
-        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
+        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
         if use_connection is None and interfaces:
             use_connection = any((issubclass(interface, Node) for interface in interfaces))
 
@@ -101,8 +100,8 @@ class MongoengineObjectType(ObjectType):
             ).format(cls.__name__, type(connection))
 
         if connection_field_class is not None:
-            assert issubclass(connection_field_class, ConnectionField), (
-                'The attribute connection_field_class in {}.Meta must be of type ConnectionField. '
+            assert issubclass(connection_field_class, graphene.ConnectionField), (
+                'The attribute connection_field_class in {}.Meta must be of type graphene.ConnectionField. '
                 'Received "{}" instead.'
             ).format(cls.__name__, type(connection_field_class))
         else:
@@ -128,7 +127,7 @@ class MongoengineObjectType(ObjectType):
             # Notes: Take care list of self-reference fields.
             converted_fields = construct_self_referenced_fields(self_referenced, registry)
             if converted_fields:
-                mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
+                mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
                 cls._meta.fields.update(mongoengine_fields)
                 registry.register(cls)
 
@@ -141,7 +140,7 @@ class MongoengineObjectType(ObjectType):
             cls._meta.only_fields, cls._meta.exclude_fields
         )
 
-        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=Field)
+        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
 
         # The initial scan should take precidence
         for field in mongoengine_fields:
