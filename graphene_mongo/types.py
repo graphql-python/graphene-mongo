@@ -2,7 +2,7 @@ import graphene
 import mongoengine
 
 from collections import OrderedDict
-from graphene.relay import Connection, Node, is_node
+from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
 
@@ -13,6 +13,17 @@ from .utils import (get_model_fields, is_valid_mongoengine_model)
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
+    """
+    Args:
+        model (mongoengine.Document):
+        registry (graphene_mongo.registry.Registry):
+        only_fields ([str]):
+        exclude_fields ([str]):
+
+    Returns:
+        (OrderedDict, OrderedDict): coverted fields and self reference fields.
+
+    """
     _model_fields = get_model_fields(model)
     fields = OrderedDict()
     self_referenced = OrderedDict()
