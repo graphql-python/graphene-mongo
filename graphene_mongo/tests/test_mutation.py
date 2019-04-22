@@ -4,7 +4,7 @@ from graphene.relay import Node
 
 from .setup import fixtures
 from .models import (Article, Editor)
-from .types import (ArticleNode, EditorNode)
+from .nodes import (ArticleNode, EditorNode)
 
 
 def test_should_create(fixtures):

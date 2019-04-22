@@ -63,6 +63,7 @@ def fixtures():
     )
     reporter1.embedded_articles = [embedded_article1, embedded_article2]
     reporter1.embedded_list_articles = [embedded_article2, embedded_article1]
+    reporter1.generic_reference = article1
     reporter1.save()
 
     Player.drop_collection()

@@ -1,16 +1,10 @@
 import graphene
 import mongoengine
-
-from graphene import (
-    Dynamic, Node
-)
-
 from py.test import raises
 
 from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
-    ProfessorMetadata, ProfessorVector,
-    Publisher)
+    ProfessorMetadata, ProfessorVector, Publisher)
 from .. import registry
 from ..converter import convert_mongoengine_field
 from ..fields import MongoengineConnectionField
@@ -114,11 +108,11 @@ def test_should_reference_convert_dynamic():
 
         class Meta:
             model = Editor
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         EmbeddedArticle._fields['editor'], E._meta.registry)
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == E
@@ -130,12 +124,12 @@ def test_should_lazy_reference_convert_dynamic():
 
         class Meta:
             model = Publisher
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         Editor._fields['company'], P._meta.registry)
 
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == P
@@ -147,11 +141,11 @@ def test_should_embedded_convert_dynamic():
 
         class Meta:
             model = ProfessorMetadata
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         ProfessorVector._fields['metadata'], PM._meta.registry)
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == PM
@@ -161,7 +155,7 @@ def test_should_convert_none():
     registry.reset_global_registry()
     dynamic_field = convert_mongoengine_field(
         EmbeddedArticle._fields['editor'], registry.get_global_registry())
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert graphene_type is None
 
@@ -170,7 +164,7 @@ def test_should_convert_none_lazily():
     registry.reset_global_registry()
     dynamic_field = convert_mongoengine_field(
         Editor._fields['company'], registry.get_global_registry())
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert graphene_type is None
 
@@ -223,11 +217,11 @@ def test_should_self_reference_convert_dynamic():
 
         class Meta:
             model = Player
-            interfaces = (Node,)
+            interfaces = (graphene.Node,)
 
     dynamic_field = convert_mongoengine_field(
         Player._fields['opponent'], P._meta.registry)
-    assert isinstance(dynamic_field, Dynamic)
+    assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == P
@@ -300,3 +294,28 @@ def test_should_description_convert_reference_metadata():
         Article._fields['editor'], A._meta.registry
     ).get_type()
     assert editor_field.description == "An Editor of a publication."
+
+
+def test_should_generic_reference_convert_union():
+    pass
+    """
+    class A(MongoengineObjectType):
+
+        class Meta:
+            model = Article
+
+    class E(MongoengineObjectType):
+
+        class Meta:
+            model = Editor
+
+    class R(MongoengineObjectType):
+
+        class Meta:
+            model = Reporter
+
+    generic_reference_field = convert_mongoengine_field(
+        Reporter._fields['generic_reference'], registry.get_global_registry())
+    assert isinstance(generic_reference_field, graphene.Field)
+    assert isinstance(generic_reference_field.type(), graphene.Union)
+    """

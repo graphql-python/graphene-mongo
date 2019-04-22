@@ -7,7 +7,7 @@ from graphene.relay import Node
 
 from .setup import fixtures
 from .models import Article, Reporter
-from .types import (ArticleNode,
+from .nodes import (ArticleNode,
                     EditorNode,
                     PlayerNode,
                     ReporterNode,
@@ -56,6 +56,12 @@ def test_should_query_reporter(fixtures):
                         node {
                             headline
                         }
+                    }
+                },
+                genericReference {
+                    __typename
+                    ... on ArticleNode {
+                        headline
                     }
                 }
             }
@@ -108,6 +114,10 @@ def test_should_query_reporter(fixtures):
                         }
                     }
                 ],
+            },
+            'genericReference': {
+                '__typename': 'ArticleNode',
+                'headline': 'Hello'
             }
         }
     }
@@ -779,16 +789,16 @@ def test_should_query_with_embedded_document(fixtures):
 
     query = '''
     query {
-      allProfessors {
-        edges {
-            node {
-                vec,
-                metadata {
-                     firstName
+        allProfessors {
+            edges {
+                node {
+                    vec,
+                    metadata {
+                        firstName
+                    }
                 }
             }
         }
-      }
     }
     '''
     expected = {

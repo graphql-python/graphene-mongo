@@ -1,10 +1,10 @@
-from ..fields import MongoengineConnectionField
-from .types import ArticleNode, PublisherNode, ReporterNode, ErroneousModelNode
+from . import nodes
 from .setup import fixtures
+from ..fields import MongoengineConnectionField
 
 
 def test_article_field_args():
-    field = MongoengineConnectionField(ArticleNode)
+    field = MongoengineConnectionField(nodes.ArticleNode)
 
     field_args = ['id', 'headline', 'pub_date']
     assert set(field.field_args.keys()) == set(field_args)
@@ -18,35 +18,35 @@ def test_article_field_args():
 
 
 def test_reporter_field_args():
-    field = MongoengineConnectionField(ReporterNode)
+    field = MongoengineConnectionField(nodes.ReporterNode)
 
     field_args = ['id', 'first_name', 'last_name', 'email', 'awards']
     assert set(field.field_args.keys()) == set(field_args)
 
 
 def test_field_args_with_property():
-    field = MongoengineConnectionField(PublisherNode)
+    field = MongoengineConnectionField(nodes.PublisherNode)
 
     field_args = ['id', 'name']
     assert set(field.field_args.keys()) == set(field_args)
 
 
 def test_field_args_with_unconverted_field():
-    field = MongoengineConnectionField(PublisherNode)
+    field = MongoengineConnectionField(nodes.PublisherNode)
 
     field_args = ['id', 'name']
     assert set(field.field_args.keys()) == set(field_args)
 
 
 def test_default_resolver_with_colliding_objects_field():
-    field = MongoengineConnectionField(ErroneousModelNode)
+    field = MongoengineConnectionField(nodes.ErroneousModelNode)
 
     connection = field.default_resolver(None, {})
     assert 0 == len(connection.iterable)
 
 
 def test_default_resolver_connection_list_length(fixtures):
-    field = MongoengineConnectionField(ArticleNode)
+    field = MongoengineConnectionField(nodes.ArticleNode)
 
     connection = field.default_resolver(None, {}, **{'first': 1})
     assert hasattr(connection, 'list_length')
