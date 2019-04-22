@@ -1,4 +1,5 @@
 import mongoengine
+import uuid
 from graphene import (
     ID,
     Boolean,
@@ -22,8 +23,6 @@ from .utils import (
 )
 
 singledispatch = import_single_dispatch()
-
-_union_registry = {}
 
 
 class MongoEngineConversionError(Exception):
@@ -126,18 +125,21 @@ def convert_field_to_union(field, registry=None):
         if _type:
             _types.append(_type.type)
         else:
-            # Can register type auto-matically here.
+            # TODO: Register type auto-matically here.
             pass
 
     if len(_types) == 0:
         return None
 
-    print('*' * 50)
-    print(field.__dict__)
-    name = field._owner_document.__name__ + '_' + field.db_field + '_union'
+    # XXX: Use uuid to avoid duplicate name
+    name = '{}_{}_union_{}'.format(
+        field._owner_document.__name__,
+        field.db_field,
+        str(uuid.uuid1()).replace('-', '')
+    )
     Meta = type('Meta', (object, ), {'types': tuple(_types)})
-    _union_registry[name] = type(name, (Union, ), {'Meta': Meta})
-    return Field(_union_registry.get(name))
+    _union = type(name, (Union, ), {'Meta': Meta})
+    return Field(_union)
 
 
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)

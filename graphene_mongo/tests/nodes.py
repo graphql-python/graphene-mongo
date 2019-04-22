@@ -1,7 +1,8 @@
 import graphene
 from graphene.relay import Node
 
-from . import models, types
+from . import models
+from . import types  # noqa: F401
 from ..types import MongoengineObjectType
 
 
