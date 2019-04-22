@@ -40,7 +40,8 @@ class Article(mongoengine.Document):
         help_text="The date of first press.")
     editor = mongoengine.ReferenceField(Editor)
     reporter = mongoengine.ReferenceField('Reporter')
-    # generic_reference = mongoengine.GenericReferenceField(choices=[Editor])
+    # Will not convert this field cause no chioces
+    generic_reference = mongoengine.GenericReferenceField()
 
 
 class EmbeddedArticle(mongoengine.EmbeddedDocument):
