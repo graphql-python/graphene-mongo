@@ -11,7 +11,7 @@ def _resolve_type_coordinates(self, info):
     return self['coordinates']
 
 
-class _CoordinatesField(graphene.ObjectType):
+class _TypeField(graphene.ObjectType):
 
     type = graphene.String()
 
@@ -19,13 +19,13 @@ class _CoordinatesField(graphene.ObjectType):
         return self['type']
 
 
-class PointFieldType(_CoordinatesField):
+class PointFieldType(_TypeField):
 
     coordinates = graphene.List(
         graphene.Float, resolver=_resolve_type_coordinates)
 
 
-class PolygonFieldType(_CoordinatesField):
+class PolygonFieldType(_TypeField):
 
     coordinates = graphene.List(
         graphene.List(
@@ -34,7 +34,7 @@ class PolygonFieldType(_CoordinatesField):
     )
 
 
-class MultiPolygonFieldType(_CoordinatesField):
+class MultiPolygonFieldType(_TypeField):
 
     coordinates = graphene.List(
         graphene.List(

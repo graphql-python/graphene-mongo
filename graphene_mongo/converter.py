@@ -1,3 +1,5 @@
+import mongoengine
+import uuid
 from graphene import (
     ID,
     Boolean,
@@ -9,14 +11,16 @@ from graphene import (
     List,
     NonNull,
     String,
+    Union,
     is_node
 )
 from graphene.types.json import JSONString
-
-import mongoengine
+from mongoengine.base import get_document
 
 from . import advanced_types
-from .utils import import_single_dispatch, get_field_description
+from .utils import (
+    import_single_dispatch, get_field_description,
+)
 
 singledispatch = import_single_dispatch()
 
@@ -108,6 +112,34 @@ def convert_field_to_list(field, registry=None):
         base_type = type(base_type)
 
     return List(base_type, description=get_field_description(field, registry), required=field.required)
+
+
+@convert_mongoengine_field.register(mongoengine.GenericReferenceField)
+def convert_field_to_union(field, registry=None):
+
+    _types = []
+    for choice in field.choices:
+        _field = mongoengine.ReferenceField(get_document(choice))
+        _field = convert_mongoengine_field(_field, registry)
+        _type = _field.get_type()
+        if _type:
+            _types.append(_type.type)
+        else:
+            # TODO: Register type auto-matically here.
+            pass
+
+    if len(_types) == 0:
+        return None
+
+    # XXX: Use uuid to avoid duplicate name
+    name = '{}_{}_union_{}'.format(
+        field._owner_document.__name__,
+        field.db_field,
+        str(uuid.uuid1()).replace('-', '')
+    )
+    Meta = type('Meta', (object, ), {'types': tuple(_types)})
+    _union = type(name, (Union, ), {'Meta': Meta})
+    return Field(_union)
 
 
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)

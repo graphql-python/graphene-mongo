@@ -66,7 +66,8 @@ def test_objecttype_registered():
         'embedded_articles',
         'embedded_list_articles',
         'articles',
-        'awards'
+        'awards',
+        'generic_reference',
     ])
 
 
