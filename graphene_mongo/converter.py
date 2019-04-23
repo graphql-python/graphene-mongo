@@ -96,6 +96,8 @@ def convert_field_to_datetime(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentListField)
 def convert_field_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
+    if isinstance(base_type, Field):
+        return List(base_type._type, description=get_field_description(field, registry), required=field.required)
     if isinstance(base_type, (Dynamic)):
         base_type = base_type.get_type()
         if base_type is None:
@@ -116,7 +118,6 @@ def convert_field_to_list(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.GenericReferenceField)
 def convert_field_to_union(field, registry=None):
-
     _types = []
     for choice in field.choices:
         _field = mongoengine.ReferenceField(get_document(choice))
@@ -137,8 +138,8 @@ def convert_field_to_union(field, registry=None):
         field.db_field,
         str(uuid.uuid1()).replace('-', '')
     )
-    Meta = type('Meta', (object, ), {'types': tuple(_types)})
-    _union = type(name, (Union, ), {'Meta': Meta})
+    Meta = type('Meta', (object,), {'types': tuple(_types)})
+    _union = type(name, (Union,), {'Meta': Meta})
     return Field(_union)
 
 
