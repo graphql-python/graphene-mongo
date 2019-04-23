@@ -297,8 +297,6 @@ def test_should_description_convert_reference_metadata():
 
 
 def test_should_generic_reference_convert_union():
-    pass
-    """
     class A(MongoengineObjectType):
 
         class Meta:
@@ -318,4 +316,4 @@ def test_should_generic_reference_convert_union():
         Reporter._fields['generic_reference'], registry.get_global_registry())
     assert isinstance(generic_reference_field, graphene.Field)
     assert isinstance(generic_reference_field.type(), graphene.Union)
-    """
+    assert generic_reference_field.type()._meta.types == (A, E)
