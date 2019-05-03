@@ -42,7 +42,7 @@ def test_should_query_editor(fixtures):
     expected = {
         'editor': {
             'firstName': 'Penny',
-            'company': {"name": "Newsco"}
+            'company': {'name': 'Newsco'}
         },
         'editors': [{
             'firstName': 'Penny',
@@ -55,15 +55,17 @@ def test_should_query_editor(fixtures):
             'lastName': 'Rodman'
         }]
     }
-    expected_metadata = '{"age": "20", "nickname": "$1"}'
+    expected_metadata = {
+        'age': '20',
+        'nickname': "$1"
+    }
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
     metadata = result.data['editor'].pop('metadata')
-    assert (json.loads(metadata)) == dict(json.loads(expected_metadata))
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert cmp(json.loads(metadata), expected_metadata) == 0
+    assert cmp(result.data, expected) == 0
 
 
 def test_should_query_reporter(fixtures):
@@ -125,7 +127,7 @@ def test_should_query_reporter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['reporter']) == expected['reporter']
+    assert cmp(result.data, expected) == 0
 
 
 def test_should_custom_kwargs(fixtures):
@@ -163,7 +165,7 @@ def test_should_custom_kwargs(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert all(item in result.data['editors'] for item in expected['editors'])
+    assert cmp(result.data, expected) == 0
 
 
 def test_should_self_reference(fixtures):
@@ -232,8 +234,7 @@ def test_should_self_reference(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert cmp(result.data, expected) == 0
 
 
 def test_should_query_with_embedded_document(fixtures):
@@ -266,8 +267,7 @@ def test_should_query_with_embedded_document(fixtures):
     schema = graphene.Schema(query=Query, types=[ProfessorVectorType])
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert cmp(result.data, expected) == 0
 
 
 def test_should_query_child(fixtures):
@@ -311,8 +311,7 @@ def test_should_query_child(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert cmp(result.data, expected) == 0
 
 
 def test_should_query_cell_tower(fixtures):
@@ -372,5 +371,4 @@ def test_should_query_cell_tower(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert cmp(result.data, expected) == 0
