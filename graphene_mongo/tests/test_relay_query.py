@@ -1,4 +1,3 @@
-import json
 import pytest
 
 import graphene
@@ -271,8 +270,7 @@ def test_should_filter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_filter_by_reference_field(fixtures):
@@ -312,8 +310,7 @@ def test_should_filter_by_reference_field(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_filter_through_inheritance(fixtures):
@@ -357,8 +354,7 @@ def test_should_filter_through_inheritance(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_filter_by_list_contains(fixtures):
