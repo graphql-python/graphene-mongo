@@ -17,6 +17,7 @@ def _resolve_data(self, info):
 
 class FsFile(mongoengine.Document):
 
+    # TODO: Need to take care collection name instead of hard-code
     meta = {'collection': 'fs.files'}
     content_type = mongoengine.StringField(name='contentType')
     chunk_size = mongoengine.IntField(name='chunkSize')
