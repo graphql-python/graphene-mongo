@@ -141,7 +141,10 @@ def test_should_query_all_editors(fixtures):
                 node {
                     id,
                     firstName,
-                    lastName
+                    lastName,
+                    avatar {
+                        contentType
+                    }
                 }
             }
           }
@@ -154,14 +157,20 @@ def test_should_query_all_editors(fixtures):
                     'node': {
                         'id': 'RWRpdG9yTm9kZTox',
                         'firstName': 'Penny',
-                        'lastName': 'Hardaway'
+                        'lastName': 'Hardaway',
+                        'avatar': {
+                            'contentType': 'image/jpeg'
+                        }
                     }
                 },
                 {
                     'node': {
                         'id': 'RWRpdG9yTm9kZToy',
                         'firstName': 'Grant',
-                        'lastName': 'Hill'
+                        'lastName': 'Hill',
+                        'avatar': {
+                            'contentType': None
+                        }
                     }
 
                 },
@@ -169,7 +178,10 @@ def test_should_query_all_editors(fixtures):
                     'node': {
                         'id': 'RWRpdG9yTm9kZToz',
                         'firstName': 'Dennis',
-                        'lastName': 'Rodman'
+                        'lastName': 'Rodman',
+                        'avatar': {
+                            'contentType': None
+                        }
                     }
                 }
             ]
