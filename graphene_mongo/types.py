@@ -163,7 +163,16 @@ class MongoengineObjectType(ObjectType):
     # noqa
     @classmethod
     def is_type_of(cls, root, info):
+        print('cls')
+        print(cls)
+        print('root')
+        print(root.__dict__)
+        print(root)
+        print(type(root))
+        print('*' * 20)
         if isinstance(root, cls):
+            return True
+        if isinstance(root, mongoengine.GridFSProxy):
             return True
         if not is_valid_mongoengine_model(type(root)):
             raise Exception((

@@ -27,9 +27,15 @@ def fixtures():
     )
     image_filename = os.path.join(
         current_dirname, 'fixtures', 'image.jpg')
-    with open(image_filename, 'r') as f:
+    with open(image_filename, 'rb') as f:
         editor1.avatar.put(f, content_type='image/jpeg')
     editor1.save()
+
+    """
+    e = Editor.objects(first_name='Penny').first()
+    avatar = e.avatar.read()
+    print(e.avatar.content_type)
+    """
 
     editor2 = Editor(
         id='2',

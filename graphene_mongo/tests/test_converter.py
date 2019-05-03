@@ -98,6 +98,16 @@ def test_should_multipolygon_convert_field():
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
 
+def test_should_file_convert_field():
+    from ..advanced_types import FsFileType
+    dynamic_field = convert_mongoengine_field(
+        mongoengine.FileField(), registry.get_global_registry())
+    assert isinstance(dynamic_field, graphene.Dynamic)
+    graphene_type = dynamic_field.get_type()
+    assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == FsFileType
+
+
 def test_should_field_convert_list():
     assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
 
@@ -297,8 +307,6 @@ def test_should_description_convert_reference_metadata():
 
 
 def test_should_generic_reference_convert_union():
-    pass
-    """
     class A(MongoengineObjectType):
 
         class Meta:
@@ -318,4 +326,3 @@ def test_should_generic_reference_convert_union():
         Reporter._fields['generic_reference'], registry.get_global_registry())
     assert isinstance(generic_reference_field, graphene.Field)
     assert isinstance(generic_reference_field.type(), graphene.Union)
-    """
