@@ -103,6 +103,8 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def reference_args(self):
+        from .advanced_types import FsFile
+
         def get_reference_field(r, kv):
             field = kv[1]
             mongo_field = getattr(self.model, kv[0], None)
@@ -112,7 +114,7 @@ class MongoengineConnectionField(ConnectionField):
                 _type = field.get_type()
                 if _type:
                     node = _type._type._meta
-                    if 'id' in node.fields and not issubclass(node.model, mongoengine.EmbeddedDocument):
+                    if 'id' in node.fields and not issubclass(node.model, (mongoengine.EmbeddedDocument, FsFile)):
                         r.update({kv[0]: node.fields['id']._type.of_type()})
             return r
 
