@@ -101,7 +101,7 @@ def test_should_multipolygon_convert_field():
 def test_should_file_convert_field():
     from ..advanced_types import FsFileType
     dynamic_field = convert_mongoengine_field(
-        mongoengine.FileField(), registry.get_global_registry())
+        mongoengine.FileField(), FsFileType._meta.registry)
     assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
