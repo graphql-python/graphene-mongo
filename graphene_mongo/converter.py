@@ -97,21 +97,6 @@ def convert_multipolygon_to_field(field, register=None):
 @convert_mongoengine_field.register(mongoengine.FileField)
 def convert_file_to_field(field, registry=None):
     from . import advanced_types
-    """
-    from .advanced_models import FsFile
-
-    Meta = type(
-        'Meta',
-        (object,),
-        {'model': FsFile, 'interfaces': (Node,)}
-    )
-    _ = type(
-        '_FsFileType',
-        (MongoengineObjectType,),
-        {'Meta': Meta}
-    )
-    field = mongoengine.ReferenceField(FsFile)
-    """
     field = mongoengine.ReferenceField(advanced_types.FsFile)
     return convert_mongoengine_field(field, registry)
 
