@@ -1,4 +1,4 @@
-import models
+from . import models
 from ..types import MongoengineObjectType
 
 
