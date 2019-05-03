@@ -31,6 +31,12 @@ def test_should_query_editor(fixtures):
                 metadata,
                 company {
                     name
+                },
+                avatar {
+                    contentType,
+                    chunkSize,
+                    length,
+                    md5
                 }
             }
             editors {
@@ -42,7 +48,13 @@ def test_should_query_editor(fixtures):
     expected = {
         'editor': {
             'firstName': 'Penny',
-            'company': {'name': 'Newsco'}
+            'company': {'name': 'Newsco'},
+            'avatar': {
+                'contentType': 'image/jpeg',
+                'chunkSize': 261120,
+                'length': 46928,
+                'md5': 'f3c657fd472fdc4bc2ca9056a1ae6106'
+            }
         },
         'editors': [{
             'firstName': 'Penny',

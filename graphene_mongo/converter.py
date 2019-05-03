@@ -65,6 +65,11 @@ def convert_field_to_float(field, registry=None):
     return Float(description=get_field_description(field, registry), required=field.required)
 
 
+@convert_mongoengine_field.register(mongoengine.DateTimeField)
+def convert_field_to_datetime(field, registry=None):
+    return DateTime(description=get_field_description(field, registry), required=field.required)
+
+
 @convert_mongoengine_field.register(mongoengine.DictField)
 @convert_mongoengine_field.register(mongoengine.MapField)
 def convert_field_to_jsonstring(field, registry=None):
@@ -72,13 +77,13 @@ def convert_field_to_jsonstring(field, registry=None):
 
 
 @convert_mongoengine_field.register(mongoengine.PointField)
-def convert_point_to_field(field, register=None):
+def convert_point_to_field(field, registry=None):
     from . import advanced_types
     return Field(advanced_types.PointFieldType)
 
 
 @convert_mongoengine_field.register(mongoengine.PolygonField)
-def convert_polygon_to_field(field, register=None):
+def convert_polygon_to_field(field, registry=None):
     from . import advanced_types
     return Field(advanced_types.PolygonFieldType)
 
@@ -89,17 +94,26 @@ def convert_multipolygon_to_field(field, register=None):
     return Field(advanced_types.MultiPolygonFieldType)
 
 
-@convert_mongoengine_field.register(mongoengine.DateTimeField)
-def convert_field_to_datetime(field, registry=None):
-    return DateTime(description=get_field_description(field, registry), required=field.required)
-
-
 @convert_mongoengine_field.register(mongoengine.FileField)
-def convert_field_to_none(field, register=None):
-    from .advanced_types import FsFileType
-    print(FsFileType)
-    # FIXME
-    return None
+def convert_file_to_field(field, registry=None):
+    from . import advanced_types
+    """
+    from .advanced_models import FsFile
+
+    Meta = type(
+        'Meta',
+        (object,),
+        {'model': FsFile, 'interfaces': (Node,)}
+    )
+    _ = type(
+        '_FsFileType',
+        (MongoengineObjectType,),
+        {'Meta': Meta}
+    )
+    field = mongoengine.ReferenceField(FsFile)
+    """
+    field = mongoengine.ReferenceField(advanced_types.FsFile)
+    return convert_mongoengine_field(field, registry)
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
