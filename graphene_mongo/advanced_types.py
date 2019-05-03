@@ -1,3 +1,4 @@
+import base64
 import mongoengine
 import graphene
 
@@ -6,6 +7,12 @@ from .types import MongoengineObjectType
 
 def _resolve_type_coordinates(self, info):
     return self['coordinates']
+
+
+def _resolve_data(self, info):
+    v = getattr(self.instance, self.key)
+    data = v.read()
+    return base64.b64encode(data)
 
 
 class FsFile(mongoengine.Document):
@@ -21,6 +28,8 @@ class FsFileType(MongoengineObjectType):
 
     class Meta:
         model = FsFile
+
+    data = graphene.String(resolver=_resolve_data)
 
 
 class _TypeField(graphene.ObjectType):

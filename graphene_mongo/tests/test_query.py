@@ -36,7 +36,8 @@ def test_should_query_editor(fixtures):
                     contentType,
                     chunkSize,
                     length,
-                    md5
+                    md5,
+                    chunk
                 }
             }
             editors {
@@ -53,7 +54,8 @@ def test_should_query_editor(fixtures):
                 'contentType': 'image/jpeg',
                 'chunkSize': 261120,
                 'length': 46928,
-                'md5': 'f3c657fd472fdc4bc2ca9056a1ae6106'
+                'md5': 'f3c657fd472fdc4bc2ca9056a1ae6106',
+                'chunk': 'abc'
             }
         },
         'editors': [{
