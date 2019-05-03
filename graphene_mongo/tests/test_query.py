@@ -76,8 +76,8 @@ def test_should_query_editor(fixtures):
     result = schema.execute(query)
     assert not result.errors
     metadata = result.data['editor'].pop('metadata')
-    assert cmp(json.loads(metadata), expected_metadata) == 0
-    assert cmp(result.data, expected) == 0
+    assert json.loads(metadata) == expected_metadata
+    assert result.data == expected
 
 
 def test_should_query_reporter(fixtures):
@@ -139,7 +139,7 @@ def test_should_query_reporter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert cmp(result.data, expected) == 0
+    assert result.data == expected
 
 
 def test_should_custom_kwargs(fixtures):
@@ -177,7 +177,7 @@ def test_should_custom_kwargs(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert cmp(result.data, expected) == 0
+    assert result.data == expected
 
 
 def test_should_self_reference(fixtures):
@@ -246,7 +246,7 @@ def test_should_self_reference(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert cmp(result.data, expected) == 0
+    assert result.data == expected
 
 
 def test_should_query_with_embedded_document(fixtures):
@@ -279,7 +279,7 @@ def test_should_query_with_embedded_document(fixtures):
     schema = graphene.Schema(query=Query, types=[ProfessorVectorType])
     result = schema.execute(query)
     assert not result.errors
-    assert cmp(result.data, expected) == 0
+    assert result.data == expected
 
 
 def test_should_query_child(fixtures):
@@ -323,7 +323,7 @@ def test_should_query_child(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert cmp(result.data, expected) == 0
+    assert result.data == expected
 
 
 def test_should_query_cell_tower(fixtures):
@@ -383,4 +383,4 @@ def test_should_query_cell_tower(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert cmp(result.data, expected) == 0
+    assert result.data == expected

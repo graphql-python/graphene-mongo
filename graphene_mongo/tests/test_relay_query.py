@@ -526,8 +526,7 @@ def test_should_after(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_before(fixtures):
@@ -569,8 +568,7 @@ def test_should_before(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_last_n(fixtures):
@@ -611,8 +609,7 @@ def test_should_last_n(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_self_reference(fixtures):
@@ -723,8 +720,7 @@ def test_should_self_reference(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_lazy_reference(fixtures):
@@ -789,8 +785,7 @@ def test_should_lazy_reference(fixtures):
 
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_query_with_embedded_document(fixtures):
@@ -873,8 +868,7 @@ def test_should_get_queryset_returns_dict_filters(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_get_queryset_returns_qs_filters(fixtures):
@@ -919,5 +913,4 @@ def test_should_get_queryset_returns_qs_filters(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
