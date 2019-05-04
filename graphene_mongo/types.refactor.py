@@ -65,8 +65,14 @@ class MongoengineObjectTypeOptions(ObjectTypeOptions):
 
     model = None  # type: Model
     registry = None  # type: Registry
-    connection = None  # type: Type[Connection]
+    only_fields = ()
+    exclude_fields = ()
     filter_fields = ()
+    connection = None  # type: Type[Connection]
+    connection_class = None
+    use_connection = None
+    connection_field_class = None
+    interfaces = ()
 
 
 class MongoengineObjectType(ObjectType):
@@ -75,80 +81,79 @@ class MongoengineObjectType(ObjectType):
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
                                     only_fields=(), exclude_fields=(), filter_fields=None,
                                     connection=None, connection_class=None, use_connection=None,
-                                    connection_field_class=None, interfaces=(),
-                                    _meta=None, **options):
+                                    connection_field_class=None, interfaces=(), _meta=None,
+                                    **options):
 
-        assert is_valid_mongoengine_model(model), (
+        if not _meta:
+            _meta = MongoengineObjectTypeOptions(cls)
+            _meta.model = model
+            _meta.registry = registry
+            _meta.filter_fields = filter_fields
+            _meta.connection = connection
+            _meta.connection_class = connection_class
+            _meta.use_connection = use_connection
+            _meta.connection_field_class = connection_field_class
+            _meta.interfaces = interfaces
+            # Save them for later
+            _meta.only_fields = only_fields
+            _meta.exclude_fields = exclude_fields
+
+        assert is_valid_mongoengine_model(_meta.model), (
             'The attribute model in {}.Meta must be a valid Mongoengine Model. '
             'Received "{}" instead.'
-        ).format(cls.__name__, type(model))
+        ).format(cls.__name__, type(_meta.model))
 
-        if not registry:
-            registry = get_global_registry()
+        if not _meta.registry:
+            _meta.registry = get_global_registry()
 
-        assert isinstance(registry, Registry), (
+        assert isinstance(_meta.registry, Registry), (
             'The attribute registry in {}.Meta needs to be an instance of '
             'Registry, received "{}".'
-        ).format(cls.__name__, registry)
+        ).format(cls.__name__, _meta.registry)
         converted_fields, self_referenced = construct_fields(
-            model, registry, only_fields, exclude_fields
+            _meta.model, _meta.registry, _meta.only_fields,
+            _meta.exclude_fields
         )
         mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
-        if use_connection is None and interfaces:
-            use_connection = any((issubclass(interface, Node) for interface in interfaces))
+        _meta.fields = mongoengine_fields
 
-        if use_connection and not connection:
+        if _meta.use_connection is None and _meta.interfaces:
+            _meta.use_connection = any((issubclass(interface, Node)
+                                        for interface in _meta.interfaces))
+
+        if _meta.use_connection and not _meta.connection:
             # We create the connection automatically
-            if not connection_class:
-                connection_class = Connection
+            if not _meta.connection_class:
+                _meta.connection_class = Connection
 
-            connection = connection_class.create_type(
+            _meta.connection = _meta.connection_class.create_type(
                 '{}Connection'.format(cls.__name__), node=cls)
-
-        if connection is not None:
-            assert issubclass(connection, Connection), (
+        if _meta.connection is not None:
+            assert issubclass(_meta.connection, Connection), (
                 'The attribute connection in {}.Meta must be of type Connection. '
                 'Received "{}" instead.'
-            ).format(cls.__name__, type(connection))
+            ).format(cls.__name__, type(_meta.connection))
 
-        if connection_field_class is not None:
-            assert issubclass(connection_field_class, graphene.ConnectionField), (
+        if _meta.connection_field_class is not None:
+            assert issubclass(_meta.connection_field_class, graphene.ConnectionField), (
                 'The attribute connection_field_class in {}.Meta must be of type graphene.ConnectionField. '
                 'Received "{}" instead.'
-            ).format(cls.__name__, type(connection_field_class))
+            ).format(cls.__name__, type(_meta.connection_field_class))
         else:
-            connection_field_class = MongoengineConnectionField
-
-        if _meta:
-            assert isinstance(_meta, MongoengineObjectTypeOptions), (
-                '_meta must be an instance of MongoengineObjectTypeOptions, '
-                'received {}'
-            ).format(_meta.__class__)
-        else:
-            _meta = MongoengineObjectTypeOptions(cls)
-
-        _meta.model = model
-        _meta.registry = registry
-        _meta.fields = mongoengine_fields
-        _meta.filter_fields = filter_fields
-        _meta.connection = connection
-        _meta.connection_field_class = connection_field_class
-        # Save them for later
-        _meta.only_fields = only_fields
-        _meta.exclude_fields = exclude_fields
+            _meta.connection_field_class = MongoengineConnectionField
 
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
-            _meta=_meta, interfaces=interfaces, **options
+            _meta=_meta, interfaces=_meta.interfaces, **options
         )
 
         if not skip_registry:
-            registry.register(cls)
+            _meta.registry.register(cls)
             # Notes: Take care list of self-reference fields.
-            converted_fields = construct_self_referenced_fields(self_referenced, registry)
+            converted_fields = construct_self_referenced_fields(self_referenced, _meta.registry)
             if converted_fields:
                 mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
                 cls._meta.fields.update(mongoengine_fields)
-                registry.register(cls)
+                _meta.registry.register(cls)
 
     @classmethod
     def rescan_fields(cls):

@@ -4,7 +4,7 @@ from graphene import Field, Int, Interface, ObjectType
 from graphene.relay import Node, is_node
 
 from .. import registry
-from ..types import MongoengineObjectType
+from ..types import MongoengineObjectType, MongoengineObjectTypeOptions
 from .models import Article, EmbeddedArticle, Reporter
 from .models import Parent, Child
 from .utils import with_local_registry
@@ -127,3 +127,40 @@ def test_mongoengine_objecttype_exclude_fields():
             exclude_fields = ('headline')
 
     assert 'headline' not in list(A._meta.fields.keys())
+
+
+@with_local_registry
+def test_passing_meta_when_subclassing_mongoengine_objecttype():
+    class TypeSubclassWithBadOptions(MongoengineObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, **kwargs):
+            _meta = ['hi']
+            super(TypeSubclassWithBadOptions, cls). \
+                __init_subclass_with_meta__(_meta=_meta, **kwargs)
+
+    with raises(Exception) as einfo:
+        class A(TypeSubclassWithBadOptions):
+            class Meta:
+                model = Article
+    assert 'instance of MongoengineObjectTypeOptions' in str(einfo.value)
+
+    class TypeSubclass(MongoengineObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, some_subclass_attr=None,
+                                        **kwargs):
+            _meta = MongoengineObjectTypeOptions(cls)
+            _meta.some_subclass_attr = some_subclass_attr
+            super(TypeSubclass, cls). \
+                __init_subclass_with_meta__(_meta=_meta, **kwargs)
+
+    class B(TypeSubclass):
+        class Meta:
+            model = Article
+            some_subclass_attr = 'someval'
+    assert hasattr(B._meta, 'some_subclass_attr')
