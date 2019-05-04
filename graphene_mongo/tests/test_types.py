@@ -164,3 +164,4 @@ def test_passing_meta_when_subclassing_mongoengine_objecttype():
             model = Article
             some_subclass_attr = 'someval'
     assert hasattr(B._meta, 'some_subclass_attr')
+    assert B._meta.some_subclass_attr == 'someval'
