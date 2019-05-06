@@ -11,6 +11,12 @@ from .models import (
 
 current_dirname = os.path.dirname(os.path.abspath(__file__))
 
+
+@pytest.fixture()
+def fixtures_dirname():
+    return os.path.join(current_dirname, 'fixtures')
+
+
 @pytest.fixture(scope='module')
 def fixtures():
     Publisher.drop_collection()
@@ -30,13 +36,6 @@ def fixtures():
     with open(image_filename, 'rb') as f:
         editor1.avatar.put(f, content_type='image/jpeg')
     editor1.save()
-
-    e = Editor.objects(first_name='Penny').first()
-    avatar = e.avatar.read()
-    print(e.avatar.content_type)
-    print(e.avatar.chunk_size)
-    print(e.avatar.md5)
-    print(type(avatar))
 
     editor2 = Editor(
         id='2',
