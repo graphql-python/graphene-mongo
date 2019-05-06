@@ -1,8 +1,9 @@
+import base64
+import os
 import json
-
 import graphene
 
-from .setup import fixtures
+from .setup import fixtures, fixtures_dirname
 from .models import (
     Child, Editor, Player, Reporter, ProfessorVector, Parent, CellTower
 )
@@ -11,7 +12,7 @@ from .types import (
 )
 
 
-def test_should_query_editor(fixtures):
+def test_should_query_editor(fixtures, fixtures_dirname):
 
     class Query(graphene.ObjectType):
 
@@ -37,7 +38,7 @@ def test_should_query_editor(fixtures):
                     chunkSize,
                     length,
                     md5,
-                    chunk
+                    data
                 }
             }
             editors {
@@ -46,6 +47,11 @@ def test_should_query_editor(fixtures):
             }
         }
     '''
+
+    avator_filename = os.path.join(fixtures_dirname, 'image.jpg')
+    with open(avator_filename, 'rb') as f:
+        data = base64.b64encode(f.read())
+
     expected = {
         'editor': {
             'firstName': 'Penny',
@@ -55,7 +61,7 @@ def test_should_query_editor(fixtures):
                 'chunkSize': 261120,
                 'length': 46928,
                 'md5': 'f3c657fd472fdc4bc2ca9056a1ae6106',
-                'chunk': 'abc'
+                'data': str(data)
             }
         },
         'editors': [{

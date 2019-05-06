@@ -11,8 +11,7 @@ def _resolve_type_coordinates(self, info):
 
 def _resolve_data(self, info):
     v = getattr(self.instance, self.key)
-    data = v.read()
-    return base64.b64encode(data)
+    return base64.b64encode(v.read())
 
 
 class FsFile(mongoengine.Document):
@@ -30,7 +29,17 @@ class FsFileType(MongoengineObjectType):
     class Meta:
         model = FsFile
 
-    data = graphene.String(resolver=_resolve_data)
+    # data = graphene.String(
+    #     resolver=lambda self, *args, **kwargs: self.resolve_data())
+
+    data = graphene.String(
+        resolver=_resolve_data)
+
+    def resolve_data(self):
+        v = getattr(self.instance, self.key)
+        data = v.read()
+        print(type(data))
+        return base64.b64encode(data)
 
 
 class _TypeField(graphene.ObjectType):
