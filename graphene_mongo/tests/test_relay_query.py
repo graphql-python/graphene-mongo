@@ -1,10 +1,12 @@
+import base64
+import os
 import pytest
 
 import graphene
 
 from graphene.relay import Node
 
-from .setup import fixtures
+from .setup import fixtures, fixtures_dirname
 from .models import Article, Reporter
 from .nodes import (ArticleNode,
                     EditorNode,
@@ -127,7 +129,7 @@ def test_should_query_reporter(fixtures):
     assert dict(result.data['reporter']) == expected['reporter']
 
 
-def test_should_query_all_editors(fixtures):
+def test_should_query_all_editors(fixtures, fixtures_dirname):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -142,13 +144,20 @@ def test_should_query_all_editors(fixtures):
                     firstName,
                     lastName,
                     avatar {
-                        contentType
+                        contentType,
+                        length,
+                        data
                     }
                 }
             }
           }
         }
     '''
+
+    avator_filename = os.path.join(fixtures_dirname, 'image.jpg')
+    with open(avator_filename, 'rb') as f:
+        data = base64.b64encode(f.read())
+
     expected = {
         'allEditors': {
             'edges': [
@@ -158,7 +167,9 @@ def test_should_query_all_editors(fixtures):
                         'firstName': 'Penny',
                         'lastName': 'Hardaway',
                         'avatar': {
-                            'contentType': 'image/jpeg'
+                            'contentType': 'image/jpeg',
+                            'length': 46928,
+                            'data': str(data)
                         }
                     }
                 },
@@ -168,7 +179,9 @@ def test_should_query_all_editors(fixtures):
                         'firstName': 'Grant',
                         'lastName': 'Hill',
                         'avatar': {
-                            'contentType': None
+                            'contentType': None,
+                            'length': 0,
+                            'data': None
                         }
                     }
 
@@ -179,7 +192,9 @@ def test_should_query_all_editors(fixtures):
                         'firstName': 'Dennis',
                         'lastName': 'Rodman',
                         'avatar': {
-                            'contentType': None
+                            'contentType': None,
+                            'length': 0,
+                            'data': None
                         }
                     }
                 }
@@ -189,7 +204,7 @@ def test_should_query_all_editors(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allEditors']) == expected['allEditors']
+    assert result.data['allEditors'] == expected['allEditors']
 
 
 def test_should_filter_editors_by_id(fixtures):

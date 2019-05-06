@@ -17,6 +17,7 @@ from graphene import (
 from graphene.types.json import JSONString
 from mongoengine.base import get_document
 
+from . import advanced_types
 from .utils import (
     import_single_dispatch, get_field_description,
 )
@@ -78,27 +79,22 @@ def convert_field_to_jsonstring(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.PointField)
 def convert_point_to_field(field, registry=None):
-    from . import advanced_types
     return Field(advanced_types.PointFieldType)
 
 
 @convert_mongoengine_field.register(mongoengine.PolygonField)
 def convert_polygon_to_field(field, registry=None):
-    from . import advanced_types
     return Field(advanced_types.PolygonFieldType)
 
 
 @convert_mongoengine_field.register(mongoengine.MultiPolygonField)
 def convert_multipolygon_to_field(field, register=None):
-    from . import advanced_types
     return Field(advanced_types.MultiPolygonFieldType)
 
 
 @convert_mongoengine_field.register(mongoengine.FileField)
 def convert_file_to_field(field, registry=None):
-    from . import advanced_types
-    field = mongoengine.ReferenceField(advanced_types.FsFile)
-    return convert_mongoengine_field(field, registry)
+    return Field(advanced_types.FileFieldType)
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)

@@ -1,45 +1,47 @@
 import base64
-import mongoengine
 import graphene
-
-from .types import MongoengineObjectType
 
 
 def _resolve_type_coordinates(self, info):
     return self['coordinates']
 
 
+def _resolve_fs_field(field, name, default_value=None):
+    v = getattr(field.instance, field.key)
+    return getattr(v, name, default_value)
+
+
+def _resolve_content_type(self, info):
+    return _resolve_fs_field(self, 'content_type')
+
+
+def _resolve_md5(self, info):
+    return _resolve_fs_field(self, 'md5')
+
+
+def _resolve_chunk_size(self, info):
+    return _resolve_fs_field(self, 'chunk_size', 0)
+
+
+def _resolve_length(self, info):
+    return _resolve_fs_field(self, 'length', 0)
+
+
 def _resolve_data(self, info):
     v = getattr(self.instance, self.key)
-    return base64.b64encode(v.read())
-
-
-class FsFile(mongoengine.Document):
-
-    # TODO: Need to take care collection name instead of hard-code
-    meta = {'collection': 'fs.files'}
-    content_type = mongoengine.StringField(name='contentType')
-    chunk_size = mongoengine.IntField(name='chunkSize')
-    length = mongoengine.IntField()
-    md5 = mongoengine.StringField()
-
-
-class FsFileType(MongoengineObjectType):
-
-    class Meta:
-        model = FsFile
-
-    # data = graphene.String(
-    #     resolver=lambda self, *args, **kwargs: self.resolve_data())
-
-    data = graphene.String(
-        resolver=_resolve_data)
-
-    def resolve_data(self):
-        v = getattr(self.instance, self.key)
-        data = v.read()
-        print(type(data))
+    data = v.read()
+    if data is not None:
         return base64.b64encode(data)
+    return None
+
+
+class FileFieldType(graphene.ObjectType):
+
+    content_type = graphene.String(resolver=_resolve_content_type)
+    md5 = graphene.String(resolver=_resolve_md5)
+    chunk_size = graphene.Int(resolver=_resolve_chunk_size)
+    length = graphene.Int(resolver=_resolve_length)
+    data = graphene.String(resolver=_resolve_data)
 
 
 class _TypeField(graphene.ObjectType):
