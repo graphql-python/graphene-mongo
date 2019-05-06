@@ -1,11 +1,12 @@
-import json
+import base64
+import os
 import pytest
 
 import graphene
 
 from graphene.relay import Node
 
-from .setup import fixtures
+from .setup import fixtures, fixtures_dirname
 from .models import Article, Reporter
 from .nodes import (ArticleNode,
                     EditorNode,
@@ -128,7 +129,7 @@ def test_should_query_reporter(fixtures):
     assert dict(result.data['reporter']) == expected['reporter']
 
 
-def test_should_query_all_editors(fixtures):
+def test_should_query_all_editors(fixtures, fixtures_dirname):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -141,12 +142,22 @@ def test_should_query_all_editors(fixtures):
                 node {
                     id,
                     firstName,
-                    lastName
+                    lastName,
+                    avatar {
+                        contentType,
+                        length,
+                        data
+                    }
                 }
             }
           }
         }
     '''
+
+    avator_filename = os.path.join(fixtures_dirname, 'image.jpg')
+    with open(avator_filename, 'rb') as f:
+        data = base64.b64encode(f.read())
+
     expected = {
         'allEditors': {
             'edges': [
@@ -154,14 +165,24 @@ def test_should_query_all_editors(fixtures):
                     'node': {
                         'id': 'RWRpdG9yTm9kZTox',
                         'firstName': 'Penny',
-                        'lastName': 'Hardaway'
+                        'lastName': 'Hardaway',
+                        'avatar': {
+                            'contentType': 'image/jpeg',
+                            'length': 46928,
+                            'data': str(data)
+                        }
                     }
                 },
                 {
                     'node': {
                         'id': 'RWRpdG9yTm9kZToy',
                         'firstName': 'Grant',
-                        'lastName': 'Hill'
+                        'lastName': 'Hill',
+                        'avatar': {
+                            'contentType': None,
+                            'length': 0,
+                            'data': None
+                        }
                     }
 
                 },
@@ -169,7 +190,12 @@ def test_should_query_all_editors(fixtures):
                     'node': {
                         'id': 'RWRpdG9yTm9kZToz',
                         'firstName': 'Dennis',
-                        'lastName': 'Rodman'
+                        'lastName': 'Rodman',
+                        'avatar': {
+                            'contentType': None,
+                            'length': 0,
+                            'data': None
+                        }
                     }
                 }
             ]
@@ -178,7 +204,7 @@ def test_should_query_all_editors(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allEditors']) == expected['allEditors']
+    assert result.data['allEditors'] == expected['allEditors']
 
 
 def test_should_filter_editors_by_id(fixtures):
@@ -259,8 +285,7 @@ def test_should_filter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_filter_by_reference_field(fixtures):
@@ -300,8 +325,7 @@ def test_should_filter_by_reference_field(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_filter_through_inheritance(fixtures):
@@ -345,8 +369,7 @@ def test_should_filter_through_inheritance(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_filter_by_list_contains(fixtures):
@@ -514,8 +537,7 @@ def test_should_after(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_before(fixtures):
@@ -557,8 +579,7 @@ def test_should_before(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_last_n(fixtures):
@@ -599,8 +620,7 @@ def test_should_last_n(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_self_reference(fixtures):
@@ -711,8 +731,7 @@ def test_should_self_reference(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_lazy_reference(fixtures):
@@ -777,8 +796,7 @@ def test_should_lazy_reference(fixtures):
 
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_query_with_embedded_document(fixtures):
@@ -861,8 +879,7 @@ def test_should_get_queryset_returns_dict_filters(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_get_queryset_returns_qs_filters(fixtures):
@@ -907,5 +924,4 @@ def test_should_get_queryset_returns_qs_filters(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True)
+    assert result.data == expected

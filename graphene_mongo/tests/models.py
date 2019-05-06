@@ -1,7 +1,10 @@
 import mongoengine
 from datetime import datetime
+from mongomock import gridfs
 
+gridfs.enable_gridfs_integration()
 mongoengine.connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
+# mongoengine.connect('graphene-mongo-test', host='mongodb://192.168.15.91/graphene-mongo-dev')
 
 
 class Publisher(mongoengine.Document):
@@ -28,6 +31,7 @@ class Editor(mongoengine.Document):
     last_name = mongoengine.StringField(required=True, help_text="Editor's last name.")
     metadata = mongoengine.MapField(field=mongoengine.StringField(), help_text="Arbitrary metadata.")
     company = mongoengine.LazyReferenceField(Publisher)
+    avatar = mongoengine.FileField()
 
 
 class Article(mongoengine.Document):

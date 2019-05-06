@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from datetime import datetime
@@ -7,6 +8,13 @@ from .models import (
     ChildRegisteredBefore, ChildRegisteredAfter,
     ParentWithRelationship, CellTower,
     Publisher)
+
+current_dirname = os.path.dirname(os.path.abspath(__file__))
+
+
+@pytest.fixture()
+def fixtures_dirname():
+    return os.path.join(current_dirname, 'fixtures')
 
 
 @pytest.fixture(scope='module')
@@ -23,7 +31,12 @@ def fixtures():
         metadata={'age': '20', 'nickname': '$1'},
         company=publisher1
     )
+    image_filename = os.path.join(
+        current_dirname, 'fixtures', 'image.jpg')
+    with open(image_filename, 'rb') as f:
+        editor1.avatar.put(f, content_type='image/jpeg')
     editor1.save()
+
     editor2 = Editor(
         id='2',
         first_name='Grant',

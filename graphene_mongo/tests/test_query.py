@@ -1,8 +1,9 @@
+import base64
+import os
 import json
-
 import graphene
 
-from .setup import fixtures
+from .setup import fixtures, fixtures_dirname
 from .models import (
     Child, Editor, Player, Reporter, ProfessorVector, Parent, CellTower
 )
@@ -11,7 +12,7 @@ from .types import (
 )
 
 
-def test_should_query_editor(fixtures):
+def test_should_query_editor(fixtures, fixtures_dirname):
 
     class Query(graphene.ObjectType):
 
@@ -31,6 +32,13 @@ def test_should_query_editor(fixtures):
                 metadata,
                 company {
                     name
+                },
+                avatar {
+                    contentType,
+                    chunkSize,
+                    length,
+                    md5,
+                    data
                 }
             }
             editors {
@@ -39,10 +47,22 @@ def test_should_query_editor(fixtures):
             }
         }
     '''
+
+    avator_filename = os.path.join(fixtures_dirname, 'image.jpg')
+    with open(avator_filename, 'rb') as f:
+        data = base64.b64encode(f.read())
+
     expected = {
         'editor': {
             'firstName': 'Penny',
-            'company': {"name": "Newsco"}
+            'company': {'name': 'Newsco'},
+            'avatar': {
+                'contentType': 'image/jpeg',
+                'chunkSize': 261120,
+                'length': 46928,
+                'md5': 'f3c657fd472fdc4bc2ca9056a1ae6106',
+                'data': str(data)
+            }
         },
         'editors': [{
             'firstName': 'Penny',
@@ -55,15 +75,17 @@ def test_should_query_editor(fixtures):
             'lastName': 'Rodman'
         }]
     }
-    expected_metadata = '{"age": "20", "nickname": "$1"}'
+    expected_metadata = {
+        'age': '20',
+        'nickname': "$1"
+    }
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
     metadata = result.data['editor'].pop('metadata')
-    assert (json.loads(metadata)) == dict(json.loads(expected_metadata))
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert json.loads(metadata) == expected_metadata
+    assert result.data == expected
 
 
 def test_should_query_reporter(fixtures):
@@ -125,7 +147,7 @@ def test_should_query_reporter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['reporter']) == expected['reporter']
+    assert result.data == expected
 
 
 def test_should_custom_kwargs(fixtures):
@@ -163,7 +185,7 @@ def test_should_custom_kwargs(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert all(item in result.data['editors'] for item in expected['editors'])
+    assert result.data == expected
 
 
 def test_should_self_reference(fixtures):
@@ -232,8 +254,7 @@ def test_should_self_reference(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_query_with_embedded_document(fixtures):
@@ -266,8 +287,7 @@ def test_should_query_with_embedded_document(fixtures):
     schema = graphene.Schema(query=Query, types=[ProfessorVectorType])
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_query_child(fixtures):
@@ -311,8 +331,7 @@ def test_should_query_child(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert result.data == expected
 
 
 def test_should_query_cell_tower(fixtures):
@@ -372,5 +391,4 @@ def test_should_query_cell_tower(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert result.data == expected
