@@ -1,6 +1,6 @@
 from mongoengine import connect
 
-from models import Department, Employee, Role, Task
+from .models import Department, Employee, Role, Task
 
 connect('graphene-mongo-example', host='mongomock://localhost', alias='default')
 

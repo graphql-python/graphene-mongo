@@ -1,10 +1,10 @@
 import graphene
 from graphene.relay import Node
 from graphene_mongo import MongoengineConnectionField, MongoengineObjectType
-from models import Department as DepartmentModel
-from models import Employee as EmployeeModel
-from models import Role as RoleModel
-from models import Task as TaskModel
+from .models import Department as DepartmentModel
+from .models import Employee as EmployeeModel
+from .models import Role as RoleModel
+from .models import Task as TaskModel
 
 class Department(MongoengineObjectType):
 
