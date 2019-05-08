@@ -57,7 +57,7 @@ class MongoengineConnectionField(ConnectionField):
     @property
     def args(self):
         return to_arguments(self._base_args or OrderedDict(),
-                            dict(self.field_args, **self.reference_args, **self.filter_args))
+                            dict(dict(self.field_args, **self.reference_args), **self.filter_args))
 
     @args.setter
     def args(self, args):
