@@ -135,6 +135,7 @@ class MongoengineConnectionField(ConnectionField):
                     reference_obj = get_node_from_global_id(reference_fields[arg_name], info, args.pop(arg_name))
                     hydrated_references[arg_name] = reference_obj
             args.update(hydrated_references)
+
         if self._get_queryset:
             queryset_or_filters = self._get_queryset(model, info, **args)
             if isinstance(queryset_or_filters, mongoengine.QuerySet):
@@ -178,12 +179,15 @@ class MongoengineConnectionField(ConnectionField):
         return connection
 
     def chained_resolver(self, resolver, root, info, **args):
-        resolved = resolver(root, info, **args)
-        if resolved is not None:
-            return resolved
+        if not bool(args):
+            # XXX: Filter nested args
+            resolved = resolver(root, info, **args)
+            if resolved is not None:
+                return resolved
         return self.default_resolver(root, info, **args)
 
     def get_resolver(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
+        # print('super_resolver', super_resolver)
         resolver = partial(self.chained_resolver, super_resolver)
         return partial(self.connection_resolver, resolver, self.type)

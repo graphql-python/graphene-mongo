@@ -57,4 +57,4 @@ def test_default_resolver_connection_list_length(fixtures):
 
     connection = field.default_resolver(None, {}, **{'first': 1})
     assert hasattr(connection, 'list_length')
-    assert connection.list_length == 2
+    assert connection.list_length == 3
