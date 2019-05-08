@@ -56,10 +56,8 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def args(self):
-        return to_arguments(
-            self._base_args or OrderedDict(),
-            dict(self.field_args, **self.reference_args, **self.filter_args)
-        )
+        return to_arguments(self._base_args or OrderedDict(),
+                            dict(self.field_args, **self.reference_args, **self.filter_args))
 
     @args.setter
     def args(self, args):
@@ -85,10 +83,8 @@ class MongoengineConnectionField(ConnectionField):
                 return False
             if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
-            if callable(getattr(converted, 'type', None)) \
-                    and isinstance(
-                        converted.type(),
-                        (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union)):
+            if callable(getattr(converted, 'type', None)) and \
+                    isinstance(converted.type(), (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union)):
                 return False
             return True
 
