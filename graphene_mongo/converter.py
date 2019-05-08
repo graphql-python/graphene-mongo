@@ -101,8 +101,6 @@ def convert_file_to_field(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentListField)
 def convert_field_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
-    if isinstance(base_type, Field):
-        return List(base_type._type, description=get_field_description(field, registry), required=field.required)
     if isinstance(base_type, (Dynamic)):
         base_type = base_type.get_type()
         if base_type is None:
