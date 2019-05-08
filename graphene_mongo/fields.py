@@ -56,7 +56,7 @@ class MongoengineConnectionField(ConnectionField):
     def args(self):
         return to_arguments(
             self._base_args or OrderedDict(),
-            dict(self.field_args, **self.reference_args)
+            dict(self.field_args, **self.reference_args, **self.filter_args)
         )
 
     @args.setter
@@ -80,7 +80,7 @@ class MongoengineConnectionField(ConnectionField):
                 converted = convert_mongoengine_field(getattr(self.model, k), self.registry)
             except MongoEngineConversionError:
                 return False
-            if isinstance(converted, (ConnectionField, Dynamic, List)):
+            if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
             if callable(getattr(converted, 'type', None)) \
                     and isinstance(
@@ -99,6 +99,17 @@ class MongoengineConnectionField(ConnectionField):
     @property
     def field_args(self):
         return self._field_args(self.fields.items())
+
+    @property
+    def filter_args(self):
+        filter_args = dict()
+        if self._type._meta.filter_fields:
+            for field, filter_collection in self._type._meta.filter_fields.items():
+                for each in filter_collection:
+                    filter_args[field + "__" + each] = graphene.Argument(
+                        type=getattr(graphene, str(self._type._meta.fields[field].type).replace("!", "")))
+
+        return filter_args
 
     @property
     def reference_args(self):
