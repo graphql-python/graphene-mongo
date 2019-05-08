@@ -6,6 +6,7 @@ from .models import (
     Article, Editor, EmbeddedArticle, Player, Reporter,
     ProfessorMetadata, ProfessorVector, Publisher)
 from .. import registry
+from .. import advanced_types
 from ..converter import convert_mongoengine_field
 from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
@@ -80,6 +81,7 @@ def test_should_map_convert_json():
 def test_should_point_convert_field():
     graphene_type = convert_mongoengine_field(mongoengine.PointField())
     assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == advanced_types.PointFieldType
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
@@ -87,6 +89,7 @@ def test_should_point_convert_field():
 def test_should_polygon_covert_field():
     graphene_type = convert_mongoengine_field(mongoengine.PolygonField())
     assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == advanced_types.PolygonFieldType
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
 
@@ -94,8 +97,15 @@ def test_should_polygon_covert_field():
 def test_should_multipolygon_convert_field():
     graphene_type = convert_mongoengine_field(mongoengine.MultiPolygonField())
     assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == advanced_types.MultiPolygonFieldType
     assert isinstance(graphene_type.type.type, graphene.String)
     assert isinstance(graphene_type.type.coordinates, graphene.List)
+
+
+def test_should_file_convert_field():
+    graphene_type = convert_mongoengine_field(mongoengine.FileField())
+    assert isinstance(graphene_type, graphene.Field)
+    assert graphene_type.type == advanced_types.FileFieldType
 
 
 def test_should_field_convert_list():
