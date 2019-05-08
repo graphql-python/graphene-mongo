@@ -1,7 +1,7 @@
 import mongoengine
 from datetime import datetime
 
-mongoengine.connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
+mongoengine.connect('graphene-mongo-test', host='localhost', alias='default')
 
 
 class Publisher(mongoengine.Document):

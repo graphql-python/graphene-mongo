@@ -13,7 +13,7 @@ from .nodes import (ArticleNode,
                     ReporterNode,
                     ChildNode,
                     ParentWithRelationshipNode,
-                    ProfessorVectorNode,)
+                    ProfessorVectorNode, )
 from ..fields import MongoengineConnectionField
 
 
@@ -22,7 +22,6 @@ def get_nodes(data, key):
 
 
 def test_should_query_reporter(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
         reporter = graphene.Field(ReporterNode)
@@ -129,7 +128,6 @@ def test_should_query_reporter(fixtures):
 
 
 def test_should_query_all_editors(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
         all_editors = MongoengineConnectionField(EditorNode)
@@ -182,7 +180,6 @@ def test_should_query_all_editors(fixtures):
 
 
 def test_should_filter_editors_by_id(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
         all_editors = MongoengineConnectionField(EditorNode)
@@ -221,7 +218,6 @@ def test_should_filter_editors_by_id(fixtures):
 
 
 def test_should_filter(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
         articles = MongoengineConnectionField(ArticleNode)
@@ -263,8 +259,46 @@ def test_should_filter(fixtures):
         expected, sort_keys=True)
 
 
-def test_should_filter_by_reference_field(fixtures):
+def test_should_filter_mongoengine_queryset(fixtures):
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(PlayerNode)
 
+    query = '''
+        query players {
+            players(firstName_Istartswith: "M") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'players': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Michael',
+                    }
+                },
+                {
+                    'node': {
+                        'firstName': 'Magic'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True)
+
+
+def test_should_filter_by_reference_field(fixtures):
     class Query(graphene.ObjectType):
         node = Node.Field()
         articles = MongoengineConnectionField(ArticleNode)
@@ -305,7 +339,6 @@ def test_should_filter_by_reference_field(fixtures):
 
 
 def test_should_filter_through_inheritance(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
         children = MongoengineConnectionField(ChildNode)
@@ -334,8 +367,8 @@ def test_should_filter_through_inheritance(fixtures):
                         'bar': 'bar',
                         'baz': 'baz',
                         'loc': {
-                             'type': 'Point',
-                             'coordinates': [10.0, 20.0]
+                            'type': 'Point',
+                            'coordinates': [10.0, 20.0]
                         }
                     }
                 }
@@ -414,9 +447,7 @@ def test_should_filter_by_id(fixtures):
 
 
 def test_should_first_n(fixtures):
-
     class Query(graphene.ObjectType):
-
         editors = MongoengineConnectionField(EditorNode)
 
     query = '''
@@ -471,7 +502,6 @@ def test_should_first_n(fixtures):
 
 def test_should_after(fixtures):
     class Query(graphene.ObjectType):
-
         players = MongoengineConnectionField(PlayerNode)
 
     query = '''
@@ -502,10 +532,10 @@ def test_should_after(fixtures):
                     }
                 },
                 {
-                     'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
-                     'node': {
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
+                    'node': {
                         'firstName': 'Chris'
-                     }
+                    }
                 }
             ]
         }
@@ -520,7 +550,6 @@ def test_should_after(fixtures):
 
 def test_should_before(fixtures):
     class Query(graphene.ObjectType):
-
         players = MongoengineConnectionField(PlayerNode)
 
     query = '''
@@ -587,10 +616,10 @@ def test_should_last_n(fixtures):
                     }
                 },
                 {
-                     'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
-                     'node': {
-                          'firstName': 'Chris'
-                     }
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
+                    'node': {
+                        'firstName': 'Chris'
+                    }
                 }
             ]
         }
@@ -599,14 +628,11 @@ def test_should_last_n(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == \
-        json.dumps(expected, sort_keys=True)
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
 
 def test_should_self_reference(fixtures):
-
     class Query(graphene.ObjectType):
-
         all_players = MongoengineConnectionField(PlayerNode)
 
     query = '''
@@ -695,15 +721,15 @@ def test_should_self_reference(fixtures):
                     }
                 },
                 {
-                     'node': {
-                          'firstName': 'Chris',
-                          'players': {
-                              'edges': []
-                          },
-                          'embeddedListArticles': {
-                               'edges': []
-                          }
-                     }
+                    'node': {
+                        'firstName': 'Chris',
+                        'players': {
+                            'edges': []
+                        },
+                        'embeddedListArticles': {
+                            'edges': []
+                        }
+                    }
                 }
             ]
         }
@@ -716,7 +742,6 @@ def test_should_self_reference(fixtures):
 
 
 def test_should_lazy_reference(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
         parents = MongoengineConnectionField(ParentWithRelationshipNode)
@@ -782,9 +807,7 @@ def test_should_lazy_reference(fixtures):
 
 
 def test_should_query_with_embedded_document(fixtures):
-
     class Query(graphene.ObjectType):
-
         all_professors = MongoengineConnectionField(ProfessorVectorNode)
 
     query = '''
@@ -808,7 +831,7 @@ def test_should_query_with_embedded_document(fixtures):
                     'node': {
                         'vec': [1.0, 2.3],
                         'metadata': {
-                             'firstName': 'Steven'
+                            'firstName': 'Steven'
                         }
                     }
 
@@ -823,7 +846,6 @@ def test_should_query_with_embedded_document(fixtures):
 
 
 def test_should_get_queryset_returns_dict_filters(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
         articles = MongoengineConnectionField(ArticleNode, get_queryset=lambda *_, **__: {"headline": "World"})
@@ -866,7 +888,6 @@ def test_should_get_queryset_returns_dict_filters(fixtures):
 
 
 def test_should_get_queryset_returns_qs_filters(fixtures):
-
     def get_queryset(model, info, **args):
         return model.objects(headline="World")
 
