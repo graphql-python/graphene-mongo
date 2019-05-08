@@ -11,7 +11,9 @@ from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
-from .advanced_types import PointFieldType, MultiPolygonFieldType
+from .advanced_types import (
+    FileFieldType, PointFieldType, MultiPolygonFieldType
+)
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
 from .utils import get_model_reference_fields, get_node_from_global_id
@@ -64,6 +66,7 @@ class MongoengineConnectionField(ConnectionField):
         self._base_args = args
 
     def _field_args(self, items):
+
         def is_filterable(k):
             """
             Args:
@@ -83,7 +86,9 @@ class MongoengineConnectionField(ConnectionField):
             if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
             if callable(getattr(converted, 'type', None)) \
-                    and isinstance(converted.type(), (PointFieldType, MultiPolygonFieldType, graphene.Union)):
+                    and isinstance(
+                        converted.type(),
+                        (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union)):
                 return False
             return True
 
@@ -111,6 +116,7 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def reference_args(self):
+
         def get_reference_field(r, kv):
             field = kv[1]
             mongo_field = getattr(self.model, kv[0], None)
@@ -120,7 +126,7 @@ class MongoengineConnectionField(ConnectionField):
                 _type = field.get_type()
                 if _type:
                     node = _type._type._meta
-                    if 'id' in node.fields and not issubclass(node.model, mongoengine.EmbeddedDocument):
+                    if 'id' in node.fields and not issubclass(node.model, (mongoengine.EmbeddedDocument,)):
                         r.update({kv[0]: node.fields['id']._type.of_type()})
             return r
 
