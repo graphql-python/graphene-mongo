@@ -855,15 +855,15 @@ def test_should_query_with_embedded_document(fixtures):
 
     class Query(graphene.ObjectType):
 
-        all_professors = MongoengineConnectionField(ProfessorVectorNode)
+        professors = MongoengineConnectionField(ProfessorVectorNode)
 
     query = '''
     query {
-        allProfessors {
+        professors {
             edges {
                 node {
                     vec,
-                    metadata {
+                    metadata(firstName: "Steven") {
                         firstName
                     }
                 }
@@ -872,7 +872,7 @@ def test_should_query_with_embedded_document(fixtures):
     }
     '''
     expected = {
-        'allProfessors': {
+        'professors': {
             'edges': [
                 {
                     'node': {
@@ -889,7 +889,7 @@ def test_should_query_with_embedded_document(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allProfessors']) == expected['allProfessors']
+    assert result.data['professors'] == expected['professors']
 
 
 def test_should_get_queryset_returns_dict_filters(fixtures):
