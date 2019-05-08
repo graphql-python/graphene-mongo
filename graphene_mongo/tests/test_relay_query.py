@@ -25,7 +25,6 @@ def get_nodes(data, key):
 def test_should_query_reporter(fixtures):
 
     class Query(graphene.ObjectType):
-        node = Node.Field()
         reporter = graphene.Field(ReporterNode)
 
         def resolve_reporter(self, *args, **kwargs):
@@ -132,7 +131,6 @@ def test_should_query_reporter(fixtures):
 def test_should_query_reporters_with_nested_document(fixtures):
 
     class Query(graphene.ObjectType):
-        node = Node.Field()
         reporters = MongoengineConnectionField(ReporterNode)
 
     query = '''
@@ -156,40 +154,45 @@ def test_should_query_reporters_with_nested_document(fixtures):
         }
     '''
     expected = {
-        'reporter': {
-            'firstName': 'Allen',
-            'lastName': 'Iverson',
-            'email': 'ai@gmail.com',
-            'articles': {
-                'edges': [
-                    {
-                        'node': {
-                            'headline': 'Hello'
+        'reporters': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Allen',
+                        'lastName': 'Iverson',
+                        'email': 'ai@gmail.com',
+                        'articles': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'headline': 'Hello'
+                                    }
+                                }
+                            ]
                         }
                     }
-                ]
-            }
+                }
+            ]
         }
     }
 
-    print(query, expected)
-    # schema = graphene.Schema(query=Query)
-    # result = schema.execute(query)
-    # assert not result.errors
-    # print(dict(result.data['reporters']))
-    # assert json.dumps(result.data['reporter'], sort_keys=True) \
-    #     == json.dumps(expected['reporter'], sort_keys=True)
+    # print(query, expected)
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    # import json
+    # print(json.dumps(result.data['reporters']))
+    assert result.data['reporters'] == expected['reporters']
 
 
 def test_should_query_all_editors(fixtures, fixtures_dirname):
 
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        all_editors = MongoengineConnectionField(EditorNode)
+        editors = MongoengineConnectionField(EditorNode)
 
     query = '''
         query EditorQuery {
-          allEditors {
+          editors {
             edges {
                 node {
                     id,
@@ -211,7 +214,7 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
         data = base64.b64encode(f.read())
 
     expected = {
-        'allEditors': {
+        'editors': {
             'edges': [
                 {
                     'node': {
@@ -256,7 +259,7 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data['allEditors'] == expected['allEditors']
+    assert result.data['editors'] == expected['editors']
 
 
 def test_should_filter_editors_by_id(fixtures):
