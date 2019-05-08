@@ -57,6 +57,7 @@ class CellTowerType(MongoengineObjectType):
 
 
 class ProfessorMetadataType(MongoengineObjectType):
+
     class Meta:
         model = models.ProfessorMetadata
 
