@@ -75,7 +75,8 @@ class MongoengineObjectType(ObjectType):
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
                                     only_fields=(), exclude_fields=(), filter_fields=None,
                                     connection=None, connection_class=None, use_connection=None,
-                                    connection_field_class=None, interfaces=(), **options):
+                                    connection_field_class=None, interfaces=(),
+                                    _meta=None, **options):
 
         assert is_valid_mongoengine_model(model), (
             'The attribute model in {}.Meta must be a valid Mongoengine Model. '
@@ -118,7 +119,14 @@ class MongoengineObjectType(ObjectType):
         else:
             connection_field_class = MongoengineConnectionField
 
-        _meta = MongoengineObjectTypeOptions(cls)
+        if _meta:
+            assert isinstance(_meta, MongoengineObjectTypeOptions), (
+                '_meta must be an instance of MongoengineObjectTypeOptions, '
+                'received {}'
+            ).format(_meta.__class__)
+        else:
+            _meta = MongoengineObjectTypeOptions(cls)
+
         _meta.model = model
         _meta.registry = registry
         _meta.fields = mongoengine_fields
