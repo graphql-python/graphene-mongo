@@ -1,13 +1,4 @@
-<<<<<<< HEAD
 from . import models
-||||||| merged common ancestors
-from graphene.relay import Node
-
-=======
-from graphene.relay import Node
-
-from ..fields import MongoengineConnectionField
->>>>>>> wip: Add test_should_query_reporters_with_nested_document
 from ..types import MongoengineObjectType
 
 
