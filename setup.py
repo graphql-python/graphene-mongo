@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='graphene-mongo',
-    version='0.2.4',
+    version='0.2.5',
 
     description='Graphene Mongoengine integration',
     long_description=open('README.rst').read(),

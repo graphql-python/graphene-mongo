@@ -176,12 +176,9 @@ def test_should_query_reporters_with_nested_document(fixtures):
         }
     }
 
-    # print(query, expected)
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    # import json
-    # print(json.dumps(result.data['reporters']))
     assert result.data['reporters'] == expected['reporters']
 
 

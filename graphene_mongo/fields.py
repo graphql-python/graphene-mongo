@@ -188,6 +188,5 @@ class MongoengineConnectionField(ConnectionField):
 
     def get_resolver(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
-        # print('super_resolver', super_resolver)
         resolver = partial(self.chained_resolver, super_resolver)
         return partial(self.connection_resolver, resolver, self.type)
