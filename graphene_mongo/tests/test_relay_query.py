@@ -718,11 +718,11 @@ def test_should_self_reference(fixtures):
 
     class Query(graphene.ObjectType):
 
-        all_players = MongoengineConnectionField(nodes.PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = '''
         query PlayersQuery {
-            allPlayers {
+            players {
                 edges {
                     node {
                         firstName,
@@ -746,7 +746,7 @@ def test_should_self_reference(fixtures):
         }
     '''
     expected = {
-        'allPlayers': {
+        'players': {
             'edges': [
                 {
                     'node': {
@@ -894,11 +894,11 @@ def test_should_query_with_embedded_document(fixtures):
 
     class Query(graphene.ObjectType):
 
-        all_professors = MongoengineConnectionField(nodes.ProfessorVectorNode)
+        professors = MongoengineConnectionField(nodes.ProfessorVectorNode)
 
     query = '''
     query {
-        allProfessors {
+        professors {
             edges {
                 node {
                     vec,
@@ -911,7 +911,7 @@ def test_should_query_with_embedded_document(fixtures):
     }
     '''
     expected = {
-        'allProfessors': {
+        'professors': {
             'edges': [
                 {
                     'node': {
@@ -928,7 +928,7 @@ def test_should_query_with_embedded_document(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allProfessors']) == expected['allProfessors']
+    assert result.data == expected
 
 
 def test_should_get_queryset_returns_dict_filters(fixtures):
