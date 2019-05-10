@@ -8,6 +8,7 @@ from graphene.relay import Node
 
 from . import models
 from . import nodes
+from . import types
 from .setup import fixtures, fixtures_dirname
 from ..fields import MongoengineConnectionField
 
@@ -249,7 +250,7 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
     assert result.data == expected
 
 
-"""
+
 def test_should_query_editors_with_dataloader(fixtures):
     from promise import Promise
     from promise.dataloader import DataLoader
@@ -272,29 +273,41 @@ def test_should_query_editors_with_dataloader(fixtures):
         # editors = MongoengineConnectionField(nodes.EditorNode)
         editors = graphene.List(types.EditorType)
 
-        def resolve_editors(self, info, **args):
-            print(self.__dict__)
+        def resolve_editors(self, info, *args, **kwargs):
+            print('hell')
+            # print(self.__dict__)
+            print(self)
+            print(info)
+            print(args)
+            print(kwargs)
             return None
 
 
     query = '''
         query EditorPromiseQuery {
             editors(first: 1) {
+                firstName
+            }
+        }
+    '''
+    """
+    query = '''
+        query EditorPromiseQuery {
+            editors {
                 edges {
                     node {
-                        id,
-                        firstName,
-                        lastName
+                        firstName
                     }
                 }
             }
         }
     '''
-
+    """
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
-    print(result.data)
-"""
+    assert not result.errors
+    # print(result.errors)
+    print('ccccc' * 10, result.data)
 
 
 def test_should_filter_editors_by_id(fixtures):
