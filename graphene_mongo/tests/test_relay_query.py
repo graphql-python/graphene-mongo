@@ -22,6 +22,7 @@ def test_should_query_reporter(fixtures):
         reporter = graphene.Field(nodes.ReporterNode)
 
         def resolve_reporter(self, *args, **kwargs):
+            print('abc' * 10)
             return models.Reporter.objects.first()
 
     query = '''
@@ -183,20 +184,20 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
 
     query = '''
         query EditorQuery {
-          editors {
-            edges {
-                node {
-                    id,
-                    firstName,
-                    lastName,
-                    avatar {
-                        contentType,
-                        length,
-                        data
+            editors {
+                edges {
+                    node {
+                        id,
+                        firstName,
+                        lastName,
+                        avatar {
+                            contentType,
+                            length,
+                            data
+                        }
                     }
                 }
             }
-          }
         }
     '''
 
@@ -253,16 +254,51 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
     assert result.data['editors'] == expected['editors']
 
 
-"""
+
 def test_should_query_editors_with_dataloader(fixtures):
     from promise import Promise
     from promise.dataloader import DataLoader
 
     class EditorLoader(DataLoader):
-        queryset = models.Editor.
+
         def batch_load_fn(self, keys):
-        return Promise.resolve([get_user(id=key) for key in keys])
-"""
+            print(keys)
+            queryset = models.Editor.objects(_id__in=keys)
+            return Promise.resolve(
+                [
+                    [e for e in queryset if e._id == _id]
+                    for _id in keys
+                ]
+            )
+
+    editor_loader = EditorLoader()
+
+    class Query(graphene.ObjectType):
+        editors = MongoengineConnectionField(nodes.EditorNode)
+
+        """
+        def resolve_editors(self, info, **args):
+            print(self.__dict__)
+            return None
+        """
+
+    query = '''
+        query EditorPromiseQuery {
+            editors(first: 1) {
+                edges {
+                    node {
+                        id,
+                        firstName,
+                        lastName
+                    }
+                }
+            }
+        }
+    '''
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    print(result.data)
 
 
 def test_should_filter_editors_by_id(fixtures):
