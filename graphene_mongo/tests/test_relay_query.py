@@ -12,10 +12,6 @@ from .setup import fixtures, fixtures_dirname
 from ..fields import MongoengineConnectionField
 
 
-def _get_nodes(data, key):
-    return map(lambda edge: edge['node'], data[key]['edges'])
-
-
 def test_should_query_reporter(fixtures):
 
     class Query(graphene.ObjectType):
@@ -555,13 +551,13 @@ def test_should_first_n(fixtures):
         'editors': {
             'edges': [
                 {
-                    'cursor': 'xxx',
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjA=',
                     'node': {
                         'firstName': 'Penny'
                     }
                 },
                 {
-                    'cursor': 'xxx',
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
                     'node': {
                         'firstName': 'Grant'
                     }
@@ -570,8 +566,8 @@ def test_should_first_n(fixtures):
             'pageInfo': {
                 'hasNextPage': True,
                 'hasPreviousPage': False,
-                'startCursor': 'xxx',
-                'endCursor': 'xxx'
+                'startCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+                'endCursor': 'YXJyYXljb25uZWN0aW9uOjE='
             }
         }
     }
@@ -579,8 +575,7 @@ def test_should_first_n(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert all(item in _get_nodes(result.data, 'editors')
-               for item in _get_nodes(expected, 'editors'))
+    assert result.data == expected
 
 
 def test_should_after(fixtures):
