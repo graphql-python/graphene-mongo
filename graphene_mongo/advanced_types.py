@@ -2,11 +2,6 @@ import base64
 import graphene
 
 
-def _resolve_fs_field(field, name, default_value=None):
-    v = getattr(field.instance, field.key)
-    return getattr(v, name, default_value)
-
-
 class FileFieldType(graphene.ObjectType):
 
     content_type = graphene.String()
@@ -15,17 +10,22 @@ class FileFieldType(graphene.ObjectType):
     length = graphene.Int()
     data = graphene.String()
 
+    @classmethod
+    def _resolve_fs_field(cls, field, name, default_value=None):
+        v = getattr(field.instance, field.key)
+        return getattr(v, name, default_value)
+
     def resolve_content_type(self, info):
-        return _resolve_fs_field(self, 'content_type')
+        return FileFieldType._resolve_fs_field(self, 'content_type')
 
     def resolve_md5(self, info):
-        return _resolve_fs_field(self, 'md5')
+        return FileFieldType._resolve_fs_field(self, 'md5')
 
     def resolve_chunk_size(self, info):
-        return _resolve_fs_field(self, 'chunk_size', 0)
+        return FileFieldType._resolve_fs_field(self, 'chunk_size', 0)
 
     def resolve_length(self, info):
-        return _resolve_fs_field(self, 'length', 0)
+        return FileFieldType._resolve_fs_field(self, 'length', 0)
 
     def resolve_data(self, info):
         v = getattr(self.instance, self.key)
