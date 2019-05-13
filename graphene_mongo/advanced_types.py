@@ -2,10 +2,6 @@ import base64
 import graphene
 
 
-def _resolve_type_coordinates(self, info):
-    return self['coordinates']
-
-
 def _resolve_fs_field(field, name, default_value=None):
     v = getattr(field.instance, field.key)
     return getattr(v, name, default_value)
@@ -39,33 +35,34 @@ class FileFieldType(graphene.ObjectType):
         return None
 
 
-class _TypeField(graphene.ObjectType):
+class _CoordinatesTypeField(graphene.ObjectType):
 
     type = graphene.String()
 
     def resolve_type(self, info):
         return self['type']
 
-
-class PointFieldType(_TypeField):
-
-    coordinates = graphene.List(
-        graphene.Float, resolver=_resolve_type_coordinates)
+    def resolve_coordinates(self, info):
+        return self['coordinates']
 
 
-class PolygonFieldType(_TypeField):
+class PointFieldType(_CoordinatesTypeField):
+
+    coordinates = graphene.List(graphene.Float)
+
+
+class PolygonFieldType(_CoordinatesTypeField):
 
     coordinates = graphene.List(
         graphene.List(
-            graphene.List(graphene.Float)),
-        resolver=_resolve_type_coordinates
+            graphene.List(graphene.Float))
     )
 
 
-class MultiPolygonFieldType(_TypeField):
+class MultiPolygonFieldType(_CoordinatesTypeField):
 
     coordinates = graphene.List(
         graphene.List(
             graphene.List(
-                graphene.List(graphene.Float))),
-        resolver=_resolve_type_coordinates)
+                graphene.List(graphene.Float)))
+    )
