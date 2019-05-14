@@ -5,6 +5,7 @@ from functools import partial, reduce
 
 import graphene
 import mongoengine
+from promise import Promise
 from graphene.relay import ConnectionField
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
@@ -126,7 +127,6 @@ class MongoengineConnectionField(ConnectionField):
         return self._type._meta.fields
 
     def get_queryset(self, model, info, **args):
-
         if args:
             reference_fields = get_model_reference_fields(self.model)
             hydrated_references = {}
@@ -157,36 +157,49 @@ class MongoengineConnectionField(ConnectionField):
         _id = args.pop('id', None)
 
         if _id is not None:
-            objs = [get_node_from_global_id(self.node_type, info, _id)]
+            iterables = [get_node_from_global_id(self.node_type, info, _id)]
             list_length = 1
         elif callable(getattr(self.model, 'objects', None)):
-            objs = self.get_queryset(self.model, info, **args)
-            list_length = objs.count()
+            iterables = self.get_queryset(self.model, info, **args)
+            list_length = iterables.count()
         else:
-            objs = []
+            iterables = []
             list_length = 0
 
         connection = connection_from_list_slice(
-            list_slice=objs,
+            list_slice=iterables,
             args=connection_args,
             list_length=list_length,
             connection_type=self.type,
             edge_type=self.type.Edge,
             pageinfo_type=graphene.PageInfo,
         )
-        connection.iterable = objs
+        connection.iterable = iterables
         connection.list_length = list_length
         return connection
 
-    def chained_resolver(self, resolver, root, info, **args):
-        if not bool(args):
+    def chained_resolver(self, resolver, is_partial, root, info, **args):
+        if not bool(args) or not is_partial:
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
                 return resolved
         return self.default_resolver(root, info, **args)
 
+    @classmethod
+    def connection_resolver(cls, resolver, connection_type, root, info, **args):
+        iterable = resolver(root, info, **args)
+        if isinstance(connection_type, graphene.NonNull):
+            connection_type = connection_type.of_type
+
+        on_resolve = partial(cls.resolve_connection, connection_type, args)
+        if Promise.is_thenable(iterable):
+            return Promise.resolve(iterable).then(on_resolve)
+
+        return on_resolve(iterable)
+
     def get_resolver(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
-        resolver = partial(self.chained_resolver, super_resolver)
+        resolver = partial(
+            self.chained_resolver, super_resolver, isinstance(super_resolver, partial))
         return partial(self.connection_resolver, resolver, self.type)
