@@ -6,29 +6,21 @@ import graphene
 
 from graphene.relay import Node
 
+from . import models
+from . import nodes
+from . import types
 from .setup import fixtures, fixtures_dirname
-from .models import Article, Reporter
-from .nodes import (ArticleNode,
-                    EditorNode,
-                    PlayerNode,
-                    ReporterNode,
-                    ChildNode,
-                    ParentWithRelationshipNode,
-                    ProfessorVectorNode,)
 from ..fields import MongoengineConnectionField
-
-
-def get_nodes(data, key):
-    return map(lambda edge: edge['node'], data[key]['edges'])
+from ..types import MongoengineObjectType
 
 
 def test_should_query_reporter(fixtures):
 
     class Query(graphene.ObjectType):
-        reporter = graphene.Field(ReporterNode)
+        reporter = graphene.Field(nodes.ReporterNode)
 
         def resolve_reporter(self, *args, **kwargs):
-            return Reporter.objects.first()
+            return models.Reporter.objects.first()
 
     query = '''
         query ReporterQuery {
@@ -125,13 +117,13 @@ def test_should_query_reporter(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data['reporter'] == expected['reporter']
+    assert result.data == expected
 
 
 def test_should_query_reporters_with_nested_document(fixtures):
 
     class Query(graphene.ObjectType):
-        reporters = MongoengineConnectionField(ReporterNode)
+        reporters = MongoengineConnectionField(nodes.ReporterNode)
 
     query = '''
         query ReporterQuery {
@@ -179,30 +171,30 @@ def test_should_query_reporters_with_nested_document(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data['reporters'] == expected['reporters']
+    assert result.data == expected
 
 
 def test_should_query_all_editors(fixtures, fixtures_dirname):
 
     class Query(graphene.ObjectType):
-        editors = MongoengineConnectionField(EditorNode)
+        editors = MongoengineConnectionField(nodes.EditorNode)
 
     query = '''
         query EditorQuery {
-          editors {
-            edges {
-                node {
-                    id,
-                    firstName,
-                    lastName,
-                    avatar {
-                        contentType,
-                        length,
-                        data
+            editors {
+                edges {
+                    node {
+                        id,
+                        firstName,
+                        lastName,
+                        avatar {
+                            contentType,
+                            length,
+                            data
+                        }
                     }
                 }
             }
-          }
         }
     '''
 
@@ -256,18 +248,91 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data['editors'] == expected['editors']
+    assert result.data == expected
+
+
+def test_should_query_editors_with_dataloader(fixtures):
+    from promise import Promise
+    from promise.dataloader import DataLoader
+
+    class ArticleLoader(DataLoader):
+
+        def batch_load_fn(self, instances):
+            queryset = models.Article.objects(editor__in=instances)
+            return Promise.resolve([
+                [a for a in queryset if a.editor.id == instance.id]
+                for instance in instances
+            ])
+
+    article_loader = ArticleLoader()
+
+    class _EditorNode(MongoengineObjectType):
+
+        class Meta:
+            model = models.Editor
+            interfaces = (graphene.Node,)
+
+        articles = MongoengineConnectionField(nodes.ArticleNode)
+
+        def resolve_articles(self, *args, **kwargs):
+            return article_loader.load(self)
+
+    class Query(graphene.ObjectType):
+        editors = MongoengineConnectionField(_EditorNode)
+
+    query = '''
+        query EditorPromiseConnectionQuery {
+            editors(first: 1) {
+                edges {
+                    node {
+                        firstName,
+                        articles(first: 1) {
+                            edges {
+                                node {
+                                    headline
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'editors': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Penny',
+                        'articles': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'headline': 'Hello'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
 
 
 def test_should_filter_editors_by_id(fixtures):
 
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        all_editors = MongoengineConnectionField(EditorNode)
+        editors = MongoengineConnectionField(nodes.EditorNode)
 
     query = '''
         query EditorQuery {
-          allEditors(id: "RWRpdG9yTm9kZToy") {
+          editors(id: "RWRpdG9yTm9kZToy") {
             edges {
                 node {
                     id,
@@ -279,7 +344,7 @@ def test_should_filter_editors_by_id(fixtures):
         }
     '''
     expected = {
-        'allEditors': {
+        'editors': {
             'edges': [
                 {
                     'node': {
@@ -287,7 +352,6 @@ def test_should_filter_editors_by_id(fixtures):
                         'firstName': 'Grant',
                         'lastName': 'Hill'
                     }
-
                 }
             ]
         }
@@ -295,14 +359,13 @@ def test_should_filter_editors_by_id(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allEditors']) == expected['allEditors']
+    assert result.data == expected
 
 
 def test_should_filter(fixtures):
 
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode)
+        articles = MongoengineConnectionField(nodes.ArticleNode)
 
     query = '''
         query ArticlesQuery {
@@ -343,8 +406,7 @@ def test_should_filter(fixtures):
 def test_should_filter_by_reference_field(fixtures):
 
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode)
+        articles = MongoengineConnectionField(nodes.ArticleNode)
 
     query = '''
         query ArticlesQuery {
@@ -384,7 +446,7 @@ def test_should_filter_through_inheritance(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
-        children = MongoengineConnectionField(ChildNode)
+        children = MongoengineConnectionField(nodes.ChildNode)
 
     query = '''
         query ChildrenQuery {
@@ -427,7 +489,7 @@ def test_should_filter_through_inheritance(fixtures):
 def test_should_filter_by_list_contains(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
-        reporters = MongoengineConnectionField(ReporterNode)
+        reporters = MongoengineConnectionField(nodes.ReporterNode)
 
     query = '''
         query ReportersQuery {
@@ -464,7 +526,7 @@ def test_should_filter_by_list_contains(fixtures):
 def test_should_filter_by_id(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
-        reporter = Node.Field(ReporterNode)
+        reporter = Node.Field(nodes.ReporterNode)
 
     query = '''
         query ReporterQuery {
@@ -492,7 +554,7 @@ def test_should_first_n(fixtures):
 
     class Query(graphene.ObjectType):
 
-        editors = MongoengineConnectionField(EditorNode)
+        editors = MongoengineConnectionField(nodes.EditorNode)
 
     query = '''
         query EditorQuery {
@@ -516,13 +578,13 @@ def test_should_first_n(fixtures):
         'editors': {
             'edges': [
                 {
-                    'cursor': 'xxx',
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjA=',
                     'node': {
                         'firstName': 'Penny'
                     }
                 },
                 {
-                    'cursor': 'xxx',
+                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
                     'node': {
                         'firstName': 'Grant'
                     }
@@ -531,8 +593,8 @@ def test_should_first_n(fixtures):
             'pageInfo': {
                 'hasNextPage': True,
                 'hasPreviousPage': False,
-                'startCursor': 'xxx',
-                'endCursor': 'xxx'
+                'startCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+                'endCursor': 'YXJyYXljb25uZWN0aW9uOjE='
             }
         }
     }
@@ -540,14 +602,13 @@ def test_should_first_n(fixtures):
     result = schema.execute(query)
 
     assert not result.errors
-    assert all(item in get_nodes(result.data, 'editors')
-               for item in get_nodes(expected, 'editors'))
+    assert result.data == expected
 
 
 def test_should_after(fixtures):
     class Query(graphene.ObjectType):
 
-        players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = '''
         query EditorQuery {
@@ -595,7 +656,7 @@ def test_should_after(fixtures):
 def test_should_before(fixtures):
     class Query(graphene.ObjectType):
 
-        players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = '''
         query EditorQuery {
@@ -636,7 +697,7 @@ def test_should_before(fixtures):
 
 def test_should_last_n(fixtures):
     class Query(graphene.ObjectType):
-        players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = '''
         query PlayerQuery {
@@ -679,11 +740,11 @@ def test_should_self_reference(fixtures):
 
     class Query(graphene.ObjectType):
 
-        all_players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = '''
         query PlayersQuery {
-            allPlayers {
+            players {
                 edges {
                     node {
                         firstName,
@@ -707,7 +768,7 @@ def test_should_self_reference(fixtures):
         }
     '''
     expected = {
-        'allPlayers': {
+        'players': {
             'edges': [
                 {
                     'node': {
@@ -790,7 +851,7 @@ def test_should_lazy_reference(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
-        parents = MongoengineConnectionField(ParentWithRelationshipNode)
+        parents = MongoengineConnectionField(nodes.ParentWithRelationshipNode)
 
     schema = graphene.Schema(query=Query)
 
@@ -855,11 +916,11 @@ def test_should_query_with_embedded_document(fixtures):
 
     class Query(graphene.ObjectType):
 
-        all_professors = MongoengineConnectionField(ProfessorVectorNode)
+        professors = MongoengineConnectionField(nodes.ProfessorVectorNode)
 
     query = '''
     query {
-        allProfessors {
+        professors {
             edges {
                 node {
                     vec,
@@ -872,7 +933,7 @@ def test_should_query_with_embedded_document(fixtures):
     }
     '''
     expected = {
-        'allProfessors': {
+        'professors': {
             'edges': [
                 {
                     'node': {
@@ -889,14 +950,14 @@ def test_should_query_with_embedded_document(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allProfessors']) == expected['allProfessors']
+    assert result.data == expected
 
 
 def test_should_get_queryset_returns_dict_filters(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode, get_queryset=lambda *_, **__: {"headline": "World"})
+        articles = MongoengineConnectionField(nodes.ArticleNode, get_queryset=lambda *_, **__: {"headline": "World"})
 
     query = '''
            query ArticlesQuery {
@@ -941,7 +1002,7 @@ def test_should_get_queryset_returns_qs_filters(fixtures):
 
     class Query(graphene.ObjectType):
         node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode, get_queryset=get_queryset)
+        articles = MongoengineConnectionField(nodes.ArticleNode, get_queryset=get_queryset)
 
     query = '''
            query ArticlesQuery {
