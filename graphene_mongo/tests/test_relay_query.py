@@ -11,6 +11,7 @@ from . import nodes
 from . import types
 from .setup import fixtures, fixtures_dirname
 from ..fields import MongoengineConnectionField
+from ..types import MongoengineObjectType
 
 
 def test_should_query_reporter(fixtures):
@@ -250,64 +251,78 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
     assert result.data == expected
 
 
-
 def test_should_query_editors_with_dataloader(fixtures):
     from promise import Promise
     from promise.dataloader import DataLoader
 
-    class EditorLoader(DataLoader):
+    class ArticleLoader(DataLoader):
 
-        def batch_load_fn(self, keys):
-            print(keys)
-            queryset = models.Editor.objects(_id__in=keys)
-            return Promise.resolve(
-                [
-                    [e for e in queryset if e._id == _id]
-                    for _id in keys
-                ]
-            )
+        def batch_load_fn(self, instances):
+            queryset = models.Article.objects(editor__in=instances)
+            return Promise.resolve([
+                [a for a in queryset if a.editor.id == instance.id]
+                for instance in instances
+            ])
 
-    editor_loader = EditorLoader()
+    article_loader = ArticleLoader()
+
+    class _EditorNode(MongoengineObjectType):
+
+        class Meta:
+            model = models.Editor
+            interfaces = (graphene.Node,)
+
+        articles = MongoengineConnectionField(nodes.ArticleNode)
+
+        def resolve_articles(self, *args, **kwargs):
+            return article_loader.load(self)
 
     class Query(graphene.ObjectType):
-        # editors = MongoengineConnectionField(nodes.EditorNode)
-        editors = graphene.List(types.EditorType)
-
-        def resolve_editors(self, info, *args, **kwargs):
-            print('hell')
-            # print(self.__dict__)
-            print(self)
-            print(info)
-            print(args)
-            print(kwargs)
-            return None
-
+        editors = MongoengineConnectionField(_EditorNode)
 
     query = '''
-        query EditorPromiseQuery {
+        query EditorsConnectionPromiseQuery {
             editors(first: 1) {
-                firstName
-            }
-        }
-    '''
-    """
-    query = '''
-        query EditorPromiseQuery {
-            editors {
                 edges {
                     node {
-                        firstName
+                        firstName,
+                        articles(first: 1) {
+                            edges {
+                                node {
+                                    headline
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     '''
-    """
+
+    expected = {
+        'editors': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Penny',
+                        'articles': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'headline': 'Hello'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    # print(result.errors)
-    print('ccccc' * 10, result.data)
+    assert result.data == expected
 
 
 def test_should_filter_editors_by_id(fixtures):
@@ -337,7 +352,6 @@ def test_should_filter_editors_by_id(fixtures):
                         'firstName': 'Grant',
                         'lastName': 'Hill'
                     }
-
                 }
             ]
         }
