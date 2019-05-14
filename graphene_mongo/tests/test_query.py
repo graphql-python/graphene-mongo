@@ -3,27 +3,23 @@ import os
 import json
 import graphene
 
+from . import models
+from . import types
 from .setup import fixtures, fixtures_dirname
-from .models import (
-    Child, Editor, Player, Reporter, ProfessorVector, Parent, CellTower
-)
-from .types import (
-    ChildType, EditorType, PlayerType, ReporterType, ProfessorVectorType, ParentType, CellTowerType
-)
 
 
 def test_should_query_editor(fixtures, fixtures_dirname):
 
     class Query(graphene.ObjectType):
 
-        editor = graphene.Field(EditorType)
-        editors = graphene.List(EditorType)
+        editor = graphene.Field(types.EditorType)
+        editors = graphene.List(types.EditorType)
 
         def resolve_editor(self, *args, **kwargs):
-            return Editor.objects.first()
+            return models.Editor.objects.first()
 
         def resolve_editors(self, *args, **kwargs):
-            return list(Editor.objects.all())
+            return list(models.Editor.objects.all())
 
     query = '''
         query EditorQuery {
@@ -91,10 +87,10 @@ def test_should_query_editor(fixtures, fixtures_dirname):
 def test_should_query_reporter(fixtures):
 
     class Query(graphene.ObjectType):
-        reporter = graphene.Field(ReporterType)
+        reporter = graphene.Field(types.ReporterType)
 
         def resolve_reporter(self, *args, **kwargs):
-            return Reporter.objects.first()
+            return models.Reporter.objects.first()
 
     query = '''
         query ReporterQuery {
@@ -154,10 +150,10 @@ def test_should_custom_kwargs(fixtures):
 
     class Query(graphene.ObjectType):
 
-        editors = graphene.List(EditorType, first=graphene.Int())
+        editors = graphene.List(types.EditorType, first=graphene.Int())
 
         def resolve_editors(self, *args, **kwargs):
-            editors = Editor.objects()
+            editors = models.Editor.objects()
             if 'first' in kwargs:
                 editors = editors[:kwargs['first']]
             return list(editors)
@@ -192,10 +188,10 @@ def test_should_self_reference(fixtures):
 
     class Query(graphene.ObjectType):
 
-        all_players = graphene.List(PlayerType)
+        all_players = graphene.List(types.PlayerType)
 
         def resolve_all_players(self, *args, **kwargs):
-            return Player.objects.all()
+            return models.Player.objects.all()
 
     query = '''
         query PlayersQuery {
@@ -260,10 +256,10 @@ def test_should_self_reference(fixtures):
 def test_should_query_with_embedded_document(fixtures):
 
     class Query(graphene.ObjectType):
-        professor_vector = graphene.Field(ProfessorVectorType, id=graphene.String())
+        professor_vector = graphene.Field(types.ProfessorVectorType, id=graphene.String())
 
         def resolve_professor_vector(self, info, id):
-            return ProfessorVector.objects(metadata__id=id).first()
+            return models.ProfessorVector.objects(metadata__id=id).first()
 
     query = """
         query {
@@ -284,7 +280,8 @@ def test_should_query_with_embedded_document(fixtures):
             }
         }
     }
-    schema = graphene.Schema(query=Query, types=[ProfessorVectorType])
+    schema = graphene.Schema(
+        query=Query, types=[types.ProfessorVectorType])
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
@@ -294,10 +291,10 @@ def test_should_query_child(fixtures):
 
     class Query(graphene.ObjectType):
 
-        children = graphene.List(ChildType)
+        children = graphene.List(types.ChildType)
 
         def resolve_children(self, *args, **kwargs):
-            return list(Child.objects.all())
+            return list(models.Child.objects.all())
 
     query = '''
         query Query {
@@ -338,10 +335,10 @@ def test_should_query_cell_tower(fixtures):
 
     class Query(graphene.ObjectType):
 
-        cell_towers = graphene.List(CellTowerType)
+        cell_towers = graphene.List(types.CellTowerType)
 
         def resolve_cell_towers(self, *args, **kwargs):
-            return list(CellTower.objects.all())
+            return list(models.CellTower.objects.all())
 
     query = '''
         query Query {
