@@ -281,7 +281,7 @@ def test_should_query_editors_with_dataloader(fixtures):
         editors = MongoengineConnectionField(_EditorNode)
 
     query = '''
-        query EditorsConnectionPromiseQuery {
+        query EditorPromiseConnectionQuery {
             editors(first: 1) {
                 edges {
                     node {
