@@ -122,11 +122,16 @@ def convert_field_to_list(field, registry=None):
 
 
 @convert_mongoengine_field.register(mongoengine.GenericReferenceField)
+@convert_mongoengine_field.register(mongoengine.GenericEmbeddedDocumentField)
 def convert_field_to_union(field, registry=None):
     _types = []
     for choice in field.choices:
-        _field = mongoengine.ReferenceField(get_document(choice))
-        _field = convert_mongoengine_field(_field, registry)
+        try:
+            _field = mongoengine.ReferenceField(get_document(choice))
+            _field = convert_mongoengine_field(_field, registry)
+        except Exception:
+            _field = mongoengine.EmbeddedDocumentField(get_document(choice._class_name))
+            _field = convert_mongoengine_field(_field, registry)
         _type = _field.get_type()
         if _type:
             _types.append(_type.type)
