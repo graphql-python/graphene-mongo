@@ -14,7 +14,7 @@ Mongoengine Fields
 - FileField
 - FloatField
 - GenericReferenceField
-- IntegerField
+- IntField
 - ListField
 - ObjectIdField
 - ReferenceField
