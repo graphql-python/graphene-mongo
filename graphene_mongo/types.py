@@ -35,6 +35,8 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # in there. Or when we exclude this field in exclude_fields
             continue
         if isinstance(field, mongoengine.ListField):
+            if not field.field:
+                continue
             # Take care of list of self-reference.
             document_type_obj = field.field.__dict__.get('document_type_obj', None)
             if document_type_obj == model._class_name \
