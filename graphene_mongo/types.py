@@ -21,7 +21,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
         exclude_fields ([str]):
 
     Returns:
-        (OrderedDict, OrderedDict): coverted fields and self reference fields.
+        (OrderedDict, OrderedDict): converted fields and self reference fields.
 
     """
     _model_fields = get_model_fields(model)
@@ -163,12 +163,11 @@ class MongoengineObjectType(ObjectType):
 
         mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
 
-        # The initial scan should take precidence
+        # The initial scan should take precedence
         for field in mongoengine_fields:
             if field not in cls._meta.fields:
                 cls._meta.fields.update({field: mongoengine_fields[field]})
         # Self-referenced fields can't change between scans!
-
 
     # noqa
     @classmethod
