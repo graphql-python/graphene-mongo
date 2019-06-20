@@ -11,11 +11,15 @@ Mongoengine Fields
 - EmailField
 - EmbeddedDocumentField
 - EmbeddedDocumentListField
+- FileField
 - FloatField
-- IntegerField
+- GenericReferenceField
+- IntField
 - ListField
 - ObjectIdField
 - ReferenceField
+- PointField
+- PolygonField
 - StringField
 - URLField
 - UUIDField

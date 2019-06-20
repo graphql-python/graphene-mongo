@@ -1,122 +1,165 @@
+import mongoengine
 from datetime import datetime
-from mongoengine import (
-    connect, Document, EmbeddedDocument
-)
-from mongoengine.fields import (
-    DateTimeField, EmailField, EmbeddedDocumentField,
-    FloatField, EmbeddedDocumentListField, ListField,
-    MapField, ReferenceField, StringField
-)
+from mongomock import gridfs
 
-connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
+gridfs.enable_gridfs_integration()
+mongoengine.connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
+# mongoengine.connect('graphene-mongo-test', host='mongodb://192.168.15.91/graphene-mongo-dev')
 
 
-class Editor(Document):
+class Publisher(mongoengine.Document):
+
+    meta = {'collection': 'test_publisher'}
+    name = mongoengine.StringField()
+
+    @property
+    def legal_name(self):
+        return self.name + " Inc."
+
+    def bad_field(self):
+        return None
+
+
+class Editor(mongoengine.Document):
+    """
+    An Editor of a publication.
+    """
 
     meta = {'collection': 'test_editor'}
-    id = StringField(primary_key=True)
-    first_name = StringField(required=True)
-    last_name = StringField(required=True)
-    metadata = MapField(field=StringField())
+    id = mongoengine.StringField(primary_key=True)
+    first_name = mongoengine.StringField(required=True, help_text="Editor's first name.", db_field='fname')
+    last_name = mongoengine.StringField(required=True, help_text="Editor's last name.")
+    metadata = mongoengine.MapField(field=mongoengine.StringField(), help_text="Arbitrary metadata.")
+    company = mongoengine.LazyReferenceField(Publisher)
+    avatar = mongoengine.FileField()
 
 
-class Pet(Document):
-
-    meta = {'collection': 'test_pet'}
-    name = StringField(max_length=16, required=True)
-    reporter_id = StringField()
-
-
-class Article(Document):
+class Article(mongoengine.Document):
 
     meta = {'collection': 'test_article'}
-    headline = StringField(required=True)
-    pub_date = DateTimeField(default=datetime.now)
-    editor = ReferenceField(Editor)
-    reporter = ReferenceField('Reporter')
+    headline = mongoengine.StringField(required=True, help_text="The article headline.")
+    pub_date = mongoengine.DateTimeField(
+        default=datetime.now,
+        verbose_name="publication date",
+        help_text="The date of first press.")
+    editor = mongoengine.ReferenceField(Editor)
+    reporter = mongoengine.ReferenceField('Reporter')
+    # Will not convert this field cause no chioces
+    generic_reference = mongoengine.GenericReferenceField()
 
 
-class EmbeddedArticle(EmbeddedDocument):
+class EmbeddedArticle(mongoengine.EmbeddedDocument):
 
     meta = {'collection': 'test_embedded_article'}
-    headline = StringField(required=True)
-    pub_date = DateTimeField(default=datetime.now)
-    editor = ReferenceField(Editor)
-    reporter = ReferenceField('Reporter')
+    headline = mongoengine.StringField(required=True)
+    pub_date = mongoengine.DateTimeField(default=datetime.now)
+    editor = mongoengine.ReferenceField(Editor)
+    reporter = mongoengine.ReferenceField('Reporter')
 
 
-class Reporter(Document):
+class Reporter(mongoengine.Document):
 
-    meta = {'collection': 'test_repoter'}
-    id = StringField(primary_key=True)
-    first_name = StringField(required=True)
-    last_name = StringField(required=True)
-    email = EmailField()
-    articles = ListField(ReferenceField(Article))
-    embedded_articles = ListField(EmbeddedDocumentField(EmbeddedArticle))
-    embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
-    awards = ListField(StringField())
+    meta = {'collection': 'test_reporter'}
+    id = mongoengine.StringField(primary_key=True)
+    first_name = mongoengine.StringField(required=True)
+    last_name = mongoengine.StringField(required=True)
+    email = mongoengine.EmailField()
+    awards = mongoengine.ListField(mongoengine.StringField())
+    articles = mongoengine.ListField(mongoengine.ReferenceField(Article))
+    embedded_articles = mongoengine.ListField(mongoengine.EmbeddedDocumentField(EmbeddedArticle))
+    embedded_list_articles = mongoengine.EmbeddedDocumentListField(EmbeddedArticle)
+    id = mongoengine.StringField(primary_key=True)
+    first_name = mongoengine.StringField(required=True)
+    last_name = mongoengine.StringField(required=True)
+    email = mongoengine.EmailField()
+    awards = mongoengine.ListField(mongoengine.StringField())
+    articles = mongoengine.ListField(mongoengine.ReferenceField(Article))
+    embedded_articles = mongoengine.ListField(mongoengine.EmbeddedDocumentField(EmbeddedArticle))
+    embedded_list_articles = mongoengine.EmbeddedDocumentListField(EmbeddedArticle)
+    generic_reference = mongoengine.GenericReferenceField(
+        choices=[Article, Editor, ]
+    )
 
 
-class Player(Document):
+class Player(mongoengine.Document):
 
     meta = {'collection': 'test_player'}
-    first_name = StringField(required=True)
-    last_name = StringField(required=True)
-    opponent = ReferenceField('Player')
-    players = ListField(ReferenceField('Player'))
-    articles = ListField(ReferenceField('Article'))
-    embedded_list_articles = EmbeddedDocumentListField(EmbeddedArticle)
+    first_name = mongoengine.StringField(required=True)
+    last_name = mongoengine.StringField(required=True)
+    opponent = mongoengine.ReferenceField('Player')
+    players = mongoengine.ListField(mongoengine.ReferenceField('Player'))
+    articles = mongoengine.ListField(mongoengine.ReferenceField('Article'))
+    embedded_list_articles = mongoengine.EmbeddedDocumentListField(EmbeddedArticle)
 
 
-class Parent(Document):
+class Parent(mongoengine.Document):
 
     meta = {
         'collection': 'test_parent',
         'allow_inheritance': True
     }
-    bar = StringField()
+    bar = mongoengine.StringField()
+    loc = mongoengine.MultiPolygonField()
+
+
+class CellTower(mongoengine.Document):
+
+    meta = {
+        'collection': 'test_cell_tower',
+    }
+    code = mongoengine.StringField()
+    base = mongoengine.PolygonField()
+    coverage_area = mongoengine.MultiPolygonField()
 
 
 class Child(Parent):
 
     meta = {'collection': 'test_child'}
-    baz = StringField()
+    baz = mongoengine.StringField()
+    loc = mongoengine.PointField()
 
 
-class ProfessorMetadata(EmbeddedDocument):
+class ProfessorMetadata(mongoengine.EmbeddedDocument):
 
     meta = {'collection': 'test_professor_metadata'}
-    id = StringField(primary_key=False)
-    first_name = StringField()
-    last_name = StringField()
-    departments = ListField(StringField())
+    id = mongoengine.StringField(primary_key=False)
+    first_name = mongoengine.StringField()
+    last_name = mongoengine.StringField()
+    departments = mongoengine.ListField(mongoengine.StringField())
 
 
-class ProfessorVector(Document):
+class ProfessorVector(mongoengine.Document):
 
     meta = {'collection': 'test_professor_vector'}
-    vec = ListField(FloatField())
-    metadata = EmbeddedDocumentField(ProfessorMetadata)
+    vec = mongoengine.ListField(mongoengine.FloatField())
+    metadata = mongoengine.EmbeddedDocumentField(ProfessorMetadata)
 
 
-class ParentWithRelationship(Document):
+class ParentWithRelationship(mongoengine.Document):
 
     meta = {'collection': 'test_parent_reference'}
-    before_child = ListField(ReferenceField("ChildRegisteredBefore"))
-    after_child = ListField(ReferenceField("ChildRegisteredAfter"))
-    name = StringField()
+    before_child = mongoengine.ListField(
+        mongoengine.ReferenceField('ChildRegisteredBefore'))
+    after_child = mongoengine.ListField(
+        mongoengine.ReferenceField('ChildRegisteredAfter'))
+    name = mongoengine.StringField()
 
 
-class ChildRegisteredBefore(Document):
+class ChildRegisteredBefore(mongoengine.Document):
 
     meta = {'collection': 'test_child_before_reference'}
-    parent = ReferenceField(ParentWithRelationship)
-    name = StringField()
+    parent = mongoengine.ReferenceField(ParentWithRelationship)
+    name = mongoengine.StringField()
 
 
-class ChildRegisteredAfter(Document):
+class ChildRegisteredAfter(mongoengine.Document):
 
     meta = {'collection': 'test_child_after_reference'}
-    parent = ReferenceField(ParentWithRelationship)
-    name = StringField()
+    parent = mongoengine.ReferenceField(ParentWithRelationship)
+    name = mongoengine.StringField()
+
+
+class ErroneousModel(mongoengine.Document):
+    meta = {'collection': 'test_colliding_objects_model'}
+
+    objects = mongoengine.ListField(mongoengine.StringField())
