@@ -1,22 +1,42 @@
+import os
 import pytest
+
+from datetime import datetime
 from .models import (
     Article, Editor, EmbeddedArticle, Player,
     Reporter, Child, ProfessorMetadata, ProfessorVector,
     ChildRegisteredBefore, ChildRegisteredAfter,
-    ParentWithRelationship
-)
+    ParentWithRelationship, CellTower,
+    Publisher)
+
+current_dirname = os.path.dirname(os.path.abspath(__file__))
+
+
+@pytest.fixture()
+def fixtures_dirname():
+    return os.path.join(current_dirname, 'fixtures')
 
 
 @pytest.fixture(scope='module')
 def fixtures():
+    Publisher.drop_collection()
+    publisher1 = Publisher(name="Newsco")
+    publisher1.save()
+
     Editor.drop_collection()
     editor1 = Editor(
         id='1',
         first_name='Penny',
         last_name='Hardaway',
-        metadata={'age': '20', 'nickname': '$1'}
+        metadata={'age': '20', 'nickname': '$1'},
+        company=publisher1
     )
+    image_filename = os.path.join(
+        current_dirname, 'fixtures', 'image.jpg')
+    with open(image_filename, 'rb') as f:
+        editor1.avatar.put(f, content_type='image/jpeg')
     editor1.save()
+
     editor2 = Editor(
         id='2',
         first_name='Grant',
@@ -31,10 +51,14 @@ def fixtures():
     editor3.save()
 
     Article.drop_collection()
-    article1 = Article(headline='Hello', editor=editor1)
+    pub_date = datetime.strptime('2020-01-01', '%Y-%m-%d')
+    article1 = Article(headline='Hello', editor=editor1, pub_date=pub_date)
     article1.save()
-    article2 = Article(headline='World', editor=editor2)
+    article2 = Article(headline='World', editor=editor2, pub_date=pub_date)
     article2.save()
+
+    article3 = Article(headline='Bye', editor=editor2, pub_date=pub_date)
+    article3.save()
 
     Reporter.drop_collection()
     reporter1 = Reporter(
@@ -55,6 +79,7 @@ def fixtures():
     )
     reporter1.embedded_articles = [embedded_article1, embedded_article2]
     reporter1.embedded_list_articles = [embedded_article2, embedded_article1]
+    reporter1.generic_reference = article1
     reporter1.save()
 
     Player.drop_collection()
@@ -92,9 +117,30 @@ def fixtures():
     child1 = Child(bar='BAR', baz='BAZ')
     child1.save()
 
-    child2 = Child(bar='bar', baz='baz')
+    child2 = Child(bar='bar', baz='baz', loc=[10, 20])
     child2.save()
 
+    CellTower.drop_collection()
+    ct = CellTower(
+        code='bar',
+        base=[[
+            [-43.36556, -22.99669],
+            [-43.36539, -23.01928],
+            [-43.26583, -23.01802],
+            [-43.36717, -22.98855],
+            [-43.36636, -22.99351],
+            [-43.36556, -22.99669]
+        ]],
+        coverage_area=[[[
+            [-43.36556, -22.99669],
+            [-43.36539, -23.01928],
+            [-43.26583, -23.01802],
+            [-43.36717, -22.98855],
+            [-43.36636, -22.99351],
+            [-43.36556, -22.99669]
+        ]]]
+    )
+    ct.save()
     ProfessorVector.drop_collection()
     professor_metadata = ProfessorMetadata(
         id='5e06aa20-6805-4eef-a144-5615dedbe32b',
@@ -131,3 +177,4 @@ def fixtures():
     child3.parent = child4.parent = parent
     child3.save()
     child4.save()
+    return True
