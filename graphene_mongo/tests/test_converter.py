@@ -50,7 +50,7 @@ def test_sould_long_convert_int():
     assert_conversion(mongoengine.LongField, graphene.Int)
 
 
-def test_sould_sequence_convert_int():
+def test_sould_sequence_convert_field():
     assert_conversion(mongoengine.SequenceField, graphene.Int)
 
 
