@@ -15,7 +15,7 @@ A `Mongoengine <https://mongoengine-odm.readthedocs.io/>`__ integration for `Gra
 Installation
 ------------
 
-For instaling graphene-mongo, just run this command in your shell
+For installing graphene-mongo, just run this command in your shell
 
 .. code:: bash
 
