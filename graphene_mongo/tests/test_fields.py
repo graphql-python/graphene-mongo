@@ -27,7 +27,7 @@ def test_reporter_field_args():
 def test_editor_field_args():
     field = MongoengineConnectionField(nodes.EditorNode)
 
-    field_args = {'id', 'first_name', 'last_name', 'metadata'}
+    field_args = {'id', 'first_name', 'last_name', 'metadata', 'seq'}
     assert set(field.field_args.keys()) == field_args
 
 
