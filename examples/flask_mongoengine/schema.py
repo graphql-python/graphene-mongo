@@ -6,6 +6,7 @@ from models import Employee as EmployeeModel
 from models import Role as RoleModel
 from models import Task as TaskModel
 
+
 class Department(MongoengineObjectType):
 
     class Meta:
@@ -26,6 +27,7 @@ class Task(MongoengineObjectType):
         model = TaskModel
         interfaces = (Node,)
 
+
 class Employee(MongoengineObjectType):
 
     class Meta:
@@ -39,5 +41,5 @@ class Query(graphene.ObjectType):
     all_roles = MongoengineConnectionField(Role)
     role = graphene.Field(Role)
 
-schema = graphene.Schema(query=Query, types=[Department, Employee, Role])
 
+schema = graphene.Schema(query=Query, types=[Department, Employee, Role])

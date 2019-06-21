@@ -45,7 +45,7 @@ class Article(mongoengine.Document):
         help_text="The date of first press.")
     editor = mongoengine.ReferenceField(Editor)
     reporter = mongoengine.ReferenceField('Reporter')
-    # Will not convert this field cause no chioces
+    # Will not convert this field cause no choices
     generic_reference = mongoengine.GenericReferenceField()
 
 
@@ -61,14 +61,6 @@ class EmbeddedArticle(mongoengine.EmbeddedDocument):
 class Reporter(mongoengine.Document):
 
     meta = {'collection': 'test_reporter'}
-    id = mongoengine.StringField(primary_key=True)
-    first_name = mongoengine.StringField(required=True)
-    last_name = mongoengine.StringField(required=True)
-    email = mongoengine.EmailField()
-    awards = mongoengine.ListField(mongoengine.StringField())
-    articles = mongoengine.ListField(mongoengine.ReferenceField(Article))
-    embedded_articles = mongoengine.ListField(mongoengine.EmbeddedDocumentField(EmbeddedArticle))
-    embedded_list_articles = mongoengine.EmbeddedDocumentListField(EmbeddedArticle)
     id = mongoengine.StringField(primary_key=True)
     first_name = mongoengine.StringField(required=True)
     last_name = mongoengine.StringField(required=True)
