@@ -42,6 +42,9 @@ class PlayerNode(MongoengineObjectType):
     class Meta:
         model = models.Player
         interfaces = (Node, )
+        filter_fields = {
+            'first_name': ['istartswith']
+        }
 
 
 class ReporterNode(MongoengineObjectType):
