@@ -1,9 +1,8 @@
 import pytest
-from .models import Bike
+from .models import Bike, Shop
 
 
-@pytest.fixture(scope='module')
-def fixtures_data():
+def fixture_bike_data():
     Bike.drop_collection()
     bike_one = Bike(
         name='Level R',
@@ -24,5 +23,27 @@ def fixtures_data():
         type='Gravel'
     )
     bike_two.save()
+
+
+def fixture_shop_data():
+    Shop.drop_collection()
+    shop_one = Shop(
+        name="Big Wheel Bicycles",
+        address="2438 Hart Ridge Road",
+        website="https://www.bigwheelbike.test"
+    )
+    shop_one.save()
+    shop_two = Shop(
+        name="Bike Tech",
+        address="2175 Pearl Street",
+        website="https://www.biketech.test"
+    )
+    shop_two.save()
+
+
+@pytest.fixture(scope='module')
+def fixtures_data():
+    fixture_bike_data()
+    fixture_shop_data()
 
     return True

@@ -1,5 +1,12 @@
 from mongoengine import Document
-from mongoengine.fields import FloatField, StringField, ListField
+from mongoengine.fields import FloatField, StringField, ListField, URLField
+
+
+class Shop(Document):
+    meta = {'collection': 'shop'}
+    name = StringField()
+    address = StringField()
+    website = URLField()
 
 
 class Bike(Document):

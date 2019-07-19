@@ -76,9 +76,42 @@ def test_bikes_filter_by_type_item_query(fixtures_data):
                                 "wheelSize": 27.5,
                                 "type": "MTB"
                             }
-                        },
+                        }
                     ]
                 }
+        }
+    }
+
+    client = Client(schema)
+    result = client.execute(query)
+    assert result == expected
+
+
+def test_shop_data_query(fixtures_data):
+    query = '''{
+               shopList{
+                    name
+                    address
+                    website
+                    }
+            }'''
+
+    expected = {
+        "data": {
+            "shopList": [
+                {
+
+                    "name": "Big Wheel Bicycles",
+                    "address": "2438 Hart Ridge Road",
+                    "website": "https://www.bigwheelbike.test",
+
+                },
+                {
+                    "name": "Bike Tech",
+                    "address": "2175 Pearl Street",
+                    "website": "https://www.biketech.test",
+                }
+            ]
         }
     }
 
