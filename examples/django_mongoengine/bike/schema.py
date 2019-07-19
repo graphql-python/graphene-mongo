@@ -14,4 +14,4 @@ class Query(graphene.ObjectType):
         return Shop.objects.all()
 
 
-schema = graphene.Schema(query=Query, types=[BikeType, ])
+schema = graphene.Schema(query=Query, types=[BikeType, ShopType])
