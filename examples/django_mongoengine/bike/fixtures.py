@@ -24,6 +24,17 @@ def fixture_bike_data():
     )
     bike_two.save()
 
+    bike_three = Bike(
+        id="507f1f77bcf86cd799439011",
+        name='Moterra Neo',
+        brand='Cannondale',
+        year='2019',
+        size=["M", "L", "XL"],
+        wheel_size=29,
+        type='EBike'
+    )
+    bike_three.save()
+
 
 def fixture_shop_data():
     Shop.drop_collection()
