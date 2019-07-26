@@ -7,6 +7,6 @@ iso8601==0.1.12
 mongoengine==0.16.3
 mongomock==3.14.0
 pymongo==3.6.1
-pytest==5.0.1
+pytest==3.3.2
 pytest-cov==2.5.1
 singledispatch==3.4.0.3
