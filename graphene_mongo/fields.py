@@ -86,9 +86,10 @@ class MongoengineConnectionField(ConnectionField):
                 return False
             if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
-            if callable(getattr(converted, 'type', None)) and isinstance(converted.type(),
-                                                                         (FileFieldType, PointFieldType,
-                                                                          MultiPolygonFieldType, graphene.Union)):
+            if callable(getattr(converted, 'type', None)) \
+                    and isinstance(
+                        converted.type(),
+                        (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union)):
                 return False
             return True
 
@@ -188,10 +189,12 @@ class MongoengineConnectionField(ConnectionField):
         connection.list_length = list_length
         return connection
 
-    def chained_resolver(self, resolver, root, info, **args):
-        resolved = resolver(root, info, **args)
-        if resolved is not None:
-            return resolved
+    def chained_resolver(self, resolver, is_partial, root, info, **args):
+        if not bool(args) or not is_partial:
+            # XXX: Filter nested args
+            resolved = resolver(root, info, **args)
+            if resolved is not None:
+                return resolved
         return self.default_resolver(root, info, **args)
 
     @classmethod
@@ -209,5 +212,5 @@ class MongoengineConnectionField(ConnectionField):
     def get_resolver(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
         resolver = partial(
-            self.chained_resolver, super_resolver)
+            self.chained_resolver, super_resolver, isinstance(super_resolver, partial))
         return partial(self.connection_resolver, resolver, self.type)
