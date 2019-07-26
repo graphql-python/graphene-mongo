@@ -1077,4 +1077,3 @@ def test_should_filter_mongoengine_queryset(fixtures):
 
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
-
