@@ -1,7 +1,7 @@
-import base64
 import os
+import json
 import pytest
-
+import base64
 import graphene
 
 from graphene.relay import Node
@@ -1038,3 +1038,42 @@ def test_should_get_queryset_returns_qs_filters(fixtures):
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_should_filter_mongoengine_queryset(fixtures):
+
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(nodes.PlayerNode)
+
+    query = '''
+        query players {
+            players(firstName_Istartswith: "M") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'players': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Michael',
+                    }
+                },
+                {
+                    'node': {
+                        'firstName': 'Magic'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
