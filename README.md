@@ -65,20 +65,10 @@ result = schema.execute(query)
 
 To learn more check out the following [examples](examples/):
 
-* **Full example**: [Flask MongoEngine example](examples/flask_mongoengine)
+* [Flask MongoEngine example](examples/flask_mongoengine)
+* [Django MongoEngine example](examples/django_mongoengine)
+* [Falcon MongoEngine example](examples/falcon_mongoengine)
 
-## TODOs
-
-- [ ] Examples
-    - [x] Flask example
-    - [ ] Django example
-- [x] Filtering & Paging
-    - [x] Default filtering enabled with all model's attributes by equal comparison (requester: [git-albertomarin](https://github.com/git-albertomarin))
-    - [x] Take first, or last n items (credit: [alexpantyukhin](https://github.com/alexpantyukhin))
-    - [x] Filter by global id (requester: [bwalsh](https://github.com/bwalsh))
-    - [x] Filter by reference model id (requester: [msholty-fd](https://github.com/msholty-fd))
-- [ ] Support more types ([Currently supported](http://graphene-mongo.readthedocs.io/en/latest/fields.html#))
-    - [x] Self-reference and list-of-self-reference relationship (requester: [mehdiym](https://github.com/mehdiym))
 
 ## Contributing
 
