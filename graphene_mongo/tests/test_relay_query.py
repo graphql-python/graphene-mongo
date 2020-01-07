@@ -1077,3 +1077,34 @@ def test_should_filter_mongoengine_queryset(fixtures):
 
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
+
+def test_should_query_document_with_embedded(fixtures):
+
+    class Query(graphene.ObjectType):
+        foos = MongoengineConnectionField(nodes.FooNode)
+
+        def resolve_multiple_foos(self, *args, **kwargs):
+            return list(models.Foo.objects.all())
+
+    query = '''
+        query {
+            foos {
+                edges {
+                    node {
+                        bars {
+                            edges {
+                                node {
+                                    someListField
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
