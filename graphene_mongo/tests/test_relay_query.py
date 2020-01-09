@@ -1077,3 +1077,42 @@ def test_should_filter_mongoengine_queryset(fixtures):
 
     assert not result.errors
     assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
+
+
+def test_should_filter_mongoengine_queryset_with_list(fixtures):
+
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(nodes.PlayerNode)
+
+    query = '''
+        query players {
+            players(firstName_In: ["Michael", "Magic"]) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'players': {
+            'edges': [
+                {
+                    'node': {
+                        'firstName': 'Michael',
+                    }
+                },
+                {
+                    'node': {
+                        'firstName': 'Magic'
+                    }
+                }
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)

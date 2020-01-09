@@ -43,7 +43,7 @@ class PlayerNode(MongoengineObjectType):
         model = models.Player
         interfaces = (Node, )
         filter_fields = {
-            'first_name': ['istartswith']}
+            'first_name': ['istartswith', 'in']}
 
 
 class ReporterNode(MongoengineObjectType):
