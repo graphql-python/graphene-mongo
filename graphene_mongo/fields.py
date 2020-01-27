@@ -93,12 +93,15 @@ class MongoengineConnectionField(ConnectionField):
                 return False
             return True
 
-        def get_type(v):
-            if isinstance(v.type, Structure):
-                return v.type.of_type()
-            return v.type()
+        def get_filter_type(_type):
+            """
+            Returns the scalar type.
+            """
+            if isinstance(_type, Structure):
+                return get_filter_type(_type.of_type)
+            return _type()
 
-        return {k: get_type(v) for k, v in items if is_filterable(k)}
+        return {k: get_filter_type(v.type) for k, v in items if is_filterable(k)}
 
     @property
     def field_args(self):

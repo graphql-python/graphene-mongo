@@ -99,3 +99,15 @@ class ErroneousModelNode(MongoengineObjectType):
     class Meta:
         model = models.ErroneousModel
         interfaces = (Node, )
+
+
+class BarNode(MongoengineObjectType):
+    class Meta:
+        model = models.Bar
+        interfaces = (Node, )
+
+
+class FooNode(MongoengineObjectType):
+    class Meta:
+        model = models.Foo
+        interfaces = (Node, )
