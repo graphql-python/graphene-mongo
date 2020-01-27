@@ -156,3 +156,11 @@ class ErroneousModel(mongoengine.Document):
     meta = {'collection': 'test_colliding_objects_model'}
 
     objects = mongoengine.ListField(mongoengine.StringField())
+
+
+class Bar(mongoengine.EmbeddedDocument):
+    some_list_field = mongoengine.ListField(mongoengine.StringField(), required=True)
+
+
+class Foo(mongoengine.Document):
+    bars = mongoengine.EmbeddedDocumentListField(Bar)
