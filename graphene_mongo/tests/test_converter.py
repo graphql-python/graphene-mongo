@@ -336,15 +336,14 @@ def test_should_generic_reference_convert_union():
 
 
 def test_should_generic_embedded_document_convert_union():
-
     class D(MongoengineObjectType):
         class Meta:
             model = EmbeddedArticle
-    
+
     class F(MongoengineObjectType):
         class Meta:
             model = EmbeddedFoo
-            
+
     class A(MongoengineObjectType):
         class Meta:
             model = Article
@@ -356,7 +355,7 @@ def test_should_generic_embedded_document_convert_union():
     class R(MongoengineObjectType):
         class Meta:
             model = Reporter
-    
+
     generic_embedded_document = convert_mongoengine_field(
         Reporter._fields["generic_embedded_document"], registry.get_global_registry()
     )
