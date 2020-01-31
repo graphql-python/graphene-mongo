@@ -9,7 +9,6 @@ from .setup import fixtures, fixtures_dirname
 
 
 def test_should_query_editor(fixtures, fixtures_dirname):
-
     class Query(graphene.ObjectType):
 
         editor = graphene.Field(types.EditorType)
@@ -21,7 +20,7 @@ def test_should_query_editor(fixtures, fixtures_dirname):
         def resolve_editors(self, *args, **kwargs):
             return list(models.Editor.objects.all())
 
-    query = '''
+    query = """
         query EditorQuery {
             editor {
                 firstName,
@@ -42,57 +41,48 @@ def test_should_query_editor(fixtures, fixtures_dirname):
                 lastName
             }
         }
-    '''
+    """
 
-    avator_filename = os.path.join(fixtures_dirname, 'image.jpg')
-    with open(avator_filename, 'rb') as f:
+    avator_filename = os.path.join(fixtures_dirname, "image.jpg")
+    with open(avator_filename, "rb") as f:
         data = base64.b64encode(f.read())
 
     expected = {
-        'editor': {
-            'firstName': 'Penny',
-            'company': {'name': 'Newsco'},
-            'avatar': {
-                'contentType': 'image/jpeg',
-                'chunkSize': 261120,
-                'length': 46928,
-                'md5': 'f3c657fd472fdc4bc2ca9056a1ae6106',
-                'data': str(data)
-            }
+        "editor": {
+            "firstName": "Penny",
+            "company": {"name": "Newsco"},
+            "avatar": {
+                "contentType": "image/jpeg",
+                "chunkSize": 261120,
+                "length": 46928,
+                "md5": "f3c657fd472fdc4bc2ca9056a1ae6106",
+                "data": str(data),
+            },
         },
-        'editors': [{
-            'firstName': 'Penny',
-            'lastName': 'Hardaway'
-        }, {
-            'firstName': 'Grant',
-            'lastName': 'Hill'
-        }, {
-            'firstName': 'Dennis',
-            'lastName': 'Rodman'
-        }]
+        "editors": [
+            {"firstName": "Penny", "lastName": "Hardaway"},
+            {"firstName": "Grant", "lastName": "Hill"},
+            {"firstName": "Dennis", "lastName": "Rodman"},
+        ],
     }
-    expected_metadata = {
-        'age': '20',
-        'nickname': "$1"
-    }
+    expected_metadata = {"age": "20", "nickname": "$1"}
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    metadata = result.data['editor'].pop('metadata')
+    metadata = result.data["editor"].pop("metadata")
     assert json.loads(metadata) == expected_metadata
     assert result.data == expected
 
 
 def test_should_query_reporter(fixtures):
-
     class Query(graphene.ObjectType):
         reporter = graphene.Field(types.ReporterType)
 
         def resolve_reporter(self, *args, **kwargs):
             return models.Reporter.objects.first()
 
-    query = '''
+    query = """
         query ReporterQuery {
             reporter {
                 firstName,
@@ -110,33 +100,16 @@ def test_should_query_reporter(fixtures):
                 awards
             }
         }
-    '''
+    """
     expected = {
-        'reporter': {
-            'firstName': 'Allen',
-            'lastName': 'Iverson',
-            'email': 'ai@gmail.com',
-            'articles': [
-                {'headline': 'Hello'},
-                {'headline': 'World'}
-            ],
-            'embeddedArticles': [
-                {
-                    'headline': 'Real'
-                },
-                {
-                    'headline': 'World'
-                }
-            ],
-            'embeddedListArticles': [
-                {
-                    'headline': 'World'
-                },
-                {
-                    'headline': 'Real'
-                }
-            ],
-            'awards': ['2010-mvp']
+        "reporter": {
+            "firstName": "Allen",
+            "lastName": "Iverson",
+            "email": "ai@gmail.com",
+            "articles": [{"headline": "Hello"}, {"headline": "World"}],
+            "embeddedArticles": [{"headline": "Real"}, {"headline": "World"}],
+            "embeddedListArticles": [{"headline": "World"}, {"headline": "Real"}],
+            "awards": ["2010-mvp"],
         }
     }
 
@@ -147,35 +120,28 @@ def test_should_query_reporter(fixtures):
 
 
 def test_should_custom_kwargs(fixtures):
-
     class Query(graphene.ObjectType):
 
         editors = graphene.List(types.EditorType, first=graphene.Int())
 
         def resolve_editors(self, *args, **kwargs):
             editors = models.Editor.objects()
-            if 'first' in kwargs:
-                editors = editors[:kwargs['first']]
+            if "first" in kwargs:
+                editors = editors[: kwargs["first"]]
             return list(editors)
 
-    query = '''
+    query = """
         query EditorQuery {
             editors(first: 2) {
                 firstName,
                 lastName
             }
         }
-    '''
+    """
     expected = {
-        'editors': [
-            {
-                'firstName': 'Penny',
-                'lastName': 'Hardaway'
-            },
-            {
-                'firstName': 'Grant',
-                'lastName': 'Hill'
-            }
+        "editors": [
+            {"firstName": "Penny", "lastName": "Hardaway"},
+            {"firstName": "Grant", "lastName": "Hill"},
         ]
     }
     schema = graphene.Schema(query=Query)
@@ -185,7 +151,6 @@ def test_should_custom_kwargs(fixtures):
 
 
 def test_should_self_reference(fixtures):
-
     class Query(graphene.ObjectType):
 
         all_players = graphene.List(types.PlayerType)
@@ -193,7 +158,7 @@ def test_should_self_reference(fixtures):
         def resolve_all_players(self, *args, **kwargs):
             return models.Player.objects.all()
 
-    query = '''
+    query = """
         query PlayersQuery {
             allPlayers {
                 firstName,
@@ -205,46 +170,25 @@ def test_should_self_reference(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'allPlayers': [
+        "allPlayers": [
             {
-                'firstName': 'Michael',
-                'opponent': None,
-                'players': [
-                    {
-                        'firstName': 'Magic'
-                    }
-                ]
+                "firstName": "Michael",
+                "opponent": None,
+                "players": [{"firstName": "Magic"}],
             },
             {
-                'firstName': 'Magic',
-                'opponent': {
-                    'firstName': 'Michael'
-                },
-                'players': [
-                    {
-                        'firstName': 'Michael'
-                    }
-                ]
+                "firstName": "Magic",
+                "opponent": {"firstName": "Michael"},
+                "players": [{"firstName": "Michael"}],
             },
             {
-                'firstName': 'Larry',
-                'opponent': None,
-                'players': [
-                    {
-                        'firstName': 'Michael'
-                    },
-                    {
-                        'firstName': 'Magic'
-                    }
-                ]
+                "firstName": "Larry",
+                "opponent": None,
+                "players": [{"firstName": "Michael"}, {"firstName": "Magic"}],
             },
-            {
-                 'firstName': 'Chris',
-                 'opponent': None,
-                 'players': []
-            }
+            {"firstName": "Chris", "opponent": None, "players": []},
         ]
     }
     schema = graphene.Schema(query=Query)
@@ -254,9 +198,10 @@ def test_should_self_reference(fixtures):
 
 
 def test_should_query_with_embedded_document(fixtures):
-
     class Query(graphene.ObjectType):
-        professor_vector = graphene.Field(types.ProfessorVectorType, id=graphene.String())
+        professor_vector = graphene.Field(
+            types.ProfessorVectorType, id=graphene.String()
+        )
 
         def resolve_professor_vector(self, info, id):
             return models.ProfessorVector.objects(metadata__id=id).first()
@@ -273,22 +218,15 @@ def test_should_query_with_embedded_document(fixtures):
     """
 
     expected = {
-        'professorVector': {
-            'vec': [1.0, 2.3],
-            'metadata': {
-                'firstName': 'Steven'
-            }
-        }
+        "professorVector": {"vec": [1.0, 2.3], "metadata": {"firstName": "Steven"}}
     }
-    schema = graphene.Schema(
-        query=Query, types=[types.ProfessorVectorType])
+    schema = graphene.Schema(query=Query, types=[types.ProfessorVectorType])
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
 
 
 def test_should_query_child(fixtures):
-
     class Query(graphene.ObjectType):
 
         children = graphene.List(types.ChildType)
@@ -296,7 +234,7 @@ def test_should_query_child(fixtures):
         def resolve_children(self, *args, **kwargs):
             return list(models.Child.objects.all())
 
-    query = '''
+    query = """
         query Query {
             children {
                 bar,
@@ -307,21 +245,15 @@ def test_should_query_child(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'children': [
+        "children": [
+            {"bar": "BAR", "baz": "BAZ", "loc": None},
             {
-                'bar': 'BAR',
-                'baz': 'BAZ',
-                'loc': None
-            }, {
-                'bar': 'bar',
-                'baz': 'baz',
-                'loc': {
-                    'type': 'Point',
-                    'coordinates': [10.0, 20.0]
-                }
-            }
+                "bar": "bar",
+                "baz": "baz",
+                "loc": {"type": "Point", "coordinates": [10.0, 20.0]},
+            },
         ]
     }
 
@@ -332,7 +264,6 @@ def test_should_query_child(fixtures):
 
 
 def test_should_query_cell_tower(fixtures):
-
     class Query(graphene.ObjectType):
 
         cell_towers = graphene.List(types.CellTowerType)
@@ -340,7 +271,7 @@ def test_should_query_cell_tower(fixtures):
         def resolve_cell_towers(self, *args, **kwargs):
             return list(models.CellTower.objects.all())
 
-    query = '''
+    query = """
         query Query {
             cellTowers {
                 code,
@@ -354,33 +285,39 @@ def test_should_query_cell_tower(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'cellTowers': [
+        "cellTowers": [
             {
-                'code': 'bar',
-                'base': {
-                    'type': 'Polygon',
-                    'coordinates': [[
-                        [-43.36556, -22.99669],
-                        [-43.36539, -23.01928],
-                        [-43.26583, -23.01802],
-                        [-43.36717, -22.98855],
-                        [-43.36636, -22.99351],
-                        [-43.36556, -22.99669]
-                    ]]
+                "code": "bar",
+                "base": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [-43.36556, -22.99669],
+                            [-43.36539, -23.01928],
+                            [-43.26583, -23.01802],
+                            [-43.36717, -22.98855],
+                            [-43.36636, -22.99351],
+                            [-43.36556, -22.99669],
+                        ]
+                    ],
                 },
-                'coverageArea': {
-                    'type': 'MultiPolygon',
-                    'coordinates': [[[
-                        [-43.36556, -22.99669],
-                        [-43.36539, -23.01928],
-                        [-43.26583, -23.01802],
-                        [-43.36717, -22.98855],
-                        [-43.36636, -22.99351],
-                        [-43.36556, -22.99669]
-                    ]]]
-                }
+                "coverageArea": {
+                    "type": "MultiPolygon",
+                    "coordinates": [
+                        [
+                            [
+                                [-43.36556, -22.99669],
+                                [-43.36539, -23.01928],
+                                [-43.26583, -23.01802],
+                                [-43.36717, -22.98855],
+                                [-43.36636, -22.99351],
+                                [-43.36556, -22.99669],
+                            ]
+                        ]
+                    ],
+                },
             }
         ]
     }

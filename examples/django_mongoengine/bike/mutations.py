@@ -27,7 +27,7 @@ class CreateBikeMutation(graphene.Mutation):
             year=bike_data.year,
             size=bike_data.size,
             wheel_size=bike_data.wheel_size,
-            type=bike_data.type
+            type=bike_data.type,
         )
         bike.save()
 

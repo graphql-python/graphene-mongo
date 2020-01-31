@@ -12,35 +12,33 @@ from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
-from .advanced_types import (
-    FileFieldType, PointFieldType, MultiPolygonFieldType
-)
+from .advanced_types import FileFieldType, PointFieldType, MultiPolygonFieldType
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
 from .utils import get_model_reference_fields, get_node_from_global_id
 
 
 class MongoengineConnectionField(ConnectionField):
-
     def __init__(self, type, *args, **kwargs):
-        get_queryset = kwargs.pop('get_queryset', None)
+        get_queryset = kwargs.pop("get_queryset", None)
         if get_queryset:
-            assert callable(get_queryset), "Attribute `get_queryset` on {} must be callable.".format(self)
+            assert callable(
+                get_queryset
+            ), "Attribute `get_queryset` on {} must be callable.".format(self)
         self._get_queryset = get_queryset
-        super(MongoengineConnectionField, self).__init__(
-            type,
-            *args,
-            **kwargs
-        )
+        super(MongoengineConnectionField, self).__init__(type, *args, **kwargs)
 
     @property
     def type(self):
         from .types import MongoengineObjectType
+
         _type = super(ConnectionField, self).type
         assert issubclass(
-            _type, MongoengineObjectType), "MongoengineConnectionField only accepts MongoengineObjectType types"
+            _type, MongoengineObjectType
+        ), "MongoengineConnectionField only accepts MongoengineObjectType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
-            _type.__name__)
+            _type.__name__
+        )
         return _type._meta.connection
 
     @property
@@ -53,13 +51,13 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def registry(self):
-        return getattr(self.node_type._meta, 'registry', get_global_registry())
+        return getattr(self.node_type._meta, "registry", get_global_registry())
 
     @property
     def args(self):
         return to_arguments(
             self._base_args or OrderedDict(),
-            dict(dict(self.field_args, **self.reference_args), **self.filter_args)
+            dict(dict(self.field_args, **self.reference_args), **self.filter_args),
         )
 
     @args.setter
@@ -67,7 +65,6 @@ class MongoengineConnectionField(ConnectionField):
         self._base_args = args
 
     def _field_args(self, items):
-
         def is_filterable(k):
             """
             Args:
@@ -81,15 +78,17 @@ class MongoengineConnectionField(ConnectionField):
             if isinstance(getattr(self.model, k), property):
                 return False
             try:
-                converted = convert_mongoengine_field(getattr(self.model, k), self.registry)
+                converted = convert_mongoengine_field(
+                    getattr(self.model, k), self.registry
+                )
             except MongoEngineConversionError:
                 return False
             if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
-            if callable(getattr(converted, 'type', None)) \
-                    and isinstance(
-                        converted.type(),
-                        (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union)):
+            if callable(getattr(converted, "type", None)) and isinstance(
+                converted.type(),
+                (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union),
+            ):
                 return False
             return True
 
@@ -114,34 +113,42 @@ class MongoengineConnectionField(ConnectionField):
             for field, filter_collection in self._type._meta.filter_fields.items():
                 for each in filter_collection:
                     filter_type = getattr(
-                        graphene, str(self._type._meta.fields[field].type).replace("!", ""))
+                        graphene,
+                        str(self._type._meta.fields[field].type).replace("!", ""),
+                    )
 
                     # handle special cases
                     advanced_filter_types = {
-                        'in': graphene.List(filter_type),
-                        'nin': graphene.List(filter_type),
-                        'all': graphene.List(filter_type),
+                        "in": graphene.List(filter_type),
+                        "nin": graphene.List(filter_type),
+                        "all": graphene.List(filter_type),
                     }
 
                     filter_type = advanced_filter_types.get(each, filter_type)
-                    filter_args[field + "__" + each] = graphene.Argument(type=filter_type)
+                    filter_args[field + "__" + each] = graphene.Argument(
+                        type=filter_type
+                    )
 
         return filter_args
 
     @property
     def reference_args(self):
-
         def get_reference_field(r, kv):
             field = kv[1]
             mongo_field = getattr(self.model, kv[0], None)
-            if isinstance(mongo_field, (mongoengine.LazyReferenceField, mongoengine.ReferenceField)):
+            if isinstance(
+                mongo_field,
+                (mongoengine.LazyReferenceField, mongoengine.ReferenceField),
+            ):
                 field = convert_mongoengine_field(mongo_field, self.registry)
-            if callable(getattr(field, 'get_type', None)):
+            if callable(getattr(field, "get_type", None)):
                 _type = field.get_type()
                 if _type:
                     node = _type._type._meta
-                    if 'id' in node.fields and not issubclass(node.model, (mongoengine.EmbeddedDocument,)):
-                        r.update({kv[0]: node.fields['id']._type.of_type()})
+                    if "id" in node.fields and not issubclass(
+                        node.model, (mongoengine.EmbeddedDocument,)
+                    ):
+                        r.update({kv[0]: node.fields["id"]._type.of_type()})
             return r
 
         return reduce(get_reference_field, self.fields.items(), {})
@@ -156,7 +163,9 @@ class MongoengineConnectionField(ConnectionField):
             hydrated_references = {}
             for arg_name, arg in args.copy().items():
                 if arg_name in reference_fields:
-                    reference_obj = get_node_from_global_id(reference_fields[arg_name], info, args.pop(arg_name))
+                    reference_obj = get_node_from_global_id(
+                        reference_fields[arg_name], info, args.pop(arg_name)
+                    )
                     hydrated_references[arg_name] = reference_obj
             args.update(hydrated_references)
 
@@ -172,18 +181,18 @@ class MongoengineConnectionField(ConnectionField):
         args = args or {}
 
         connection_args = {
-            'first': args.pop('first', None),
-            'last': args.pop('last', None),
-            'before': args.pop('before', None),
-            'after': args.pop('after', None)
+            "first": args.pop("first", None),
+            "last": args.pop("last", None),
+            "before": args.pop("before", None),
+            "after": args.pop("after", None),
         }
 
-        _id = args.pop('id', None)
+        _id = args.pop("id", None)
 
         if _id is not None:
             iterables = [get_node_from_global_id(self.node_type, info, _id)]
             list_length = 1
-        elif callable(getattr(self.model, 'objects', None)):
+        elif callable(getattr(self.model, "objects", None)):
             iterables = self.get_queryset(self.model, info, **args)
             list_length = iterables.count()
         else:
@@ -225,5 +234,6 @@ class MongoengineConnectionField(ConnectionField):
     def get_resolver(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
         resolver = partial(
-            self.chained_resolver, super_resolver, isinstance(super_resolver, partial))
+            self.chained_resolver, super_resolver, isinstance(super_resolver, partial)
+        )
         return partial(self.connection_resolver, resolver, self.type)
