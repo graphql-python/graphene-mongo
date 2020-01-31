@@ -7,7 +7,7 @@ from .fixtures import fixtures_data
 
 
 def test_bikes_first_item_query(fixtures_data):
-    query = '''
+    query = """
                {
                bikes(first: 1){
                    edges {
@@ -21,25 +21,24 @@ def test_bikes_first_item_query(fixtures_data):
                        }
                    }
                }
-           }'''
+           }"""
 
     expected = {
         "data": {
-            "bikes":
-                {
-                    "edges": [
-                        {
-                            "node": {
-                                "name": "Level R",
-                                "brand": "Mondraker",
-                                "year": '2020',
-                                "size": ['S', 'M', 'L', 'XL'],
-                                "wheelSize": 27.5,
-                                "type": "MTB"
-                            }
+            "bikes": {
+                "edges": [
+                    {
+                        "node": {
+                            "name": "Level R",
+                            "brand": "Mondraker",
+                            "year": "2020",
+                            "size": ["S", "M", "L", "XL"],
+                            "wheelSize": 27.5,
+                            "type": "MTB",
                         }
-                    ]
-                }
+                    }
+                ]
+            }
         }
     }
 
@@ -49,7 +48,7 @@ def test_bikes_first_item_query(fixtures_data):
 
 
 def test_bikes_filter_by_type_item_query(fixtures_data):
-    query = '''
+    query = """
                {
                bikes(first: 2, type: "Gravel"){
                    edges {
@@ -63,25 +62,24 @@ def test_bikes_filter_by_type_item_query(fixtures_data):
                        }
                    }
                }
-           }'''
+           }"""
 
     expected = {
         "data": {
-            "bikes":
-                {
-                    "edges": [
-                        {
-                            "node": {
-                                "name": "CAADX ULTEGRA",
-                                "brand": "Cannondale",
-                                "year": '2019',
-                                "size": ['46', '51', '54', '58'],
-                                "wheelSize": 28,
-                                "type": "Gravel"
-                            }
+            "bikes": {
+                "edges": [
+                    {
+                        "node": {
+                            "name": "CAADX ULTEGRA",
+                            "brand": "Cannondale",
+                            "year": "2019",
+                            "size": ["46", "51", "54", "58"],
+                            "wheelSize": 28,
+                            "type": "Gravel",
                         }
-                    ]
-                }
+                    }
+                ]
+            }
         }
     }
 
@@ -91,29 +89,27 @@ def test_bikes_filter_by_type_item_query(fixtures_data):
 
 
 def test_shop_data_query(fixtures_data):
-    query = '''{
+    query = """{
                shopList{
                     name
                     address
                     website
                     }
-            }'''
+            }"""
 
     expected = {
         "data": {
             "shopList": [
                 {
-
                     "name": "Big Wheel Bicycles",
                     "address": "2438 Hart Ridge Road",
                     "website": "https://www.bigwheelbike.test",
-
                 },
                 {
                     "name": "Bike Tech",
                     "address": "2175 Pearl Street",
                     "website": "https://www.biketech.test",
-                }
+                },
             ]
         }
     }
@@ -125,7 +121,7 @@ def test_shop_data_query(fixtures_data):
 
 @pytest.mark.django_db
 def test_create_bike_mutation():
-    query = '''
+    query = """
                     mutation {
                         createBike(bikeData:{
                                 name:"Bullhorn",
@@ -145,26 +141,25 @@ def test_create_bike_mutation():
                             }
                         }
                     }
-                  '''
+                  """
 
     expected = {
         "data": {
             "createBike": {
-                "bike":
-                    {
-                        "name": "Bullhorn",
-                        "brand": "Pegas",
-                        "year": "2019",
-                        "size": ["56", "58"],
-                        "wheelSize": 28,
-                        "type": "Fixie",
-                    }
+                "bike": {
+                    "name": "Bullhorn",
+                    "brand": "Pegas",
+                    "year": "2019",
+                    "size": ["56", "58"],
+                    "wheelSize": 28,
+                    "type": "Fixie",
+                }
             }
         }
     }
 
     factory = RequestFactory()
-    request = factory.post(reverse('graphql-query'))
+    request = factory.post(reverse("graphql-query"))
     client = Client(schema)
     result = client.execute(query, context=request)
     assert result == expected
@@ -172,7 +167,7 @@ def test_create_bike_mutation():
 
 @pytest.mark.django_db
 def test_update_bike_mutation():
-    query = '''
+    query = """
                     mutation {
                         updateBike(bikeData:{
                                 id: "507f1f77bcf86cd799439011",
@@ -191,26 +186,25 @@ def test_update_bike_mutation():
                             }
                         }
                     }
-                  '''
+                  """
 
     expected = {
         "data": {
             "updateBike": {
-                "bike":
-                    {
-                        "name": "Moterra Neo Updated",
-                        "brand": "Cannondale",
-                        "year": "2020",
-                        "size": ["M", "L", "XL"],
-                        "wheelSize": 27.5,
-                        "type": "EBike Updated"
-                    }
+                "bike": {
+                    "name": "Moterra Neo Updated",
+                    "brand": "Cannondale",
+                    "year": "2020",
+                    "size": ["M", "L", "XL"],
+                    "wheelSize": 27.5,
+                    "type": "EBike Updated",
+                }
             }
         }
     }
 
     factory = RequestFactory()
-    request = factory.post(reverse('graphql-query'))
+    request = factory.post(reverse("graphql-query"))
     client = Client(schema)
     result = client.execute(query, context=request)
     print(result)
@@ -219,24 +213,18 @@ def test_update_bike_mutation():
 
 @pytest.mark.django_db
 def test_delete_bike_mutation():
-    query = '''
+    query = """
                 mutation {
                     deleteBike(id: "507f1f77bcf86cd799439011") {
                            success
                     }
                 }
-              '''
+              """
 
-    expected = {
-        "data": {
-            "deleteBike": {
-                "success": True
-            }
-        }
-    }
+    expected = {"data": {"deleteBike": {"success": True}}}
 
     factory = RequestFactory()
-    request = factory.post(reverse('graphql-query'))
+    request = factory.post(reverse("graphql-query"))
     client = Client(schema)
     result = client.execute(query, context=request)
     assert result == expected

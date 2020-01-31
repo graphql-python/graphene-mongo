@@ -8,28 +8,24 @@ from models import Task as TaskModel
 
 
 class Department(MongoengineObjectType):
-
     class Meta:
         model = DepartmentModel
         interfaces = (Node,)
 
 
 class Role(MongoengineObjectType):
-
     class Meta:
         model = RoleModel
         interfaces = (Node,)
 
 
 class Task(MongoengineObjectType):
-
     class Meta:
         model = TaskModel
         interfaces = (Node,)
 
 
 class Employee(MongoengineObjectType):
-
     class Meta:
         model = EmployeeModel
         interfaces = (Node,)

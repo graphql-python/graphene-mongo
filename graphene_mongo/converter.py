@@ -6,9 +6,7 @@ from graphene.types.json import JSONString
 from mongoengine.base import get_document
 
 from . import advanced_types
-from .utils import (
-    import_single_dispatch, get_field_description,
-)
+from .utils import import_single_dispatch, get_field_description
 
 singledispatch = import_single_dispatch()
 
@@ -20,50 +18,65 @@ class MongoEngineConversionError(Exception):
 @singledispatch
 def convert_mongoengine_field(field, registry=None):
     raise MongoEngineConversionError(
-        "Don't know how to convert the MongoEngine field %s (%s)" %
-        (field, field.__class__))
+        "Don't know how to convert the MongoEngine field %s (%s)"
+        % (field, field.__class__)
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.EmailField)
 @convert_mongoengine_field.register(mongoengine.StringField)
 @convert_mongoengine_field.register(mongoengine.URLField)
 def convert_field_to_string(field, registry=None):
-    return graphene.String(description=get_field_description(field, registry), required=field.required)
+    return graphene.String(
+        description=get_field_description(field, registry), required=field.required
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.UUIDField)
 @convert_mongoengine_field.register(mongoengine.ObjectIdField)
 def convert_field_to_id(field, registry=None):
-    return graphene.ID(description=get_field_description(field, registry), required=field.required)
+    return graphene.ID(
+        description=get_field_description(field, registry), required=field.required
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.IntField)
 @convert_mongoengine_field.register(mongoengine.LongField)
 @convert_mongoengine_field.register(mongoengine.SequenceField)
 def convert_field_to_int(field, registry=None):
-    return graphene.Int(description=get_field_description(field, registry), required=field.required)
+    return graphene.Int(
+        description=get_field_description(field, registry), required=field.required
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.BooleanField)
 def convert_field_to_boolean(field, registry=None):
-    return graphene.Boolean(description=get_field_description(field, registry), required=field.required)
+    return graphene.Boolean(
+        description=get_field_description(field, registry), required=field.required
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.DecimalField)
 @convert_mongoengine_field.register(mongoengine.FloatField)
 def convert_field_to_float(field, registry=None):
-    return graphene.Float(description=get_field_description(field, registry), required=field.required)
+    return graphene.Float(
+        description=get_field_description(field, registry), required=field.required
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.DateTimeField)
 def convert_field_to_datetime(field, registry=None):
-    return graphene.DateTime(description=get_field_description(field, registry), required=field.required)
+    return graphene.DateTime(
+        description=get_field_description(field, registry), required=field.required
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.DictField)
 @convert_mongoengine_field.register(mongoengine.MapField)
 def convert_field_to_jsonstring(field, registry=None):
-    return JSONString(description=get_field_description(field, registry), required=field.required)
+    return JSONString(
+        description=get_field_description(field, registry), required=field.required
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.PointField)
@@ -101,19 +114,29 @@ def convert_field_to_list(field, registry=None):
 
     # Non-relationship field
     relations = (mongoengine.ReferenceField, mongoengine.EmbeddedDocumentField)
-    if not isinstance(base_type, (graphene.List, graphene.NonNull)) \
-            and not isinstance(field.field, relations):
+    if not isinstance(base_type, (graphene.List, graphene.NonNull)) and not isinstance(
+        field.field, relations
+    ):
         base_type = type(base_type)
 
-    return graphene.List(base_type, description=get_field_description(field, registry), required=field.required)
+    return graphene.List(
+        base_type,
+        description=get_field_description(field, registry),
+        required=field.required,
+    )
 
 
+@convert_mongoengine_field.register(mongoengine.GenericEmbeddedDocumentField)
 @convert_mongoengine_field.register(mongoengine.GenericReferenceField)
 def convert_field_to_union(field, registry=None):
 
     _types = []
     for choice in field.choices:
-        _field = mongoengine.ReferenceField(get_document(choice))
+        if isinstance(field, mongoengine.GenericReferenceField):
+            _field = mongoengine.ReferenceField(get_document(choice))
+        elif isinstance(field, mongoengine.GenericEmbeddedDocumentField):
+            _field = mongoengine.EmbeddedDocumentField(choice)
+
         _field = convert_mongoengine_field(_field, registry)
         _type = _field.get_type()
         if _type:
@@ -126,13 +149,13 @@ def convert_field_to_union(field, registry=None):
         return None
 
     # XXX: Use uuid to avoid duplicate name
-    name = '{}_{}_union_{}'.format(
+    name = "{}_{}_union_{}".format(
         field._owner_document.__name__,
         field.db_field,
-        str(uuid.uuid1()).replace('-', '')
+        str(uuid.uuid1()).replace("-", ""),
     )
-    Meta = type('Meta', (object, ), {'types': tuple(_types)})
-    _union = type(name, (graphene.Union, ), {'Meta': Meta})
+    Meta = type("Meta", (object,), {"types": tuple(_types)})
+    _union = type(name, (graphene.Union,), {"Meta": Meta})
     return graphene.Field(_union)
 
 
@@ -162,6 +185,10 @@ def convert_lazy_field_to_dynamic(field, registry=None):
         _type = registry.get_type_for_model(model)
         if not _type:
             return None
-        return graphene.Field(_type, resolver=lazy_resolver, description=get_field_description(field, registry))
+        return graphene.Field(
+            _type,
+            resolver=lazy_resolver,
+            description=get_field_description(field, registry),
+        )
 
     return graphene.Dynamic(dynamic_type)
