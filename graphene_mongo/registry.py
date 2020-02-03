@@ -1,14 +1,16 @@
 class Registry(object):
-
     def __init__(self):
         self._registry = {}
 
     def register(self, cls):
         from .types import MongoengineObjectType
+
         assert issubclass(
-            cls, MongoengineObjectType), 'Only MongoengineObjectTypes can be registered, received "{}"'.format(
-            cls.__name__)
-        assert cls._meta.registry == self, 'Registry for a Model have to match.'
+            cls, MongoengineObjectType
+        ), 'Only MongoengineObjectTypes can be registered, received "{}"'.format(
+            cls.__name__
+        )
+        assert cls._meta.registry == self, "Registry for a Model have to match."
         self._registry[cls._meta.model] = cls
 
         # Rescan all fields

@@ -3,14 +3,12 @@ import graphene
 from graphene.relay import Node
 
 from .setup import fixtures
-from .models import (Article, Editor)
-from .nodes import (ArticleNode, EditorNode)
+from .models import Article, Editor
+from .nodes import ArticleNode, EditorNode
 
 
 def test_should_create(fixtures):
-
     class CreateArticle(graphene.Mutation):
-
         class Arguments:
 
             headline = graphene.String()
@@ -18,9 +16,7 @@ def test_should_create(fixtures):
         article = graphene.Field(ArticleNode)
 
         def mutate(self, info, headline):
-            article = Article(
-                headline=headline
-            )
+            article = Article(headline=headline)
             article.save()
 
             return CreateArticle(article=article)
@@ -33,7 +29,7 @@ def test_should_create(fixtures):
 
         create_article = CreateArticle.Field()
 
-    query = '''
+    query = """
         mutation ArticleCreator {
             createArticle(
                 headline: "My Article"
@@ -43,14 +39,8 @@ def test_should_create(fixtures):
                 }
             }
         }
-    '''
-    expected = {
-        'createArticle': {
-            'article': {
-                'headline': 'My Article'
-            }
-        }
-    }
+    """
+    expected = {"createArticle": {"article": {"headline": "My Article"}}}
     schema = graphene.Schema(query=Query, mutation=Mutation)
     result = schema.execute(query)
     assert not result.errors
@@ -58,9 +48,7 @@ def test_should_create(fixtures):
 
 
 def test_should_update(fixtures):
-
     class UpdateEditor(graphene.Mutation):
-
         class Arguments:
             id = graphene.ID()
             first_name = graphene.String()
@@ -81,7 +69,7 @@ def test_should_update(fixtures):
 
         update_editor = UpdateEditor.Field()
 
-    query = '''
+    query = """
         mutation EditorUpdater {
             updateEditor(
                 id: "1"
@@ -92,14 +80,8 @@ def test_should_update(fixtures):
                 }
             }
         }
-    '''
-    expected = {
-        'updateEditor': {
-            'editor': {
-                'firstName': 'Tony'
-            }
-        }
-    }
+    """
+    expected = {"updateEditor": {"editor": {"firstName": "Tony"}}}
     schema = graphene.Schema(query=Query, mutation=Mutation)
     result = schema.execute(query)
     # print(result.data)

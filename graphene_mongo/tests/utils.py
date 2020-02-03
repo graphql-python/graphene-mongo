@@ -13,4 +13,5 @@ def with_local_registry(func):
         else:
             registry.registry = old
             return retval
+
     return inner

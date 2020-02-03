@@ -3,11 +3,13 @@ from graphene.test import Client
 from examples.falcon_mongoengine.schema import schema
 from .fixtures import fixtures_data
 
-mongoengine.connect('graphene-mongo-test', host='mongomock://localhost', alias='default')
+mongoengine.connect(
+    "graphene-mongo-test", host="mongomock://localhost", alias="default"
+)
 
 
 def test_category_last_1_item_query(fixtures_data):
-    query = '''
+    query = """
                {
                categories(last: 1){
                    edges {
@@ -17,21 +19,11 @@ def test_category_last_1_item_query(fixtures_data):
                        }
                    }
                }
-           }'''
+           }"""
 
     expected = {
         "data": {
-            "categories":
-                {
-                    "edges": [
-                        {
-                            "node": {
-                                "name": "Work",
-                                "color": "#1769ff",
-                            }
-                        }
-                    ]
-                }
+            "categories": {"edges": [{"node": {"name": "Work", "color": "#1769ff"}}]}
         }
     }
 
@@ -41,7 +33,7 @@ def test_category_last_1_item_query(fixtures_data):
 
 
 def test_category_filter_item_query(fixtures_data):
-    query = '''
+    query = """
                {
                categories(name: "Work"){
                    edges {
@@ -51,21 +43,11 @@ def test_category_filter_item_query(fixtures_data):
                        }
                    }
                }
-           }'''
+           }"""
 
     expected = {
         "data": {
-            "categories":
-                {
-                    "edges": [
-                        {
-                            "node": {
-                                "name": "Work",
-                                "color": "#1769ff",
-                            }
-                        }
-                    ]
-                }
+            "categories": {"edges": [{"node": {"name": "Work", "color": "#1769ff"}}]}
         }
     }
 
@@ -75,7 +57,7 @@ def test_category_filter_item_query(fixtures_data):
 
 
 def test_bookmarks_first_2_items_query(fixtures_data):
-    query = '''
+    query = """
                {
                bookmarks(first: 2){
                    edges {
@@ -90,37 +72,30 @@ def test_bookmarks_first_2_items_query(fixtures_data):
                        }
                    }
                }
-           }'''
+           }"""
 
     expected = {
         "data": {
-            "bookmarks":
-                {
-                    "edges": [
-                        {
-                            "node": {
-                                "name": "Travel tips",
-                                "url": "https://www.traveltips.test",
-                                "category": {
-                                    'name': 'Travel',
-                                    'color': '#ed008c'
-                                },
-                                "tags": ["travel", "tips", "howto", ]
-                            }
-                        },
-                        {
-                            "node": {
-                                "name": "DIY vacation",
-                                "url": "https://www.diyvacation.test",
-                                "category": {
-                                    'name': 'Travel',
-                                    'color': '#ed008c'
-                                },
-                                "tags": ["travel", "diy", "holiday", "vacation", ]
-                            }
+            "bookmarks": {
+                "edges": [
+                    {
+                        "node": {
+                            "name": "Travel tips",
+                            "url": "https://www.traveltips.test",
+                            "category": {"name": "Travel", "color": "#ed008c"},
+                            "tags": ["travel", "tips", "howto"],
                         }
-                    ]
-                }
+                    },
+                    {
+                        "node": {
+                            "name": "DIY vacation",
+                            "url": "https://www.diyvacation.test",
+                            "category": {"name": "Travel", "color": "#ed008c"},
+                            "tags": ["travel", "diy", "holiday", "vacation"],
+                        }
+                    },
+                ]
+            }
         }
     }
 
@@ -130,7 +105,7 @@ def test_bookmarks_first_2_items_query(fixtures_data):
 
 
 def test_bookmarks_filter_items_query(fixtures_data):
-    query = '''
+    query = """
                {
                bookmarks(first: 1, name: "Awesome python"){
                    edges {
@@ -145,26 +120,22 @@ def test_bookmarks_filter_items_query(fixtures_data):
                        }
                    }
                }
-           }'''
+           }"""
 
     expected = {
         "data": {
-            "bookmarks":
-                {
-                    "edges": [
-                        {
-                            "node": {
-                                "name": "Awesome python",
-                                "url": "https://awesomelists.top/#repos/vinta/awesome-python",
-                                "category": {
-                                    'name': 'Work',
-                                    'color': '#1769ff'
-                                },
-                                "tags": ["python", "dev", "awesome", "tutorial", ]
-                            }
+            "bookmarks": {
+                "edges": [
+                    {
+                        "node": {
+                            "name": "Awesome python",
+                            "url": "https://awesomelists.top/#repos/vinta/awesome-python",
+                            "category": {"name": "Work", "color": "#1769ff"},
+                            "tags": ["python", "dev", "awesome", "tutorial"],
                         }
-                    ]
-                }
+                    }
+                ]
+            }
         }
     }
 

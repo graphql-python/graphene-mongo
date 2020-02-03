@@ -12,102 +12,90 @@ class PublisherNode(MongoengineObjectType):
 
     class Meta:
         model = models.Publisher
-        only_fields = ('id', 'name')
-        interfaces = (Node, )
+        only_fields = ("id", "name")
+        interfaces = (Node,)
 
 
 class ArticleNode(MongoengineObjectType):
-
     class Meta:
         model = models.Article
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class EditorNode(MongoengineObjectType):
-
     class Meta:
         model = models.Editor
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class EmbeddedArticleNode(MongoengineObjectType):
-
     class Meta:
         model = models.EmbeddedArticle
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class PlayerNode(MongoengineObjectType):
-
     class Meta:
         model = models.Player
-        interfaces = (Node, )
-        filter_fields = {
-            'first_name': ['istartswith', 'in']}
+        interfaces = (Node,)
+        filter_fields = {"first_name": ["istartswith", "in"]}
 
 
 class ReporterNode(MongoengineObjectType):
-
     class Meta:
         model = models.Reporter
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class ParentNode(MongoengineObjectType):
-
     class Meta:
         model = models.Parent
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class ChildNode(MongoengineObjectType):
-
     class Meta:
         model = models.Child
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class ChildRegisteredBeforeNode(MongoengineObjectType):
-
     class Meta:
         model = models.ChildRegisteredBefore
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class ParentWithRelationshipNode(MongoengineObjectType):
-
     class Meta:
         model = models.ParentWithRelationship
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class ChildRegisteredAfterNode(MongoengineObjectType):
-
     class Meta:
         model = models.ChildRegisteredAfter
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class ProfessorVectorNode(MongoengineObjectType):
-
     class Meta:
         model = models.ProfessorVector
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class ErroneousModelNode(MongoengineObjectType):
     class Meta:
         model = models.ErroneousModel
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class BarNode(MongoengineObjectType):
     class Meta:
         model = models.Bar
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class FooNode(MongoengineObjectType):
     class Meta:
         model = models.Foo
-        interfaces = (Node, )
+        interfaces = (Node,)
