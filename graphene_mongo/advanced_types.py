@@ -16,16 +16,16 @@ class FileFieldType(graphene.ObjectType):
         return getattr(v, name, default_value)
 
     def resolve_content_type(self, info):
-        return FileFieldType._resolve_fs_field(self, 'content_type')
+        return FileFieldType._resolve_fs_field(self, "content_type")
 
     def resolve_md5(self, info):
-        return FileFieldType._resolve_fs_field(self, 'md5')
+        return FileFieldType._resolve_fs_field(self, "md5")
 
     def resolve_chunk_size(self, info):
-        return FileFieldType._resolve_fs_field(self, 'chunk_size', 0)
+        return FileFieldType._resolve_fs_field(self, "chunk_size", 0)
 
     def resolve_length(self, info):
-        return FileFieldType._resolve_fs_field(self, 'length', 0)
+        return FileFieldType._resolve_fs_field(self, "length", 0)
 
     def resolve_data(self, info):
         v = getattr(self.instance, self.key)
@@ -40,10 +40,10 @@ class _CoordinatesTypeField(graphene.ObjectType):
     type = graphene.String()
 
     def resolve_type(self, info):
-        return self['type']
+        return self["type"]
 
     def resolve_coordinates(self, info):
-        return self['coordinates']
+        return self["coordinates"]
 
 
 class PointFieldType(_CoordinatesTypeField):
@@ -53,16 +53,11 @@ class PointFieldType(_CoordinatesTypeField):
 
 class PolygonFieldType(_CoordinatesTypeField):
 
-    coordinates = graphene.List(
-        graphene.List(
-            graphene.List(graphene.Float))
-    )
+    coordinates = graphene.List(graphene.List(graphene.List(graphene.Float)))
 
 
 class MultiPolygonFieldType(_CoordinatesTypeField):
 
     coordinates = graphene.List(
-        graphene.List(
-            graphene.List(
-                graphene.List(graphene.Float)))
+        graphene.List(graphene.List(graphene.List(graphene.Float)))
     )
