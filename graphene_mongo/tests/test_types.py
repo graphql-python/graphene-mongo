@@ -66,6 +66,7 @@ def test_objecttype_registered():
             "awards",
             "generic_reference",
             "generic_embedded_document",
+            "generic_reference_list",
         ]
     )
 

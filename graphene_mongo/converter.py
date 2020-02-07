@@ -109,11 +109,23 @@ def convert_field_to_list(field, registry=None):
             return
         base_type = base_type._type
 
+    if (
+        isinstance(base_type, (graphene.Field))
+        and hasattr(base_type._type, "_meta")
+        and isinstance(base_type._type._meta, graphene.types.union.UnionOptions)
+    ):
+        base_type = base_type._type
+
     if graphene.is_node(base_type):
         return base_type._meta.connection_field_class(base_type)
 
     # Non-relationship field
-    relations = (mongoengine.ReferenceField, mongoengine.EmbeddedDocumentField)
+    relations = (
+        mongoengine.ReferenceField,
+        mongoengine.EmbeddedDocumentField,
+        mongoengine.GenericReferenceField,
+        mongoengine.GenericEmbeddedDocumentField
+    )
     if not isinstance(base_type, (graphene.List, graphene.NonNull)) and not isinstance(
         field.field, relations
     ):
