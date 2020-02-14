@@ -10,3 +10,5 @@ pymongo==3.6.1
 pytest==3.3.2
 pytest-cov==2.5.1
 singledispatch==3.4.0.3
+# https://stackoverflow.com/a/58189684/9041712
+attrs==19.1.0
