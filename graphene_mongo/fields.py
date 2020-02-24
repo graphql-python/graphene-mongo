@@ -67,6 +67,8 @@ class MongoengineConnectionField(ConnectionField):
     def _field_args(self, items):
         def is_filterable(k):
             """
+            Remove complex columns from input args at this moment.
+
             Args:
                 k (str): field name.
             Returns:
@@ -90,6 +92,10 @@ class MongoengineConnectionField(ConnectionField):
                 (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union),
             ):
                 return False
+            if isinstance(converted, (graphene.List)) \
+                    and issubclass(getattr(converted, '_of_type', None), graphene.Union):
+                return False
+
             return True
 
         def get_filter_type(_type):

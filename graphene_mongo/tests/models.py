@@ -88,6 +88,9 @@ class Reporter(mongoengine.Document):
     generic_embedded_document = mongoengine.GenericEmbeddedDocumentField(
         choices=[EmbeddedArticle, EmbeddedFoo]
     )
+    generic_references = mongoengine.ListField(
+        mongoengine.GenericReferenceField(choices=[Article, Editor])
+    )
 
 
 class Player(mongoengine.Document):
