@@ -207,6 +207,27 @@ def test_should_list_of_reference_convert_list():
     assert dynamic_field._of_type == A
 
 
+def test_should_list_of_generic_reference_covert_list():
+    class A(MongoengineObjectType):
+        class Meta:
+            model = Article
+
+    class E(MongoengineObjectType):
+        class Meta:
+            model = Editor
+
+    class R(MongoengineObjectType):
+        class Meta:
+            model = Reporter
+
+    generic_references_field = convert_mongoengine_field(
+        Reporter._fields["generic_references"], registry.get_global_registry()
+    )
+    assert isinstance(generic_references_field, graphene.List)
+    field = generic_references_field.get_type()
+    assert field._of_type._meta.types == (A, E)
+
+
 def test_should_list_of_embedded_convert_list():
     class E(MongoengineObjectType):
         class Meta:

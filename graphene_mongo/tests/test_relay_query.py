@@ -425,7 +425,13 @@ def test_should_filter_by_list_contains(fixtures):
                     node {
                         id,
                         firstName,
-                        awards
+                        awards,
+                        genericReferences {
+                            __typename
+                            ... on ArticleNode {
+                                headline
+                            }
+                        }
                     }
                 }
             }
@@ -439,6 +445,12 @@ def test_should_filter_by_list_contains(fixtures):
                         "id": "UmVwb3J0ZXJOb2RlOjE=",
                         "firstName": "Allen",
                         "awards": ["2010-mvp"],
+                        "genericReferences": [
+                            {
+                                "__typename": "ArticleNode",
+                                "headline": "Hello"
+                            }
+                        ]
                     }
                 }
             ]
