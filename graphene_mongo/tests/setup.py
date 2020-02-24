@@ -67,6 +67,7 @@ def fixtures():
         last_name="Iverson",
         email="ai@gmail.com",
         awards=["2010-mvp"],
+        generic_references=[article1]
     )
     reporter1.articles = [article1, article2]
     embedded_article1 = EmbeddedArticle(headline="Real", editor=editor1)
