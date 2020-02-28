@@ -167,6 +167,7 @@ def convert_field_to_union(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentField)
 @convert_mongoengine_field.register(mongoengine.ReferenceField)
+@convert_mongoengine_field.register(mongoengine.CachedReferenceField)
 def convert_field_to_dynamic(field, registry=None):
     model = field.document_type
 
