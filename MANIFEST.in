@@ -1,0 +1,4 @@
+global-exclude *.py[cod]
+recursive-exclude examples *
+recursive-exclude graphene-mongo/tests *
+include README.md LICENSE
