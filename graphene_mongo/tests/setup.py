@@ -78,9 +78,16 @@ def fixtures():
     reporter1.save()
 
     Player.drop_collection()
-    player1 = Player(first_name="Michael", last_name="Jordan")
+    player1 = Player(
+        first_name="Michael",
+        last_name="Jordan",
+        articles=[article1, article2])
     player1.save()
-    player2 = Player(first_name="Magic", last_name="Johnson", opponent=player1)
+    player2 = Player(
+        first_name="Magic",
+        last_name="Johnson",
+        opponent=player1,
+        articles=[article3])
     player2.save()
     player3 = Player(first_name="Larry", last_name="Bird", players=[player1, player2])
     player3.save()
