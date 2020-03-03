@@ -10,7 +10,7 @@ setup(
     author_email="abaw.chen@gmail.com",
     license="MIT",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries",
         "Programming Language :: Python :: 2.7",
@@ -18,6 +18,7 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: Implementation :: PyPy",
+        "License :: OSI Approved :: MIT License",
     ],
     keywords="api graphql protocol rest relay graphene mongo mongoengine",
     packages=find_packages(exclude=["tests"]),
