@@ -194,7 +194,6 @@ class MongoengineObjectType(ObjectType):
                 cls._meta.fields.update({field: mongoengine_fields[field]})
         # Self-referenced fields can't change between scans!
 
-    # noqa
     @classmethod
     def is_type_of(cls, root, info):
         if isinstance(root, cls):
@@ -212,7 +211,3 @@ class MongoengineObjectType(ObjectType):
 
     def resolve_id(self, info):
         return str(self.id)
-
-    # @classmethod
-    # def get_connection(cls):
-    #     return connection_for_type(cls)
