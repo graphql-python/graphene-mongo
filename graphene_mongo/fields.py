@@ -19,6 +19,7 @@ from .utils import get_model_reference_fields, get_node_from_global_id
 
 
 class MongoengineConnectionField(ConnectionField):
+
     def __init__(self, type, *args, **kwargs):
         get_queryset = kwargs.pop("get_queryset", None)
         if get_queryset:
@@ -185,6 +186,9 @@ class MongoengineConnectionField(ConnectionField):
 
     def default_resolver(self, _root, info, **args):
         args = args or {}
+
+        if _root is not None:
+            args["pk__in"] = [r.pk for r in getattr(_root, info.field_name, [])]
 
         connection_args = {
             "first": args.pop("first", None),
