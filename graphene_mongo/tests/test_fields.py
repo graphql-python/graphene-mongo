@@ -1,5 +1,4 @@
 from . import nodes
-from .setup import fixtures
 from ..fields import MongoengineConnectionField
 
 
