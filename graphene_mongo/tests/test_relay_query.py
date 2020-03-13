@@ -1,6 +1,5 @@
 import os
 import json
-import pytest
 import base64
 import graphene
 
@@ -8,8 +7,6 @@ from graphene.relay import Node
 
 from . import models
 from . import nodes
-from . import types
-from .setup import fixtures, fixtures_dirname
 from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
