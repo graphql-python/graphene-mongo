@@ -5,7 +5,6 @@ import graphene
 
 from . import models
 from . import types
-from .setup import fixtures, fixtures_dirname
 
 
 def test_should_query_editor(fixtures, fixtures_dirname):
