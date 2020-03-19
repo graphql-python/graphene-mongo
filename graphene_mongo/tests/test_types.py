@@ -130,6 +130,15 @@ def test_mongoengine_objecttype_exclude_fields():
 
 
 @with_local_registry
+def test_mongoengine_objecttype_order_by():
+    class A(MongoengineObjectType):
+        class Meta:
+            model = Article
+            order_by = "some_order_by_statement"
+    assert "some_order_by_statement" not in list(A._meta.fields.keys())
+
+
+@with_local_registry
 def test_passing_meta_when_subclassing_mongoengine_objecttype():
     class TypeSubclassWithBadOptions(MongoengineObjectType):
         class Meta:
