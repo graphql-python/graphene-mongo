@@ -51,6 +51,10 @@ class MongoengineConnectionField(ConnectionField):
         return self.node_type._meta.model
 
     @property
+    def order_by(self):
+        return self.node_type._meta.order_by
+
+    @property
     def registry(self):
         return getattr(self.node_type._meta, "registry", get_global_registry())
 
@@ -182,7 +186,7 @@ class MongoengineConnectionField(ConnectionField):
                 return queryset_or_filters
             else:
                 args.update(queryset_or_filters)
-        return model.objects(**args)
+        return model.objects(**args).order_by(self.order_by)
 
     def default_resolver(self, _root, info, **args):
         args = args or {}

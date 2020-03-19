@@ -71,6 +71,7 @@ class MongoengineObjectTypeOptions(ObjectTypeOptions):
     registry = None  # type: Registry
     connection = None
     filter_fields = ()
+    order_by = None
 
 
 class MongoengineObjectType(ObjectType):
@@ -89,6 +90,7 @@ class MongoengineObjectType(ObjectType):
         connection_field_class=None,
         interfaces=(),
         _meta=None,
+        order_by=None,
         **options
     ):
 
@@ -155,6 +157,7 @@ class MongoengineObjectType(ObjectType):
         # Save them for later
         _meta.only_fields = only_fields
         _meta.exclude_fields = exclude_fields
+        _meta.order_by = order_by
 
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
