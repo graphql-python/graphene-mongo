@@ -213,6 +213,7 @@ class MongoengineConnectionField(ConnectionField):
             list_slice=iterables,
             args=connection_args,
             list_length=list_length,
+            list_slice_length=list_length,
             connection_type=self.type,
             edge_type=self.type.Edge,
             pageinfo_type=graphene.PageInfo,
