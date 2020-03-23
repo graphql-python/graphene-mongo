@@ -8,9 +8,6 @@ mongoengine.connect(
 )
 
 
-# mongoengine.connect('graphene-mongo-test', host='mongodb://localhost/graphene-mongo-dev')
-
-
 class Publisher(mongoengine.Document):
     meta = {"collection": "test_publisher"}
     name = mongoengine.StringField()

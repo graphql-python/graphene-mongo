@@ -22,10 +22,8 @@ def construct_fields(model, registry, only_fields, exclude_fields, non_required_
         registry (.registry.Registry):
         only_fields ([str]):
         exclude_fields ([str]):
-
     Returns:
         (OrderedDict, OrderedDict): converted fields and self reference fields.
-
     """
     _model_fields = get_model_fields(model)
     fields = OrderedDict()
@@ -238,6 +236,9 @@ def create_graphene_generic_class(object_type, option_type):
 
         def resolve_id(self, info):
             return str(self.id)
+
+        def __resolve_reference(self, info):
+            return self._meta.model.objects.get(pk=self.id)
 
     return GrapheneMongoengineGenericType, MongoengineGenericObjectTypeOptions
 
