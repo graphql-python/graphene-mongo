@@ -12,14 +12,18 @@ from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
-from .advanced_types import FileFieldType, PointFieldType, MultiPolygonFieldType
+from .advanced_types import (
+    FileFieldType,
+    PointFieldType,
+    MultiPolygonFieldType,
+    PolygonFieldType,
+)
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
 from .utils import get_model_reference_fields, get_node_from_global_id
 
 
 class MongoengineConnectionField(ConnectionField):
-
     def __init__(self, type, *args, **kwargs):
         get_queryset = kwargs.pop("get_queryset", None)
         if get_queryset:
@@ -90,11 +94,18 @@ class MongoengineConnectionField(ConnectionField):
                 return False
             if callable(getattr(converted, "type", None)) and isinstance(
                 converted.type(),
-                (FileFieldType, PointFieldType, MultiPolygonFieldType, graphene.Union),
+                (
+                    FileFieldType,
+                    PointFieldType,
+                    MultiPolygonFieldType,
+                    graphene.Union,
+                    PolygonFieldType,
+                ),
             ):
                 return False
-            if isinstance(converted, (graphene.List)) \
-                    and issubclass(getattr(converted, '_of_type', None), graphene.Union):
+            if isinstance(converted, (graphene.List)) and issubclass(
+                getattr(converted, "_of_type", None), graphene.Union
+            ):
                 return False
 
             return True
