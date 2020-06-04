@@ -4,6 +4,7 @@ import base64
 import graphene
 
 from graphene.relay import Node
+from graphql_relay.node.node import to_global_id
 
 from . import models
 from . import nodes
@@ -1022,3 +1023,40 @@ def test_should_get_correct_list_of_documents(fixtures):
 
     assert not result.errors
     assert result.data == expected
+
+
+def test_should_filter_mongoengine_queryset_by_id_and_other_fields(fixtures):
+
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(nodes.PlayerNode)
+
+    larry = models.Player.objects.get(first_name="Larry")
+    larry_relay_id = to_global_id("PlayerNode", larry.id)
+
+    # "Larry" id && firstName == "Michael" should return nothing
+    query = """
+        query players {{
+            players(
+                id: "{larry_relay_id}",
+                firstName: "Michael"
+            ) {{
+                edges {{
+                    node {{
+                        id
+                        firstName
+                    }}
+                }}
+            }}
+        }}
+    """.format(larry_relay_id=larry_relay_id)
+
+    expected = {
+        'players': {
+            'edges': []
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
