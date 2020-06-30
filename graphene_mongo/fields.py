@@ -6,6 +6,7 @@ from functools import partial, reduce
 import graphene
 import mongoengine
 from promise import Promise
+from graphql_relay import from_global_id
 from graphene.relay import ConnectionField
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
@@ -208,12 +209,12 @@ class MongoengineConnectionField(ConnectionField):
             "after": args.pop("after", None),
         }
 
-        _id = args.pop("id", None)
+        _id = args.pop('id', None)
 
         if _id is not None:
-            iterables = [get_node_from_global_id(self.node_type, info, _id)]
-            list_length = 1
-        elif callable(getattr(self.model, "objects", None)):
+            args['pk'] = from_global_id(_id)[-1]
+
+        if callable(getattr(self.model, "objects", None)):
             iterables = self.get_queryset(self.model, info, **args)
             list_length = iterables.count()
         else:
