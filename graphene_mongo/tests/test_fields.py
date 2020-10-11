@@ -51,9 +51,9 @@ def test_default_resolver_with_colliding_objects_field():
     assert 0 == len(connection.iterable)
 
 
-def test_default_resolver_connection_list_length(fixtures):
+def test_default_resolver_connection_array_length(fixtures):
     field = MongoengineConnectionField(nodes.ArticleNode)
 
     connection = field.default_resolver(None, {}, **{"first": 1})
-    assert hasattr(connection, "list_length")
-    assert connection.list_length == 3
+    assert hasattr(connection, "array_length")
+    assert connection.array_length == 3

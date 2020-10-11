@@ -8,10 +8,11 @@ import mongoengine
 from promise import Promise
 from graphql_relay import from_global_id
 from graphene.relay import ConnectionField
+from graphene.relay.connection import page_info_adapter, connection_adapter
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
-from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphql_relay.connection.arrayconnection import connection_from_array_slice
 
 from .advanced_types import (
     FileFieldType,
@@ -149,7 +150,7 @@ class MongoengineConnectionField(ConnectionField):
 
                     filter_type = advanced_filter_types.get(each, filter_type)
                     filter_args[field + "__" + each] = graphene.Argument(
-                        type=filter_type
+                        type_=filter_type
                     )
 
         return filter_args
@@ -220,25 +221,32 @@ class MongoengineConnectionField(ConnectionField):
 
         if callable(getattr(self.model, "objects", None)):
             iterables = self.get_queryset(self.model, info, **args)
-            list_length = iterables.count()
+            array_length = iterables.count()
         else:
             iterables = []
-            list_length = 0
+            array_length = 0
 
-        connection = connection_from_list_slice(
-            list_slice=iterables,
+        def adjusted_connection_adapter(edges, pageInfo):
+            return connection_adapter(self.type, edges, pageInfo)
+
+        connection = connection_from_array_slice(
+            array_slice=iterables,
             args=connection_args,
-            list_length=list_length,
-            list_slice_length=list_length,
-            connection_type=self.type,
+            array_length=array_length,
+            array_slice_length=array_length,
+            connection_type=adjusted_connection_adapter,
             edge_type=self.type.Edge,
-            pageinfo_type=graphene.PageInfo,
+            page_info_type=page_info_adapter,
         )
         connection.iterable = iterables
-        connection.list_length = list_length
+        connection.array_length = array_length
         return connection
 
     def chained_resolver(self, resolver, is_partial, root, info, **args):
+        for key, value in args.copy().items():
+            if value is None:
+                args.pop(key, None)
+
         if not bool(args) or not is_partial:
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
@@ -258,7 +266,7 @@ class MongoengineConnectionField(ConnectionField):
 
         return on_resolve(iterable)
 
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
         resolver = partial(
             self.chained_resolver, super_resolver, isinstance(super_resolver, partial)
