@@ -95,6 +95,8 @@ def get_field_description(field, registry=None):
 
 
 def get_node_from_global_id(node, info, global_id):
+    if global_id is None:
+        return None
     try:
         for interface in node._meta.interfaces:
             if issubclass(interface, Node):
