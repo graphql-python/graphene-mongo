@@ -28,6 +28,7 @@ setup(
         "mongoengine>=0.15.0",
         "singledispatch>=3.4.0.3",
         "iso8601>=0.1.12",
+        "promise>=2.3,<3",
     ],
     python_requires=">=2.7",
     zip_safe=True,
