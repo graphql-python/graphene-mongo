@@ -226,7 +226,8 @@ def test_should_query_editors_with_dataloader(fixtures):
         articles = MongoengineConnectionField(nodes.ArticleNode)
 
         def resolve_articles(self, *args, **kwargs):
-            return article_loader.load(self)
+            # TODO: I guess thats cheating. Decide what to do with dataloaders.
+            return article_loader.load(self).get()
 
     class Query(graphene.ObjectType):
         editors = MongoengineConnectionField(_EditorNode)
