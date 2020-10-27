@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/graphql-python/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/graphql-python/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/graphene-mongo.svg)](https://badge.fury.io/py/graphene-mongo) [![PyPI pyversions](https://img.shields.io/pypi/pyversions/graphene-mongo.svg)](https://pypi.python.org/pypi/graphene-mongo/)
+[![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/graphql-python/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/graphql-python/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/graphene-mongo.svg)](https://badge.fury.io/py/graphene-mongo) [![PyPI pyversions](https://img.shields.io/pypi/pyversions/graphene-mongo.svg)](https://pypi.python.org/pypi/graphene-mongo/) [![Downloads](https://pepy.tech/badge/graphene-mongo)](https://pepy.tech/project/graphene-mongo)
 
 # Graphene-Mongo
 
@@ -7,7 +7,7 @@ A [Mongoengine](https://mongoengine-odm.readthedocs.io/) integration for [Graphe
 
 ## Installation
 
-For instaling graphene-mongo, just run this command in your shell
+For installing graphene-mongo, just run this command in your shell
 
 ```
 pip install graphene-mongo
@@ -65,20 +65,10 @@ result = schema.execute(query)
 
 To learn more check out the following [examples](examples/):
 
-* **Full example**: [Flask MongoEngine example](examples/flask_mongoengine)
+* [Flask MongoEngine example](examples/flask_mongoengine)
+* [Django MongoEngine example](examples/django_mongoengine)
+* [Falcon MongoEngine example](examples/falcon_mongoengine)
 
-## TODOs
-
-- [ ] Examples
-    - [x] Flask example
-    - [ ] Django example
-- [x] Filtering & Paging
-    - [x] Default filtering enabled with all model's attributes by equal comparison (requester: [git-albertomarin](https://github.com/git-albertomarin))
-    - [x] Take first, or last n items (credit: [alexpantyukhin](https://github.com/alexpantyukhin))
-    - [x] Filter by global id (requester: [bwalsh](https://github.com/bwalsh))
-    - [x] Filter by reference model id (requester: [msholty-fd](https://github.com/msholty-fd))
-- [ ] Support more types ([Currently supported](http://graphene-mongo.readthedocs.io/en/latest/fields.html#))
-    - [x] Self-reference and list-of-self-reference relationship (requester: [mehdiym](https://github.com/mehdiym))
 
 ## Contributing
 

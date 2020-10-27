@@ -9,7 +9,7 @@ from graphene.types.utils import yank_fields_from_attrs
 from graphene_mongo import MongoengineConnectionField
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry
-from .utils import (get_model_fields, is_valid_mongoengine_model)
+from .utils import get_model_fields, is_valid_mongoengine_model
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
@@ -21,7 +21,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
         exclude_fields ([str]):
 
     Returns:
-        (OrderedDict, OrderedDict): coverted fields and self reference fields.
+        (OrderedDict, OrderedDict): converted fields and self reference fields.
 
     """
     _model_fields = get_model_fields(model)
@@ -35,11 +35,15 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # in there. Or when we exclude this field in exclude_fields
             continue
         if isinstance(field, mongoengine.ListField):
+            if not field.field:
+                continue
             # Take care of list of self-reference.
-            document_type_obj = field.field.__dict__.get('document_type_obj', None)
-            if document_type_obj == model._class_name \
-                    or isinstance(document_type_obj, model) \
-                    or document_type_obj == model:
+            document_type_obj = field.field.__dict__.get("document_type_obj", None)
+            if (
+                document_type_obj == model._class_name
+                or isinstance(document_type_obj, model)
+                or document_type_obj == model
+            ):
                 self_referenced[name] = field
                 continue
         converted = convert_mongoengine_field(field, registry)
@@ -63,23 +67,35 @@ def construct_self_referenced_fields(self_referenced, registry):
 
 class MongoengineObjectTypeOptions(ObjectTypeOptions):
 
-    model = None  # type: Model
+    model = None
     registry = None  # type: Registry
-    connection = None  # type: Type[Connection]
+    connection = None
     filter_fields = ()
+    order_by = None
 
 
 class MongoengineObjectType(ObjectType):
-
     @classmethod
-    def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
-                                    only_fields=(), exclude_fields=(), filter_fields=None,
-                                    connection=None, connection_class=None, use_connection=None,
-                                    connection_field_class=None, interfaces=(),
-                                    _meta=None, **options):
+    def __init_subclass_with_meta__(
+        cls,
+        model=None,
+        registry=None,
+        skip_registry=False,
+        only_fields=(),
+        exclude_fields=(),
+        filter_fields=None,
+        connection=None,
+        connection_class=None,
+        use_connection=None,
+        connection_field_class=None,
+        interfaces=(),
+        _meta=None,
+        order_by=None,
+        **options
+    ):
 
         assert is_valid_mongoengine_model(model), (
-            'The attribute model in {}.Meta must be a valid Mongoengine Model. '
+            "The attribute model in {}.Meta must be a valid Mongoengine Model. "
             'Received "{}" instead.'
         ).format(cls.__name__, type(model))
 
@@ -87,15 +103,19 @@ class MongoengineObjectType(ObjectType):
             registry = get_global_registry()
 
         assert isinstance(registry, Registry), (
-            'The attribute registry in {}.Meta needs to be an instance of '
+            "The attribute registry in {}.Meta needs to be an instance of "
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
         converted_fields, self_referenced = construct_fields(
             model, registry, only_fields, exclude_fields
         )
-        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
+        mongoengine_fields = yank_fields_from_attrs(
+            converted_fields, _as=graphene.Field
+        )
         if use_connection is None and interfaces:
-            use_connection = any((issubclass(interface, Node) for interface in interfaces))
+            use_connection = any(
+                (issubclass(interface, Node) for interface in interfaces)
+            )
 
         if use_connection and not connection:
             # We create the connection automatically
@@ -103,17 +123,18 @@ class MongoengineObjectType(ObjectType):
                 connection_class = Connection
 
             connection = connection_class.create_type(
-                '{}Connection'.format(cls.__name__), node=cls)
+                "{}Connection".format(cls.__name__), node=cls
+            )
 
         if connection is not None:
             assert issubclass(connection, Connection), (
-                'The attribute connection in {}.Meta must be of type Connection. '
+                "The attribute connection in {}.Meta must be of type Connection. "
                 'Received "{}" instead.'
             ).format(cls.__name__, type(connection))
 
         if connection_field_class is not None:
             assert issubclass(connection_field_class, graphene.ConnectionField), (
-                'The attribute connection_field_class in {}.Meta must be of type graphene.ConnectionField. '
+                "The attribute connection_field_class in {}.Meta must be of type graphene.ConnectionField. "
                 'Received "{}" instead.'
             ).format(cls.__name__, type(connection_field_class))
         else:
@@ -121,8 +142,8 @@ class MongoengineObjectType(ObjectType):
 
         if _meta:
             assert isinstance(_meta, MongoengineObjectTypeOptions), (
-                '_meta must be an instance of MongoengineObjectTypeOptions, '
-                'received {}'
+                "_meta must be an instance of MongoengineObjectTypeOptions, "
+                "received {}"
             ).format(_meta.__class__)
         else:
             _meta = MongoengineObjectTypeOptions(cls)
@@ -136,6 +157,7 @@ class MongoengineObjectType(ObjectType):
         # Save them for later
         _meta.only_fields = only_fields
         _meta.exclude_fields = exclude_fields
+        _meta.order_by = order_by
 
         super(MongoengineObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
@@ -144,9 +166,13 @@ class MongoengineObjectType(ObjectType):
         if not skip_registry:
             registry.register(cls)
             # Notes: Take care list of self-reference fields.
-            converted_fields = construct_self_referenced_fields(self_referenced, registry)
+            converted_fields = construct_self_referenced_fields(
+                self_referenced, registry
+            )
             if converted_fields:
-                mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
+                mongoengine_fields = yank_fields_from_attrs(
+                    converted_fields, _as=graphene.Field
+                )
                 cls._meta.fields.update(mongoengine_fields)
                 registry.register(cls)
 
@@ -155,20 +181,22 @@ class MongoengineObjectType(ObjectType):
         """Attempts to rescan fields and will insert any not converted initially"""
 
         converted_fields, self_referenced = construct_fields(
-            cls._meta.model, cls._meta.registry,
-            cls._meta.only_fields, cls._meta.exclude_fields
+            cls._meta.model,
+            cls._meta.registry,
+            cls._meta.only_fields,
+            cls._meta.exclude_fields,
         )
 
-        mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
+        mongoengine_fields = yank_fields_from_attrs(
+            converted_fields, _as=graphene.Field
+        )
 
-        # The initial scan should take precidence
+        # The initial scan should take precedence
         for field in mongoengine_fields:
             if field not in cls._meta.fields:
                 cls._meta.fields.update({field: mongoengine_fields[field]})
         # Self-referenced fields can't change between scans!
 
-
-    # noqa
     @classmethod
     def is_type_of(cls, root, info):
         if isinstance(root, cls):
@@ -177,9 +205,7 @@ class MongoengineObjectType(ObjectType):
         if isinstance(root, mongoengine.GridFSProxy):
             return True
         if not is_valid_mongoengine_model(type(root)):
-            raise Exception((
-                'Received incompatible instance "{}".'
-            ).format(root))
+            raise Exception(('Received incompatible instance "{}".').format(root))
         return isinstance(root, cls._meta.model)
 
     @classmethod
@@ -188,7 +214,3 @@ class MongoengineObjectType(ObjectType):
 
     def resolve_id(self, info):
         return str(self.id)
-
-    # @classmethod
-    # def get_connection(cls):
-    #     return connection_for_type(cls)

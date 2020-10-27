@@ -1,20 +1,23 @@
 from datetime import datetime
 from mongoengine import Document, EmbeddedDocument
 from mongoengine.fields import (
-    DateTimeField, EmbeddedDocumentField,
-    ListField, ReferenceField, StringField,
+    DateTimeField,
+    EmbeddedDocumentField,
+    ListField,
+    ReferenceField,
+    StringField,
 )
 
 
 class Department(Document):
 
-    meta = {'collection': 'department'}
+    meta = {"collection": "department"}
     name = StringField()
 
 
 class Role(Document):
 
-    meta = {'collection': 'role'}
+    meta = {"collection": "role"}
     name = StringField()
 
 
@@ -26,10 +29,10 @@ class Task(EmbeddedDocument):
 
 class Employee(Document):
 
-    meta = {'collection': 'employee'}
+    meta = {"collection": "employee"}
     name = StringField()
     hired_on = DateTimeField(default=datetime.now)
     department = ReferenceField(Department)
     roles = ListField(ReferenceField(Role))
-    leader = ReferenceField('Employee')
+    leader = ReferenceField("Employee")
     tasks = ListField(EmbeddedDocumentField(Task))

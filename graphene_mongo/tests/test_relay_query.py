@@ -1,38 +1,25 @@
-import base64
-import json
 import os
-import pytest
-
+import json
+import base64
 import graphene
 
 from graphene.relay import Node
+from graphql_relay.node.node import to_global_id
 
-from .setup import fixtures, fixtures_dirname
-from .models import Article, Reporter
-from .nodes import (ArticleNode,
-                    EditorNode,
-                    PlayerNode,
-                    ReporterNode,
-                    ChildNode,
-                    ParentWithRelationshipNode,
-                    ProfessorVectorNode,)
+from . import models
+from . import nodes
 from ..fields import MongoengineConnectionField
-
-
-def get_nodes(data, key):
-    return map(lambda edge: edge['node'], data[key]['edges'])
+from ..types import MongoengineObjectType
 
 
 def test_should_query_reporter(fixtures):
-
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        reporter = graphene.Field(ReporterNode)
+        reporter = graphene.Field(nodes.ReporterNode)
 
         def resolve_reporter(self, *args, **kwargs):
-            return Reporter.objects.first()
+            return models.Reporter.objects.first()
 
-    query = '''
+    query = """
         query ReporterQuery {
             reporter {
                 firstName,
@@ -68,135 +55,208 @@ def test_should_query_reporter(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'reporter': {
-            'firstName': 'Allen',
-            'lastName': 'Iverson',
-            'email': 'ai@gmail.com',
-            'awards': ['2010-mvp'],
-            'articles': {
-                'edges': [
-                    {
-                        'node': {
-                            'headline': 'Hello'
-                        }
-                    },
-                    {
-                        'node': {
-                            'headline': 'World'
-                        }
-                    }
-                ],
+        "reporter": {
+            "firstName": "Allen",
+            "lastName": "Iverson",
+            "email": "ai@gmail.com",
+            "awards": ["2010-mvp"],
+            "articles": {
+                "edges": [
+                    {"node": {"headline": "Hello"}},
+                    {"node": {"headline": "World"}},
+                ]
             },
-            'embeddedArticles': {
-                'edges': [
-                    {
-                        'node': {
-                            'headline': 'Real'
-                        }
-                    },
-                    {
-                        'node': {
-                            'headline': 'World'
-                        }
-                    }
-                ],
+            "embeddedArticles": {
+                "edges": [
+                    {"node": {"headline": "Real"}},
+                    {"node": {"headline": "World"}},
+                ]
             },
-            'embeddedListArticles': {
-                'edges': [
-                    {
-                        'node': {
-                            'headline': 'World'
-                        }
-                    },
-                    {
-                        'node': {
-                            'headline': 'Real'
-                        }
-                    }
-                ],
+            "embeddedListArticles": {
+                "edges": [
+                    {"node": {"headline": "World"}},
+                    {"node": {"headline": "Real"}},
+                ]
             },
-            'genericReference': {
-                '__typename': 'ArticleNode',
-                'headline': 'Hello'
-            }
+            "genericReference": {"__typename": "ArticleNode", "headline": "Hello"},
         }
     }
 
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['reporter']) == expected['reporter']
+    assert result.data == expected
 
 
-def test_should_query_all_editors(fixtures, fixtures_dirname):
-
+def test_should_query_reporters_with_nested_document(fixtures):
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        all_editors = MongoengineConnectionField(EditorNode)
+        reporters = MongoengineConnectionField(nodes.ReporterNode)
 
-    query = '''
-        query EditorQuery {
-          allEditors {
-            edges {
-                node {
-                    id,
-                    firstName,
-                    lastName,
-                    avatar {
-                        contentType,
-                        length,
-                        data
+    query = """
+        query ReporterQuery {
+            reporters(firstName: "Allen") {
+                edges {
+                    node {
+                        firstName,
+                        lastName,
+                        email,
+                        articles(headline: "Hello") {
+                             edges {
+                                  node {
+                                       headline
+                                  }
+                             }
+                        }
                     }
                 }
             }
-          }
         }
-    '''
+    """
+    expected = {
+        "reporters": {
+            "edges": [
+                {
+                    "node": {
+                        "firstName": "Allen",
+                        "lastName": "Iverson",
+                        "email": "ai@gmail.com",
+                        "articles": {"edges": [{"node": {"headline": "Hello"}}]},
+                    }
+                }
+            ]
+        }
+    }
 
-    avator_filename = os.path.join(fixtures_dirname, 'image.jpg')
-    with open(avator_filename, 'rb') as f:
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_query_all_editors(fixtures, fixtures_dirname):
+    class Query(graphene.ObjectType):
+        editors = MongoengineConnectionField(nodes.EditorNode)
+
+    query = """
+        query EditorQuery {
+            editors {
+                edges {
+                    node {
+                        id,
+                        firstName,
+                        lastName,
+                        avatar {
+                            contentType,
+                            length,
+                            data
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    avator_filename = os.path.join(fixtures_dirname, "image.jpg")
+    with open(avator_filename, "rb") as f:
         data = base64.b64encode(f.read())
 
     expected = {
-        'allEditors': {
-            'edges': [
+        "editors": {
+            "edges": [
                 {
-                    'node': {
-                        'id': 'RWRpdG9yTm9kZTox',
-                        'firstName': 'Penny',
-                        'lastName': 'Hardaway',
-                        'avatar': {
-                            'contentType': 'image/jpeg',
-                            'length': 46928,
-                            'data': str(data)
-                        }
+                    "node": {
+                        "id": "RWRpdG9yTm9kZTox",
+                        "firstName": "Penny",
+                        "lastName": "Hardaway",
+                        "avatar": {
+                            "contentType": "image/jpeg",
+                            "length": 46928,
+                            "data": str(data),
+                        },
                     }
                 },
                 {
-                    'node': {
-                        'id': 'RWRpdG9yTm9kZToy',
-                        'firstName': 'Grant',
-                        'lastName': 'Hill',
-                        'avatar': {
-                            'contentType': None,
-                            'length': 0,
-                            'data': None
-                        }
+                    "node": {
+                        "id": "RWRpdG9yTm9kZToy",
+                        "firstName": "Grant",
+                        "lastName": "Hill",
+                        "avatar": {"contentType": None, "length": 0, "data": None},
                     }
+                },
+                {
+                    "node": {
+                        "id": "RWRpdG9yTm9kZToz",
+                        "firstName": "Dennis",
+                        "lastName": "Rodman",
+                        "avatar": {"contentType": None, "length": 0, "data": None},
+                    }
+                },
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
 
-                },
-                {
-                    'node': {
-                        'id': 'RWRpdG9yTm9kZToz',
-                        'firstName': 'Dennis',
-                        'lastName': 'Rodman',
-                        'avatar': {
-                            'contentType': None,
-                            'length': 0,
-                            'data': None
+
+def test_should_query_editors_with_dataloader(fixtures):
+    from promise import Promise
+    from promise.dataloader import DataLoader
+
+    class ArticleLoader(DataLoader):
+        def batch_load_fn(self, instances):
+            queryset = models.Article.objects(editor__in=instances)
+            return Promise.resolve(
+                [
+                    [a for a in queryset if a.editor.id == instance.id]
+                    for instance in instances
+                ]
+            )
+
+    article_loader = ArticleLoader()
+
+    class _EditorNode(MongoengineObjectType):
+        class Meta:
+            model = models.Editor
+            interfaces = (graphene.Node,)
+
+        articles = MongoengineConnectionField(nodes.ArticleNode)
+
+        def resolve_articles(self, *args, **kwargs):
+            return article_loader.load(self)
+
+    class Query(graphene.ObjectType):
+        editors = MongoengineConnectionField(_EditorNode)
+
+    query = """
+        query EditorPromiseConnectionQuery {
+            editors(first: 1) {
+                edges {
+                    node {
+                        firstName,
+                        articles(first: 1) {
+                            edges {
+                                node {
+                                    headline
+                                }
+                            }
                         }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "editors": {
+            "edges": [
+                {
+                    "node": {
+                        "firstName": "Penny",
+                        "articles": {"edges": [{"node": {"headline": "Hello"}}]},
                     }
                 }
             ]
@@ -205,18 +265,16 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert result.data['allEditors'] == expected['allEditors']
+    assert result.data == expected
 
 
 def test_should_filter_editors_by_id(fixtures):
-
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        all_editors = MongoengineConnectionField(EditorNode)
+        editors = MongoengineConnectionField(nodes.EditorNode)
 
-    query = '''
+    query = """
         query EditorQuery {
-          allEditors(id: "RWRpdG9yTm9kZToy") {
+          editors(id: "RWRpdG9yTm9kZToy") {
             edges {
                 node {
                     id,
@@ -226,17 +284,16 @@ def test_should_filter_editors_by_id(fixtures):
             }
           }
         }
-    '''
+    """
     expected = {
-        'allEditors': {
-            'edges': [
+        "editors": {
+            "edges": [
                 {
-                    'node': {
-                        'id': 'RWRpdG9yTm9kZToy',
-                        'firstName': 'Grant',
-                        'lastName': 'Hill'
+                    "node": {
+                        "id": "RWRpdG9yTm9kZToy",
+                        "firstName": "Grant",
+                        "lastName": "Hill",
                     }
-
                 }
             ]
         }
@@ -244,16 +301,14 @@ def test_should_filter_editors_by_id(fixtures):
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allEditors']) == expected['allEditors']
+    assert result.data == expected
 
 
 def test_should_filter(fixtures):
-
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode)
+        articles = MongoengineConnectionField(nodes.ArticleNode)
 
-    query = '''
+    query = """
         query ArticlesQuery {
             articles(headline: "World") {
                 edges {
@@ -267,17 +322,15 @@ def test_should_filter(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'articles': {
-            'edges': [
+        "articles": {
+            "edges": [
                 {
-                    'node': {
-                        'headline': 'World',
-                        'editor': {
-                            'firstName': 'Grant'
-                        },
-                        'pubDate': '2020-01-01T00:00:00'
+                    "node": {
+                        "headline": "World",
+                        "editor": {"firstName": "Grant"},
+                        "pubDate": "2020-01-01T00:00:00",
                     }
                 }
             ]
@@ -290,12 +343,10 @@ def test_should_filter(fixtures):
 
 
 def test_should_filter_by_reference_field(fixtures):
-
     class Query(graphene.ObjectType):
-        node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode)
+        articles = MongoengineConnectionField(nodes.ArticleNode)
 
-    query = '''
+    query = """
         query ArticlesQuery {
             articles(editor: "RWRpdG9yTm9kZTox") {
                 edges {
@@ -308,19 +359,10 @@ def test_should_filter_by_reference_field(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'articles': {
-            'edges': [
-                {
-                    'node': {
-                        'headline': 'Hello',
-                        'editor': {
-                            'firstName': 'Penny'
-                        }
-                    }
-                }
-            ]
+        "articles": {
+            "edges": [{"node": {"headline": "Hello", "editor": {"firstName": "Penny"}}}]
         }
     }
     schema = graphene.Schema(query=Query)
@@ -330,12 +372,11 @@ def test_should_filter_by_reference_field(fixtures):
 
 
 def test_should_filter_through_inheritance(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
-        children = MongoengineConnectionField(ChildNode)
+        children = MongoengineConnectionField(nodes.ChildNode)
 
-    query = '''
+    query = """
         query ChildrenQuery {
             children(bar: "bar") {
                 edges {
@@ -350,18 +391,15 @@ def test_should_filter_through_inheritance(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'children': {
-            'edges': [
+        "children": {
+            "edges": [
                 {
-                    'node': {
-                        'bar': 'bar',
-                        'baz': 'baz',
-                        'loc': {
-                             'type': 'Point',
-                             'coordinates': [10.0, 20.0]
-                        }
+                    "node": {
+                        "bar": "bar",
+                        "baz": "baz",
+                        "loc": {"type": "Point", "coordinates": [10.0, 20.0]},
                     }
                 }
             ]
@@ -376,29 +414,41 @@ def test_should_filter_through_inheritance(fixtures):
 def test_should_filter_by_list_contains(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
-        reporters = MongoengineConnectionField(ReporterNode)
+        reporters = MongoengineConnectionField(nodes.ReporterNode)
 
-    query = '''
+    query = """
         query ReportersQuery {
             reporters (awards: "2010-mvp") {
                 edges {
                     node {
                         id,
                         firstName,
-                        awards
+                        awards,
+                        genericReferences {
+                            __typename
+                            ... on ArticleNode {
+                                headline
+                            }
+                        }
                     }
                 }
             }
         }
-    '''
+    """
     expected = {
-        'reporters': {
-            'edges': [
+        "reporters": {
+            "edges": [
                 {
-                    'node': {
-                        'id': 'UmVwb3J0ZXJOb2RlOjE=',
-                        'firstName': 'Allen',
-                        'awards': ['2010-mvp']
+                    "node": {
+                        "id": "UmVwb3J0ZXJOb2RlOjE=",
+                        "firstName": "Allen",
+                        "awards": ["2010-mvp"],
+                        "genericReferences": [
+                            {
+                                "__typename": "ArticleNode",
+                                "headline": "Hello"
+                            }
+                        ]
                     }
                 }
             ]
@@ -413,9 +463,9 @@ def test_should_filter_by_list_contains(fixtures):
 def test_should_filter_by_id(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
-        reporter = Node.Field(ReporterNode)
+        reporter = Node.Field(nodes.ReporterNode)
 
-    query = '''
+    query = """
         query ReporterQuery {
             reporter (id: "UmVwb3J0ZXJOb2RlOjE=") {
                 id,
@@ -423,12 +473,12 @@ def test_should_filter_by_id(fixtures):
                 awards
             }
         }
-    '''
+    """
     expected = {
-        'reporter': {
-            'id': 'UmVwb3J0ZXJOb2RlOjE=',
-            'firstName': 'Allen',
-            'awards': ['2010-mvp']
+        "reporter": {
+            "id": "UmVwb3J0ZXJOb2RlOjE=",
+            "firstName": "Allen",
+            "awards": ["2010-mvp"],
         }
     }
     schema = graphene.Schema(query=Query)
@@ -438,12 +488,11 @@ def test_should_filter_by_id(fixtures):
 
 
 def test_should_first_n(fixtures):
-
     class Query(graphene.ObjectType):
 
-        editors = MongoengineConnectionField(EditorNode)
+        editors = MongoengineConnectionField(nodes.EditorNode)
 
-    query = '''
+    query = """
         query EditorQuery {
             editors(first: 2) {
                 edges {
@@ -460,45 +509,34 @@ def test_should_first_n(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'editors': {
-            'edges': [
-                {
-                    'cursor': 'xxx',
-                    'node': {
-                        'firstName': 'Penny'
-                    }
-                },
-                {
-                    'cursor': 'xxx',
-                    'node': {
-                        'firstName': 'Grant'
-                    }
-                }
+        "editors": {
+            "edges": [
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjA=", "node": {"firstName": "Penny"}},
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjE=", "node": {"firstName": "Grant"}},
             ],
-            'pageInfo': {
-                'hasNextPage': True,
-                'hasPreviousPage': False,
-                'startCursor': 'xxx',
-                'endCursor': 'xxx'
-            }
+            "pageInfo": {
+                "hasNextPage": True,
+                "hasPreviousPage": False,
+                "startCursor": "YXJyYXljb25uZWN0aW9uOjA=",
+                "endCursor": "YXJyYXljb25uZWN0aW9uOjE=",
+            },
         }
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
 
     assert not result.errors
-    assert all(item in get_nodes(result.data, 'editors')
-               for item in get_nodes(expected, 'editors'))
+    assert result.data == expected
 
 
 def test_should_after(fixtures):
     class Query(graphene.ObjectType):
 
-        players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
-    query = '''
+    query = """
         query EditorQuery {
             players(after: "YXJyYXljb25uZWN0aW9uOjA=") {
                 edges {
@@ -509,28 +547,13 @@ def test_should_after(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'players': {
-            'edges': [
-                {
-                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
-                    'node': {
-                        'firstName': 'Magic',
-                    }
-                },
-                {
-                    'cursor': 'YXJyYXljb25uZWN0aW9uOjI=',
-                    'node': {
-                        'firstName': 'Larry'
-                    }
-                },
-                {
-                     'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
-                     'node': {
-                        'firstName': 'Chris'
-                     }
-                }
+        "players": {
+            "edges": [
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjE=", "node": {"firstName": "Magic"}},
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjI=", "node": {"firstName": "Larry"}},
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjM=", "node": {"firstName": "Chris"}},
             ]
         }
     }
@@ -544,9 +567,9 @@ def test_should_after(fixtures):
 def test_should_before(fixtures):
     class Query(graphene.ObjectType):
 
-        players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
-    query = '''
+    query = """
         query EditorQuery {
             players(before: "YXJyYXljb25uZWN0aW9uOjI=") {
                 edges {
@@ -557,22 +580,15 @@ def test_should_before(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'players': {
-            'edges': [
+        "players": {
+            "edges": [
                 {
-                    'cursor': "YXJyYXljb25uZWN0aW9uOjA=",
-                    'node': {
-                        'firstName': 'Michael',
-                    }
+                    "cursor": "YXJyYXljb25uZWN0aW9uOjA=",
+                    "node": {"firstName": "Michael"},
                 },
-                {
-                    'cursor': 'YXJyYXljb25uZWN0aW9uOjE=',
-                    'node': {
-                        'firstName': 'Magic',
-                    }
-                }
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjE=", "node": {"firstName": "Magic"}},
             ]
         }
     }
@@ -585,9 +601,9 @@ def test_should_before(fixtures):
 
 def test_should_last_n(fixtures):
     class Query(graphene.ObjectType):
-        players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
-    query = '''
+    query = """
         query PlayerQuery {
             players(last: 2) {
                 edges {
@@ -598,22 +614,12 @@ def test_should_last_n(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'players': {
-            'edges': [
-                {
-                    'cursor': 'YXJyYXljb25uZWN0aW9uOjI=',
-                    'node': {
-                        'firstName': 'Larry',
-                    }
-                },
-                {
-                     'cursor': 'YXJyYXljb25uZWN0aW9uOjM=',
-                     'node': {
-                          'firstName': 'Chris'
-                     }
-                }
+        "players": {
+            "edges": [
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjI=", "node": {"firstName": "Larry"}},
+                {"cursor": "YXJyYXljb25uZWN0aW9uOjM=", "node": {"firstName": "Chris"}},
             ]
         }
     }
@@ -625,14 +631,13 @@ def test_should_last_n(fixtures):
 
 
 def test_should_self_reference(fixtures):
-
     class Query(graphene.ObjectType):
 
-        all_players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
-    query = '''
+    query = """
         query PlayersQuery {
-            allPlayers {
+            players {
                 edges {
                     node {
                         firstName,
@@ -654,78 +659,43 @@ def test_should_self_reference(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'allPlayers': {
-            'edges': [
+        "players": {
+            "edges": [
                 {
-                    'node': {
-                        'firstName': 'Michael',
-                        'players': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'firstName': 'Magic'
-                                    }
-                                }
-                            ]
-                        },
-                        'embeddedListArticles': {
-                            'edges': []
-                        }
+                    "node": {
+                        "firstName": "Michael",
+                        "players": {"edges": [{"node": {"firstName": "Magic"}}]},
+                        "embeddedListArticles": {"edges": []},
                     }
                 },
                 {
-                    'node': {
-                        'firstName': 'Magic',
-                        'players': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'firstName': 'Michael'
-                                    }
-                                }
-                            ]
-                        },
-                        'embeddedListArticles': {
-                            'edges': []
-                        }
-
+                    "node": {
+                        "firstName": "Magic",
+                        "players": {"edges": [{"node": {"firstName": "Michael"}}]},
+                        "embeddedListArticles": {"edges": []},
                     }
                 },
                 {
-                    'node': {
-                        'firstName': 'Larry',
-                        'players': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'firstName': 'Michael'
-                                    }
-                                },
-                                {
-                                    'node': {
-                                        'firstName': 'Magic'
-                                    }
-                                }
+                    "node": {
+                        "firstName": "Larry",
+                        "players": {
+                            "edges": [
+                                {"node": {"firstName": "Michael"}},
+                                {"node": {"firstName": "Magic"}},
                             ]
                         },
-                        'embeddedListArticles': {
-                            'edges': []
-                        }
+                        "embeddedListArticles": {"edges": []},
                     }
                 },
                 {
-                     'node': {
-                          'firstName': 'Chris',
-                          'players': {
-                              'edges': []
-                          },
-                          'embeddedListArticles': {
-                               'edges': []
-                          }
-                     }
-                }
+                    "node": {
+                        "firstName": "Chris",
+                        "players": {"edges": []},
+                        "embeddedListArticles": {"edges": []},
+                    }
+                },
             ]
         }
     }
@@ -736,10 +706,9 @@ def test_should_self_reference(fixtures):
 
 
 def test_should_lazy_reference(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
-        parents = MongoengineConnectionField(ParentWithRelationshipNode)
+        parents = MongoengineConnectionField(nodes.ParentWithRelationshipNode)
 
     schema = graphene.Schema(query=Query)
 
@@ -773,24 +742,20 @@ def test_should_lazy_reference(fixtures):
     expected = {
         "parents": {
             "edges": [
-                {"node": {
-                    "beforeChild": {
-                        "edges": [
-                            {"node": {
-                                "name": "Akari",
-                                "parent": {"name": "Yui"}
-                            }}
-                        ]
-                    },
-                    "afterChild": {
-                        "edges": [
-                            {"node": {
-                                "name": "Kyouko",
-                                "parent": {"name": "Yui"}
-                            }}
-                        ]
+                {
+                    "node": {
+                        "beforeChild": {
+                            "edges": [
+                                {"node": {"name": "Akari", "parent": {"name": "Yui"}}}
+                            ]
+                        },
+                        "afterChild": {
+                            "edges": [
+                                {"node": {"name": "Kyouko", "parent": {"name": "Yui"}}}
+                            ]
+                        },
                     }
-                }}
+                }
             ]
         }
     }
@@ -801,14 +766,13 @@ def test_should_lazy_reference(fixtures):
 
 
 def test_should_query_with_embedded_document(fixtures):
-
     class Query(graphene.ObjectType):
 
-        all_professors = MongoengineConnectionField(ProfessorVectorNode)
+        professors = MongoengineConnectionField(nodes.ProfessorVectorNode)
 
-    query = '''
+    query = """
     query {
-        allProfessors {
+        professors {
             edges {
                 node {
                     vec,
@@ -819,35 +783,28 @@ def test_should_query_with_embedded_document(fixtures):
             }
         }
     }
-    '''
+    """
     expected = {
-        'allProfessors': {
-            'edges': [
-                {
-                    'node': {
-                        'vec': [1.0, 2.3],
-                        'metadata': {
-                             'firstName': 'Steven'
-                        }
-                    }
-
-                }
+        "professors": {
+            "edges": [
+                {"node": {"vec": [1.0, 2.3], "metadata": {"firstName": "Steven"}}}
             ]
         }
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(query)
     assert not result.errors
-    assert dict(result.data['allProfessors']) == expected['allProfessors']
+    assert result.data == expected
 
 
 def test_should_get_queryset_returns_dict_filters(fixtures):
-
     class Query(graphene.ObjectType):
         node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode, get_queryset=lambda *_, **__: {"headline": "World"})
+        articles = MongoengineConnectionField(
+            nodes.ArticleNode, get_queryset=lambda *_, **__: {"headline": "World"}
+        )
 
-    query = '''
+    query = """
            query ArticlesQuery {
                articles {
                    edges {
@@ -861,17 +818,15 @@ def test_should_get_queryset_returns_dict_filters(fixtures):
                    }
                }
            }
-       '''
+       """
     expected = {
-        'articles': {
-            'edges': [
+        "articles": {
+            "edges": [
                 {
-                    'node': {
-                        'headline': 'World',
-                        'editor': {
-                            'firstName': 'Grant'
-                        },
-                        'pubDate': '2020-01-01T00:00:00'
+                    "node": {
+                        "headline": "World",
+                        "editor": {"firstName": "Grant"},
+                        "pubDate": "2020-01-01T00:00:00",
                     }
                 }
             ]
@@ -884,15 +839,16 @@ def test_should_get_queryset_returns_dict_filters(fixtures):
 
 
 def test_should_get_queryset_returns_qs_filters(fixtures):
-
     def get_queryset(model, info, **args):
         return model.objects(headline="World")
 
     class Query(graphene.ObjectType):
         node = Node.Field()
-        articles = MongoengineConnectionField(ArticleNode, get_queryset=get_queryset)
+        articles = MongoengineConnectionField(
+            nodes.ArticleNode, get_queryset=get_queryset
+        )
 
-    query = '''
+    query = """
            query ArticlesQuery {
                articles {
                    edges {
@@ -906,17 +862,15 @@ def test_should_get_queryset_returns_qs_filters(fixtures):
                    }
                }
            }
-       '''
+       """
     expected = {
-        'articles': {
-            'edges': [
+        "articles": {
+            "edges": [
                 {
-                    'node': {
-                        'headline': 'World',
-                        'editor': {
-                            'firstName': 'Grant'
-                        },
-                        'pubDate': '2020-01-01T00:00:00'
+                    "node": {
+                        "headline": "World",
+                        "editor": {"firstName": "Grant"},
+                        "pubDate": "2020-01-01T00:00:00",
                     }
                 }
             ]
@@ -930,9 +884,9 @@ def test_should_get_queryset_returns_qs_filters(fixtures):
 
 def test_should_filter_mongoengine_queryset(fixtures):
     class Query(graphene.ObjectType):
-        players = MongoengineConnectionField(PlayerNode)
+        players = MongoengineConnectionField(nodes.PlayerNode)
 
-    query = '''
+    query = """
         query players {
             players(firstName_Istartswith: "M") {
                 edges {
@@ -942,21 +896,163 @@ def test_should_filter_mongoengine_queryset(fixtures):
                 }
             }
         }
-    '''
+    """
     expected = {
-        'players': {
-            'edges': [
-                {
-                    'node': {
-                        'firstName': 'Michael',
-                    }
-                },
-                {
-                    'node': {
-                        'firstName': 'Magic'
+        "players": {
+            "edges": [
+                {"node": {"firstName": "Michael"}},
+                {"node": {"firstName": "Magic"}},
+            ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True
+    )
+
+
+def test_should_query_document_with_embedded(fixtures):
+    class Query(graphene.ObjectType):
+        foos = MongoengineConnectionField(nodes.FooNode)
+
+        def resolve_multiple_foos(self, *args, **kwargs):
+            return list(models.Foo.objects.all())
+
+    query = """
+        query {
+            foos {
+                edges {
+                    node {
+                        bars {
+                            edges {
+                                node {
+                                    someListField
+                                }
+                            }
+                        }
                     }
                 }
+            }
+        }
+    """
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+
+
+def test_should_filter_mongoengine_queryset_with_list(fixtures):
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(nodes.PlayerNode)
+
+    query = """
+        query players {
+            players(firstName_In: ["Michael", "Magic"]) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {
+        "players": {
+            "edges": [
+                {"node": {"firstName": "Michael"}},
+                {"node": {"firstName": "Magic"}},
             ]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(
+        expected, sort_keys=True
+    )
+
+
+def test_should_get_correct_list_of_documents(fixtures):
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(nodes.PlayerNode)
+
+    query = """
+        query players {
+            players(firstName: "Michael") {
+                edges {
+                    node {
+                        firstName,
+                        articles(first: 3) {
+                            edges {
+                                node {
+                                    headline
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    expected = {
+        "players": {
+            "edges": [{
+                "node": {
+                    "firstName": "Michael",
+                    "articles": {
+                        "edges": [{
+                            "node": {
+                                "headline": "Hello"
+                            }
+                        }, {
+                            "node": {
+                                "headline": "World"
+                            }
+                        }]
+                    }
+                }
+            }]
+        }
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_filter_mongoengine_queryset_by_id_and_other_fields(fixtures):
+
+    class Query(graphene.ObjectType):
+        players = MongoengineConnectionField(nodes.PlayerNode)
+
+    larry = models.Player.objects.get(first_name="Larry")
+    larry_relay_id = to_global_id("PlayerNode", larry.id)
+
+    # "Larry" id && firstName == "Michael" should return nothing
+    query = """
+        query players {{
+            players(
+                id: "{larry_relay_id}",
+                firstName: "Michael"
+            ) {{
+                edges {{
+                    node {{
+                        id
+                        firstName
+                    }}
+                }}
+            }}
+        }}
+    """.format(larry_relay_id=larry_relay_id)
+
+    expected = {
+        'players': {
+            'edges': []
         }
     }
     schema = graphene.Schema(query=Query)

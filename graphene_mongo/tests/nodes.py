@@ -12,7 +12,7 @@ class PublisherNode(MongoengineObjectType):
 
     class Meta:
         model = models.Publisher
-        only_fields = ('id', 'name')
+        only_fields = ("id", "name")
         interfaces = (Node,)
 
 
@@ -38,8 +38,7 @@ class PlayerNode(MongoengineObjectType):
     class Meta:
         model = models.Player
         interfaces = (Node,)
-        filter_fields = {
-            'first_name': ['istartswith']}
+        filter_fields = {"first_name": ["istartswith", "in"]}
 
 
 class ReporterNode(MongoengineObjectType):
@@ -87,4 +86,16 @@ class ProfessorVectorNode(MongoengineObjectType):
 class ErroneousModelNode(MongoengineObjectType):
     class Meta:
         model = models.ErroneousModel
+        interfaces = (Node,)
+
+
+class BarNode(MongoengineObjectType):
+    class Meta:
+        model = models.Bar
+        interfaces = (Node,)
+
+
+class FooNode(MongoengineObjectType):
+    class Meta:
+        model = models.Foo
         interfaces = (Node,)

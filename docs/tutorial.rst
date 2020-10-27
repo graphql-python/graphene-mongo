@@ -64,7 +64,7 @@ Let's get start with following models:
 Schema
 ------
 
-Here I assume you guys have the basic knowledage of how schema works in GraphQL, that I define the *root type*  as the `Query` class below with the ability to list all employees.
+Here I assume you guys have the basic knowledge of how schema works in GraphQL, that I define the *root type*  as the `Query` class below with the ability to list all employees.
 
 .. code:: python
 

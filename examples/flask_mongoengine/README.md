@@ -40,11 +40,48 @@ pip install -r requirements.txt
 Now the following command will setup the database, and start the server:
 
 ```bash
-./app.py
-
+python app.py
 ```
 
 
 Now head on over to
 [http://127.0.0.1:5000/graphql](http://127.0.0.1:5000/graphql)
 and run some queries!
+
+Sample query:
+```
+{
+  allEmployees {
+    edges {
+      node {
+        id,
+        name,
+        department {
+          id,
+          name
+        },
+        roles {
+          edges {
+            node {
+              id,
+              name
+            }
+          }
+        },
+        leader {
+          id,
+          name
+        }
+        tasks {
+          edges {
+            node {
+              name,
+              deadline
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```

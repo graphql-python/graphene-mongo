@@ -22,8 +22,10 @@ def get_model_reference_fields(model, excluding=None):
     excluding = excluding or []
     attributes = dict()
     for attr_name, attr in model._fields.items():
-        if attr_name in excluding \
-                or not isinstance(attr, (mongoengine.fields.ReferenceField, mongoengine.fields.LazyReferenceField)):
+        if attr_name in excluding or not isinstance(
+            attr,
+            (mongoengine.fields.ReferenceField, mongoengine.fields.LazyReferenceField),
+        ):
             continue
         attributes[attr_name] = attr
     return attributes
@@ -31,7 +33,8 @@ def get_model_reference_fields(model, excluding=None):
 
 def is_valid_mongoengine_model(model):
     return inspect.isclass(model) and (
-        issubclass(model, mongoengine.Document) or issubclass(model, mongoengine.EmbeddedDocument)
+        issubclass(model, mongoengine.Document)
+        or issubclass(model, mongoengine.EmbeddedDocument)
     )
 
 
@@ -62,8 +65,9 @@ def import_single_dispatch():
 def get_type_for_document(schema, document):
     types = schema.types.values()
     for _type in types:
-        type_document = hasattr(_type, '_meta') and getattr(
-            _type._meta, 'document', None)
+        type_document = hasattr(_type, "_meta") and getattr(
+            _type._meta, "document", None
+        )
         if document == type_document:
             return _type
 
@@ -75,13 +79,13 @@ def get_field_description(field, registry=None):
     http://docs.mongoengine.org/apireference.html#fields
     """
     parts = []
-    if hasattr(field, 'document_type'):
+    if hasattr(field, "document_type"):
         doc = trim_docstring(field.document_type.__doc__)
         if doc:
             parts.append(doc)
-    if hasattr(field, 'verbose_name'):
+    if hasattr(field, "verbose_name"):
         parts.append(field.verbose_name.title())
-    if hasattr(field, 'help_text'):
+    if hasattr(field, "help_text"):
         parts.append(field.help_text)
     if field.db_field != field.name:
         name_format = "(%s)" if parts else "%s"

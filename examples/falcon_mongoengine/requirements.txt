@@ -1,0 +1,6 @@
+falcon==2.0.0
+mongoengine==0.17.0
+graphene-mongo
+waitress==1.4.3
+pytest==4.6.3
+mongomock==3.16.0
