@@ -6,6 +6,7 @@ from collections import OrderedDict
 import mongoengine
 from graphene import Node
 from graphene.utils.trim_docstring import trim_docstring
+from graphql.utils.ast_to_dict import ast_to_dict
 
 
 def get_model_fields(model, excluding=None):
@@ -23,8 +24,8 @@ def get_model_reference_fields(model, excluding=None):
     attributes = dict()
     for attr_name, attr in model._fields.items():
         if attr_name in excluding or not isinstance(
-            attr,
-            (mongoengine.fields.ReferenceField, mongoengine.fields.LazyReferenceField),
+                attr,
+                (mongoengine.fields.ReferenceField, mongoengine.fields.LazyReferenceField),
         ):
             continue
         attributes[attr_name] = attr
@@ -33,8 +34,8 @@ def get_model_reference_fields(model, excluding=None):
 
 def is_valid_mongoengine_model(model):
     return inspect.isclass(model) and (
-        issubclass(model, mongoengine.Document)
-        or issubclass(model, mongoengine.EmbeddedDocument)
+            issubclass(model, mongoengine.Document)
+            or issubclass(model, mongoengine.EmbeddedDocument)
     )
 
 
@@ -101,3 +102,61 @@ def get_node_from_global_id(node, info, global_id):
                 return interface.get_node_from_global_id(info, global_id)
     except AttributeError:
         return Node.get_node_from_global_id(info, global_id)
+
+
+def collect_query_fields(node, fragments):
+    """Recursively collects fields from the AST
+
+    Args:
+        node (dict): A node in the AST
+        fragments (dict): Fragment definitions
+
+    Returns:
+        A dict mapping each field found, along with their sub fields.
+
+        {'name': {},
+         'image': {'id': {},
+                                   'name': {},
+                                   'description': {}},
+         'slug': {}}
+    """
+
+    field = {}
+
+    if node.get('selection_set'):
+        for leaf in node['selection_set']['selections']:
+            if leaf['kind'] == 'Field':
+                field.update({
+                    leaf['name']['value']: collect_query_fields(leaf, fragments)
+                })
+            elif leaf['kind'] == 'FragmentSpread':
+                field.update(collect_query_fields(fragments[leaf['name']['value']],
+                                                  fragments))
+
+    return field
+
+
+def get_query_fields(info):
+    """A convenience function to call collect_query_fields with info
+
+    Args:
+        info (ResolveInfo)
+
+    Returns:
+        dict: Returned from collect_query_fields
+    """
+
+    fragments = {}
+    node = ast_to_dict(info.field_asts[0])
+
+    for name, value in info.fragments.items():
+        fragments[name] = ast_to_dict(value)
+
+    query = collect_query_fields(node, fragments)
+    if "edges" in query:
+        return query["edges"]["node"].keys()
+    return query
+
+
+def camel_to_snake(field):
+    return ''.join(['_' + c.lower() if c.isupper() else c for c in field]).lstrip('_')
