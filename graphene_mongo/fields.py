@@ -245,12 +245,6 @@ class MongoengineConnectionField(ConnectionField):
             if camel_to_snake(field) in self.model._fields_ordered:
                 only_fields.append(camel_to_snake(field))
         if not bool(args) or not is_partial:
-            if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
-                                                                          mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
-                args_copy = args.copy()
-                for arg_name, arg in args.copy().items():
-                    if arg_name not in self.model._fields_ordered:
-                        args_copy.pop(arg_name)
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
