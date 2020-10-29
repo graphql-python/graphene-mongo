@@ -199,7 +199,7 @@ class MongoengineConnectionField(ConnectionField):
             else:
                 args.update(queryset_or_filters)
 
-        return model.objects(**args).order_by(self.order_by)
+        return model.objects(**args).only(*only_fields).order_by(self.order_by)
 
     def default_resolver(self, _root, info, only_fields=list(), **args):
         args = args or {}
