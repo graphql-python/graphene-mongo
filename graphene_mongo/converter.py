@@ -121,7 +121,7 @@ def convert_field_to_list(field, registry=None):
     # Non-relationship field
     relations = (mongoengine.ReferenceField, mongoengine.EmbeddedDocumentField)
     if not isinstance(base_type, (graphene.List, graphene.NonNull)) and not isinstance(
-        field.field, relations
+            field.field, relations
     ):
         base_type = type(base_type)
 
@@ -135,7 +135,6 @@ def convert_field_to_list(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.GenericEmbeddedDocumentField)
 @convert_mongoengine_field.register(mongoengine.GenericReferenceField)
 def convert_field_to_union(field, registry=None):
-
     _types = []
     for choice in field.choices:
         if isinstance(field, mongoengine.GenericReferenceField):
@@ -171,11 +170,28 @@ def convert_field_to_union(field, registry=None):
 def convert_field_to_dynamic(field, registry=None):
     model = field.document_type
 
+    def reference_resolver(root, *args, **kwargs):
+        document = getattr(root, field.name or field.db_name)
+        only_fields = get_query_fields(args[0]).keys()
+        return field.document_type.objects().only(*only_fields).get(pk=document.id)
+
+    def cached_reference_resolver(root, *args, **kwargs):
+        document = getattr(root, field.name or field.db_name)
+        only_fields = get_query_fields(args[0]).keys()
+        return field.document_type.objects().only(*only_fields).get(pk=document)
+
     def dynamic_type():
         _type = registry.get_type_for_model(model)
         if not _type:
             return None
-        return graphene.Field(_type, description=get_field_description(field, registry))
+        elif isinstance(field, mongoengine.ReferenceField):
+            graphene.Field(_type, resolver=reference_resolver,
+                           description=get_field_description(field, registry))
+        elif isinstance(field, mongoengine.CachedReferenceField):
+            return graphene.Field(_type, resolver=cached_reference_resolver,
+                                  description=get_field_description(field, registry))
+        return graphene.Field(_type,
+                              description=get_field_description(field, registry))
 
     return graphene.Dynamic(dynamic_type)
 

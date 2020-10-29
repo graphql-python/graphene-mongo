@@ -5,7 +5,6 @@ from functools import partial, reduce
 
 import graphene
 import mongoengine
-from graphql.utils.ast_to_dict import ast_to_dict
 from promise import Promise
 from graphql_relay import from_global_id
 from graphene.relay import ConnectionField
