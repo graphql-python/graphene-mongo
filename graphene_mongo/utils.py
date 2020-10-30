@@ -113,12 +113,15 @@ def collect_query_fields(node, fragments):
 
     Returns:
         A dict mapping each field found, along with their sub fields.
-
-        {'name': {},
-         'image': {'id': {},
-                                   'name': {},
-                                   'description': {}},
-         'slug': {}}
+        {
+            'name': {},
+            'image': {
+                        'id': {},
+                        'name': {},
+                        'description': {}
+                    },
+            'slug': {}
+        }
     """
 
     field = {}
@@ -156,7 +159,3 @@ def get_query_fields(info):
     if "edges" in query:
         return query["edges"]["node"].keys()
     return query
-
-
-def camel_to_snake(field):
-    return ''.join(['_' + c.lower() if c.isupper() else c for c in field]).lstrip('_')

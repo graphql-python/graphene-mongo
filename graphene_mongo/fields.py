@@ -5,6 +5,7 @@ from functools import partial, reduce
 
 import graphene
 import mongoengine
+from graphene.utils.str_converters import to_snake_case
 from promise import Promise
 from graphql_relay import from_global_id
 from graphene.relay import ConnectionField
@@ -21,7 +22,7 @@ from .advanced_types import (
 )
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
-from .utils import get_model_reference_fields, get_node_from_global_id, get_query_fields, camel_to_snake
+from .utils import get_model_reference_fields, get_node_from_global_id, get_query_fields
 
 
 class MongoengineConnectionField(ConnectionField):
@@ -242,8 +243,8 @@ class MongoengineConnectionField(ConnectionField):
     def chained_resolver(self, resolver, is_partial, root, info, **args):
         only_fields = list()
         for field in get_query_fields(info):
-            if camel_to_snake(field) in self.model._fields_ordered:
-                only_fields.append(camel_to_snake(field))
+            if to_snake_case(field) in self.model._fields_ordered:
+                only_fields.append(to_snake_case(field))
         if not bool(args) or not is_partial:
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)

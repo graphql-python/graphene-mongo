@@ -3,10 +3,10 @@ import mongoengine
 import uuid
 
 from graphene.types.json import JSONString
+from graphene.utils.str_converters import to_snake_case
 from mongoengine.base import get_document
-
 from . import advanced_types
-from .utils import import_single_dispatch, get_field_description, get_query_fields, camel_to_snake
+from .utils import import_single_dispatch, get_field_description, get_query_fields
 
 singledispatch = import_single_dispatch()
 
@@ -172,11 +172,11 @@ def convert_field_to_dynamic(field, registry=None):
 
     def reference_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
-        only_fields = [camel_to_snake(i) for i in get_query_fields(args[0]).keys()]
+        only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
         return field.document_type.objects().no_dereference().only(*only_fields).get(pk=document.id)
 
     def cached_reference_resolver(root, *args, **kwargs):
-        only_fields = [camel_to_snake(i) for i in get_query_fields(args[0]).keys()]
+        only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
         return field.document_type.objects().no_dereference().only(*only_fields).get(
             pk=getattr(root, field.name or field.db_name))
 
@@ -202,7 +202,7 @@ def convert_lazy_field_to_dynamic(field, registry=None):
 
     def lazy_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
-        only_fields = [camel_to_snake(i) for i in get_query_fields(args[0]).keys()]
+        only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
         return document.document_type.objects().no_dereference().only(*only_fields).get(pk=document.pk)
 
     def dynamic_type():
