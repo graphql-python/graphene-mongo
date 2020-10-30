@@ -200,13 +200,13 @@ class MongoengineConnectionField(ConnectionField):
             else:
                 args.update(queryset_or_filters)
 
-        return model.objects(**args).only(*only_fields).order_by(self.order_by)
+        return model.objects(**args).no_dereference().only(*only_fields).order_by(self.order_by)
 
     def default_resolver(self, _root, info, only_fields=list(), **args):
         args = args or {}
 
         if _root is not None and getattr(_root, info.field_name, []) is not None:
-            args["pk__in"] = [r.pk for r in getattr(_root, info.field_name, [])]
+            args["pk__in"] = [r.id for r in getattr(_root, info.field_name, [])]
 
         connection_args = {
             "first": args.pop("first", None),

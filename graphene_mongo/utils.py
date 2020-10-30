@@ -135,6 +135,11 @@ def collect_query_fields(node, fragments):
             elif leaf['kind'] == 'FragmentSpread':
                 field.update(collect_query_fields(fragments[leaf['name']['value']],
                                                   fragments))
+            elif leaf['kind'] == 'InlineFragment':
+                field.update({
+                    leaf["type_condition"]["name"]['value']: collect_query_fields(leaf, fragments)
+                })
+                pass
 
     return field
 

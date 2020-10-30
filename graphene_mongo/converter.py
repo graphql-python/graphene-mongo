@@ -161,6 +161,19 @@ def convert_field_to_union(field, registry=None):
     )
     Meta = type("Meta", (object,), {"types": tuple(_types)})
     _union = type(name, (graphene.Union,), {"Meta": Meta})
+
+    def reference_resolver(root, *args, **kwargs):
+        dereferenced = getattr(root, field.name or field.db_name)
+        document = get_document(dereferenced["_cls"])
+        document_field= mongoengine.ReferenceField(document)
+        document_field = convert_mongoengine_field(document_field, registry)
+        document_field_type = document_field.get_type().type._meta.name
+        only_fields = [to_snake_case(i) for i in get_query_fields(args[0])[document_field_type].keys()]
+        return document.objects().no_dereference().only(*only_fields).get(pk=dereferenced["_ref"].id)
+
+    if isinstance(field, mongoengine.GenericReferenceField):
+        return graphene.Field(_union, resolver=reference_resolver)
+
     return graphene.Field(_union)
 
 
@@ -172,8 +185,10 @@ def convert_field_to_dynamic(field, registry=None):
 
     def reference_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
-        only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
-        return field.document_type.objects().no_dereference().only(*only_fields).get(pk=document.id)
+        if document:
+            only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
+            return field.document_type.objects().no_dereference().only(*only_fields).get(pk=document.id)
+        return None
 
     def cached_reference_resolver(root, *args, **kwargs):
         only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
@@ -186,7 +201,7 @@ def convert_field_to_dynamic(field, registry=None):
             return None
         elif isinstance(field, mongoengine.ReferenceField):
             return graphene.Field(_type, resolver=reference_resolver,
-                           description=get_field_description(field, registry))
+                                  description=get_field_description(field, registry))
         elif isinstance(field, mongoengine.CachedReferenceField):
             return graphene.Field(_type, resolver=cached_reference_resolver,
                                   description=get_field_description(field, registry))
