@@ -165,7 +165,7 @@ def convert_field_to_union(field, registry=None):
     def reference_resolver(root, *args, **kwargs):
         dereferenced = getattr(root, field.name or field.db_name)
         document = get_document(dereferenced["_cls"])
-        document_field= mongoengine.ReferenceField(document)
+        document_field = mongoengine.ReferenceField(document)
         document_field = convert_mongoengine_field(document_field, registry)
         document_field_type = document_field.get_type().type._meta.name
         only_fields = [to_snake_case(i) for i in get_query_fields(args[0])[document_field_type].keys()]
