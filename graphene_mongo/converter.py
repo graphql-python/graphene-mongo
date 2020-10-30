@@ -185,7 +185,7 @@ def convert_field_to_dynamic(field, registry=None):
         if not _type:
             return None
         elif isinstance(field, mongoengine.ReferenceField):
-            graphene.Field(_type, resolver=reference_resolver,
+            return graphene.Field(_type, resolver=reference_resolver,
                            description=get_field_description(field, registry))
         elif isinstance(field, mongoengine.CachedReferenceField):
             return graphene.Field(_type, resolver=cached_reference_resolver,
