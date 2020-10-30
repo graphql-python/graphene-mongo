@@ -128,7 +128,7 @@ def convert_field_to_list(field, registry=None):
     return graphene.List(
         base_type,
         description=get_field_description(field, registry),
-        required=field.required,
+        required=field.required
     )
 
 

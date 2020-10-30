@@ -5,6 +5,7 @@ from functools import partial, reduce
 
 import graphene
 import mongoengine
+from graphene import Context
 from graphene.utils.str_converters import to_snake_case
 from promise import Promise
 from graphql_relay import from_global_id
@@ -245,7 +246,16 @@ class MongoengineConnectionField(ConnectionField):
         for field in get_query_fields(info):
             if to_snake_case(field) in self.model._fields_ordered:
                 only_fields.append(to_snake_case(field))
-        if not bool(args) or not is_partial:
+        if root is None and (not bool(args) or not is_partial):
+            if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
+                                                                          mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
+                args_copy = args.copy()
+                for arg_name, arg in args.copy().items():
+                    if arg_name not in self.model._fields_ordered:
+                        args_copy.pop(arg_name)
+                if not info.context:
+                    info.context = Context()
+                info.context.queryset = self.get_queryset(self.model, info, only_fields, **args_copy)
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
