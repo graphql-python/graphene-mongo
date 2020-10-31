@@ -7,7 +7,7 @@ from graphene.utils.str_converters import to_snake_case
 from mongoengine.base import get_document
 from . import advanced_types
 from .utils import import_single_dispatch, get_field_description, get_query_fields
-from concurrent.futures import ThreadPoolExecutor, wait, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 singledispatch = import_single_dispatch()
 
@@ -112,7 +112,7 @@ def convert_field_to_list(field, registry=None):
                     document_field = mongoengine.ReferenceField(document)
                     document_field = convert_mongoengine_field(document_field, registry)
                     document_field_type = document_field.get_type().type._meta.name
-                    only_fields = [to_snake_case(i) for i in get_query_fields(args[0][3])[document_field_type].keys()]
+                    only_fields = [to_snake_case(i) for i in get_query_fields(args[0][3][0])[document_field_type].keys()]
                     return document.objects().no_dereference().only(*only_fields).filter(pk__in=args[0][1])
                 else:
                     return []
@@ -128,7 +128,7 @@ def convert_field_to_list(field, registry=None):
                 pool = ThreadPoolExecutor(5)
                 futures = list()
                 for model, object_id_list in choice_to_resolve.items():
-                    futures.append(pool.submit(get_reference_objects, (model, object_id_list, registry, *args)))
+                    futures.append(pool.submit(get_reference_objects, (model, object_id_list, registry, args)))
                 result = list()
                 for x in as_completed(futures):
                     result += x.result()

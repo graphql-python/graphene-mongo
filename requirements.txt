@@ -12,3 +12,4 @@ pytest-cov==2.5.1
 singledispatch==3.4.0.3
 # https://stackoverflow.com/a/58189684/9041712
 attrs==19.1.0
+futures; python_version < '3.0'
