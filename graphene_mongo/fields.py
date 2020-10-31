@@ -5,6 +5,7 @@ from functools import partial, reduce
 
 import graphene
 import mongoengine
+from bson import DBRef
 from graphene import Context
 from graphene.utils.str_converters import to_snake_case
 from promise import Promise
@@ -60,6 +61,12 @@ class MongoengineConnectionField(ConnectionField):
     @property
     def order_by(self):
         return self.node_type._meta.order_by
+
+    @property
+    def only_fields(self):
+        if isinstance(self.node_type._meta.only_fields, str):
+            return self.node_type._meta.only_fields.split(",")
+        return list()
 
     @property
     def registry(self):
@@ -206,8 +213,10 @@ class MongoengineConnectionField(ConnectionField):
     def default_resolver(self, _root, info, only_fields=list(), **args):
         args = args or {}
 
-        if _root is not None and getattr(_root, info.field_name, []) is not None:
-            args["pk__in"] = [r.id for r in getattr(_root, info.field_name, [])]
+        if _root is not None:
+            field_name = to_snake_case(info.field_name)
+            if getattr(_root, field_name, []) is not None:
+                args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
         connection_args = {
             "first": args.pop("first", None),
@@ -243,10 +252,13 @@ class MongoengineConnectionField(ConnectionField):
 
     def chained_resolver(self, resolver, is_partial, root, info, **args):
         only_fields = list()
+        for field in self.only_fields:
+            if field in self.model._fields_ordered:
+                only_fields.append(field)
         for field in get_query_fields(info):
             if to_snake_case(field) in self.model._fields_ordered:
                 only_fields.append(to_snake_case(field))
-        if root is None and (not bool(args) or not is_partial):
+        if not bool(args) or not is_partial:
             if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
                                                                           mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
                 args_copy = args.copy()
@@ -259,7 +271,13 @@ class MongoengineConnectionField(ConnectionField):
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
-                return resolved
+                if isinstance(resolved, list):
+                    if resolved == list():
+                        return resolved
+                    elif not isinstance(resolved[0], DBRef):
+                        return resolved
+                else:
+                    return resolved
         return self.default_resolver(root, info, only_fields, **args)
 
     @classmethod

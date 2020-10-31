@@ -7,6 +7,7 @@ from graphene.utils.str_converters import to_snake_case
 from mongoengine.base import get_document
 from . import advanced_types
 from .utils import import_single_dispatch, get_field_description, get_query_fields
+from concurrent.futures import ThreadPoolExecutor, wait, as_completed
 
 singledispatch = import_single_dispatch()
 
@@ -104,6 +105,46 @@ def convert_file_to_field(field, registry=None):
 def convert_field_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
     if isinstance(base_type, graphene.Field):
+        if isinstance(field.field, mongoengine.GenericReferenceField):
+            def get_reference_objects(*args, **kwargs):
+                if args[0][1]:
+                    document = get_document(args[0][0])
+                    document_field = mongoengine.ReferenceField(document)
+                    document_field = convert_mongoengine_field(document_field, registry)
+                    document_field_type = document_field.get_type().type._meta.name
+                    only_fields = [to_snake_case(i) for i in get_query_fields(args[0][3])[document_field_type].keys()]
+                    return document.objects().no_dereference().only(*only_fields).filter(pk__in=args[0][1])
+                else:
+                    return []
+
+            def reference_resolver(root, *args, **kwargs):
+                choice_to_resolve = dict()
+                to_resolve = getattr(root, field.name or field.db_name)
+                for each in to_resolve:
+                    if each['_cls'] not in choice_to_resolve:
+                        choice_to_resolve[each['_cls']] = list()
+                    choice_to_resolve[each['_cls']].append(each["_ref"].id)
+
+                pool = ThreadPoolExecutor(5)
+                futures = list()
+                for model, object_id_list in choice_to_resolve.items():
+                    futures.append(pool.submit(get_reference_objects, (model, object_id_list, registry, *args)))
+                result = list()
+                for x in as_completed(futures):
+                    result += x.result()
+                to_resolve_object_ids = [each["_ref"].id for each in to_resolve]
+                result_to_resolve_object_ids = [each.id for each in result]
+                ordered_result = list()
+                for each in to_resolve_object_ids:
+                    ordered_result.append(result[result_to_resolve_object_ids.index(each)])
+                return ordered_result
+
+            return graphene.List(
+                base_type._type,
+                description=get_field_description(field, registry),
+                required=field.required,
+                resolver=reference_resolver
+            )
         return graphene.List(
             base_type._type,
             description=get_field_description(field, registry),
@@ -128,7 +169,7 @@ def convert_field_to_list(field, registry=None):
     return graphene.List(
         base_type,
         description=get_field_description(field, registry),
-        required=field.required
+        required=field.required,
     )
 
 
@@ -172,7 +213,8 @@ def convert_field_to_union(field, registry=None):
         return document.objects().no_dereference().only(*only_fields).get(pk=dereferenced["_ref"].id)
 
     if isinstance(field, mongoengine.GenericReferenceField):
-        return graphene.Field(_union, resolver=reference_resolver)
+        return graphene.Field(_union, resolver=reference_resolver,
+                              description=get_field_description(field, registry))
 
     return graphene.Field(_union)
 
