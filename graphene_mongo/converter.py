@@ -112,7 +112,8 @@ def convert_field_to_list(field, registry=None):
                     document_field = mongoengine.ReferenceField(document)
                     document_field = convert_mongoengine_field(document_field, registry)
                     document_field_type = document_field.get_type().type._meta.name
-                    only_fields = [to_snake_case(i) for i in get_query_fields(args[0][3][0])[document_field_type].keys()]
+                    only_fields = [to_snake_case(i) for i in
+                                   get_query_fields(args[0][3][0])[document_field_type].keys()]
                     return document.objects().no_dereference().only(*only_fields).filter(pk__in=args[0][1])
                 else:
                     return []
@@ -208,9 +209,12 @@ def convert_field_to_union(field, registry=None):
         document = get_document(dereferenced["_cls"])
         document_field = mongoengine.ReferenceField(document)
         document_field = convert_mongoengine_field(document_field, registry)
-        document_field_type = document_field.get_type().type._meta.name
-        only_fields = [to_snake_case(i) for i in get_query_fields(args[0])[document_field_type].keys()]
-        return document.objects().no_dereference().only(*only_fields).get(pk=dereferenced["_ref"].id)
+        _type = document_field.get_type().type
+        only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
+                                                                       str) else list()
+        return document.objects().no_dereference().only(*list(
+            set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0])[_type._meta.name].keys()]))).get(
+            pk=dereferenced["_ref"].id)
 
     if isinstance(field, mongoengine.GenericReferenceField):
         return graphene.Field(_union, resolver=reference_resolver,
@@ -228,24 +232,20 @@ def convert_field_to_dynamic(field, registry=None):
     def reference_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
-            only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
-            return field.document_type.objects().no_dereference().only(*only_fields).get(pk=document.id)
+            _type = registry.get_type_for_model(field.document_type)
+            only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
+                                                                           str) else list()
+            return field.document_type.objects().no_dereference().only(
+                *((list(set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()])))
+                )).get(pk=document.id)
         return None
-
-    def cached_reference_resolver(root, *args, **kwargs):
-        only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
-        return field.document_type.objects().no_dereference().only(*only_fields).get(
-            pk=getattr(root, field.name or field.db_name))
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
         if not _type:
             return None
-        elif isinstance(field, mongoengine.ReferenceField):
+        elif isinstance(field, mongoengine.ReferenceField) or isinstance(field, mongoengine.CachedReferenceField):
             return graphene.Field(_type, resolver=reference_resolver,
-                                  description=get_field_description(field, registry))
-        elif isinstance(field, mongoengine.CachedReferenceField):
-            return graphene.Field(_type, resolver=cached_reference_resolver,
                                   description=get_field_description(field, registry))
         return graphene.Field(_type,
                               description=get_field_description(field, registry))
@@ -259,11 +259,16 @@ def convert_lazy_field_to_dynamic(field, registry=None):
 
     def lazy_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
-        only_fields = [to_snake_case(i) for i in get_query_fields(args[0]).keys()]
-        return document.document_type.objects().no_dereference().only(*only_fields).get(pk=document.pk)
+        _type = registry.get_type_for_model(document.document_type)
+        only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
+                                                                       str) else list()
+        return document.document_type.objects().no_dereference().only(
+            *(list(set((only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
+            pk=document.pk)
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
+
         if not _type:
             return None
         return graphene.Field(
