@@ -240,12 +240,24 @@ def convert_field_to_dynamic(field, registry=None):
                 pk=document.id)
         return None
 
+    def cached_reference_resolver(root, *args, **kwargs):
+        _type = registry.get_type_for_model(field.document_type)
+        only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
+                                                                       str) else list()
+        return field.document_type.objects().no_dereference().only(
+            *(list(set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))
+              )).get(
+            pk=getattr(root, field.name or field.db_name))
+
     def dynamic_type():
         _type = registry.get_type_for_model(model)
         if not _type:
             return None
-        elif isinstance(field, mongoengine.ReferenceField) or isinstance(field, mongoengine.CachedReferenceField):
+        elif isinstance(field, mongoengine.ReferenceField):
             return graphene.Field(_type, resolver=reference_resolver,
+                                  description=get_field_description(field, registry))
+        elif isinstance(field, mongoengine.CachedReferenceField):
+            return graphene.Field(_type, resolver=cached_reference_resolver,
                                   description=get_field_description(field, registry))
         return graphene.Field(_type,
                               description=get_field_description(field, registry))
