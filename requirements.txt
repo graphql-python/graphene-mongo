@@ -1,5 +1,5 @@
-coveralls==1.11.1; python_version < '3.0'
-coveralls==2.1.2; python_version >= '3.0'
+coveralls==1.11.1; python_version <= '3.4'
+coveralls==2.1.2; python_version > '3.4'
 flake8==3.7.9
 flake8-per-file-ignores==0.6
 future==0.18.2
