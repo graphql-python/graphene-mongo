@@ -236,8 +236,8 @@ def convert_field_to_dynamic(field, registry=None):
             only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
                                                                            str) else list()
             return field.document_type.objects().no_dereference().only(
-                *((list(set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()])))
-                )).get(pk=document.id)
+                *((list(set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
+                pk=document.id)
         return None
 
     def dynamic_type():
