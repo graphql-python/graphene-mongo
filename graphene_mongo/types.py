@@ -5,11 +5,12 @@ from collections import OrderedDict
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
+from graphene.utils.str_converters import to_snake_case
 
 from graphene_mongo import MongoengineConnectionField
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry
-from .utils import get_model_fields, is_valid_mongoengine_model
+from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
@@ -210,7 +211,15 @@ class MongoengineObjectType(ObjectType):
 
     @classmethod
     def get_node(cls, info, id):
-        return cls._meta.model.objects.get(pk=id)
+        only_fields = list()
+        for field in cls._meta.only_fields:
+            if field in cls._meta.model._fields_ordered:
+                only_fields.append(field)
+        for field in get_query_fields(info):
+            if to_snake_case(field) in cls._meta.model._fields_ordered:
+                only_fields.append(to_snake_case(field))
+        only_fields = list(set(only_fields))
+        return cls._meta.model.objects.no_dereference().only(*only_fields).get(pk=id)
 
     def resolve_id(self, info):
         return str(self.id)

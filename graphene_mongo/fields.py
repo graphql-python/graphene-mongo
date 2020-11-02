@@ -5,6 +5,10 @@ from functools import partial, reduce
 
 import graphene
 import mongoengine
+from bson import DBRef
+from graphene import Context
+from graphene.utils.str_converters import to_snake_case
+from graphql import ResolveInfo
 from promise import Promise
 from graphql_relay import from_global_id
 from graphene.relay import ConnectionField
@@ -21,7 +25,7 @@ from .advanced_types import (
 )
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
-from .utils import get_model_reference_fields, get_node_from_global_id
+from .utils import get_model_reference_fields, get_node_from_global_id, get_query_fields
 
 
 class MongoengineConnectionField(ConnectionField):
@@ -58,6 +62,12 @@ class MongoengineConnectionField(ConnectionField):
     @property
     def order_by(self):
         return self.node_type._meta.order_by
+
+    @property
+    def only_fields(self):
+        if isinstance(self.node_type._meta.only_fields, str):
+            return self.node_type._meta.only_fields.split(",")
+        return list()
 
     @property
     def registry(self):
@@ -98,18 +108,18 @@ class MongoengineConnectionField(ConnectionField):
             if isinstance(converted, (ConnectionField, Dynamic)):
                 return False
             if callable(getattr(converted, "type", None)) and isinstance(
-                converted.type(),
-                (
-                    FileFieldType,
-                    PointFieldType,
-                    MultiPolygonFieldType,
-                    graphene.Union,
-                    PolygonFieldType,
-                ),
+                    converted.type(),
+                    (
+                            FileFieldType,
+                            PointFieldType,
+                            MultiPolygonFieldType,
+                            graphene.Union,
+                            PolygonFieldType,
+                    ),
             ):
                 return False
             if isinstance(converted, (graphene.List)) and issubclass(
-                getattr(converted, "_of_type", None), graphene.Union
+                    getattr(converted, "_of_type", None), graphene.Union
             ):
                 return False
 
@@ -160,8 +170,8 @@ class MongoengineConnectionField(ConnectionField):
             field = kv[1]
             mongo_field = getattr(self.model, kv[0], None)
             if isinstance(
-                mongo_field,
-                (mongoengine.LazyReferenceField, mongoengine.ReferenceField),
+                    mongo_field,
+                    (mongoengine.LazyReferenceField, mongoengine.ReferenceField),
             ):
                 field = convert_mongoengine_field(mongo_field, self.registry)
             if callable(getattr(field, "get_type", None)):
@@ -169,7 +179,7 @@ class MongoengineConnectionField(ConnectionField):
                 if _type:
                     node = _type._type._meta
                     if "id" in node.fields and not issubclass(
-                        node.model, (mongoengine.EmbeddedDocument,)
+                            node.model, (mongoengine.EmbeddedDocument,)
                     ):
                         r.update({kv[0]: node.fields["id"]._type.of_type()})
             return r
@@ -180,7 +190,7 @@ class MongoengineConnectionField(ConnectionField):
     def fields(self):
         return self._type._meta.fields
 
-    def get_queryset(self, model, info, **args):
+    def get_queryset(self, model, info, only_fields=list(), **args):
         if args:
             reference_fields = get_model_reference_fields(self.model)
             hydrated_references = {}
@@ -198,13 +208,16 @@ class MongoengineConnectionField(ConnectionField):
                 return queryset_or_filters
             else:
                 args.update(queryset_or_filters)
-        return model.objects(**args).order_by(self.order_by)
 
-    def default_resolver(self, _root, info, **args):
+        return model.objects(**args).no_dereference().only(*only_fields).order_by(self.order_by)
+
+    def default_resolver(self, _root, info, only_fields=list(), **args):
         args = args or {}
 
         if _root is not None:
-            args["pk__in"] = [r.pk for r in getattr(_root, info.field_name, [])]
+            field_name = to_snake_case(info.field_name)
+            if getattr(_root, field_name, []) is not None:
+                args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
         connection_args = {
             "first": args.pop("first", None),
@@ -219,7 +232,11 @@ class MongoengineConnectionField(ConnectionField):
             args['pk'] = from_global_id(_id)[-1]
 
         if callable(getattr(self.model, "objects", None)):
-            iterables = self.get_queryset(self.model, info, **args)
+            iterables = self.get_queryset(self.model, info, only_fields, **args)
+            if isinstance(info, ResolveInfo):
+                if not info.context:
+                    info.context = Context()
+                info.context.queryset = iterables
             list_length = iterables.count()
         else:
             iterables = []
@@ -239,23 +256,44 @@ class MongoengineConnectionField(ConnectionField):
         return connection
 
     def chained_resolver(self, resolver, is_partial, root, info, **args):
+        only_fields = list()
+        for field in self.only_fields:
+            if field in self.model._fields_ordered:
+                only_fields.append(field)
+        for field in get_query_fields(info):
+            if to_snake_case(field) in self.model._fields_ordered:
+                only_fields.append(to_snake_case(field))
         if not bool(args) or not is_partial:
+            if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
+                                                                          mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
+                args_copy = args.copy()
+                for arg_name, arg in args.copy().items():
+                    if arg_name not in self.model._fields_ordered:
+                        args_copy.pop(arg_name)
+                if isinstance(info, ResolveInfo):
+                    if not info.context:
+                        info.context = Context()
+                    info.context.queryset = self.get_queryset(self.model, info, only_fields, **args_copy)
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
-                return resolved
-        return self.default_resolver(root, info, **args)
+                if isinstance(resolved, list):
+                    if resolved == list():
+                        return resolved
+                    elif not isinstance(resolved[0], DBRef):
+                        return resolved
+                else:
+                    return resolved
+        return self.default_resolver(root, info, only_fields, **args)
 
     @classmethod
     def connection_resolver(cls, resolver, connection_type, root, info, **args):
         iterable = resolver(root, info, **args)
         if isinstance(connection_type, graphene.NonNull):
             connection_type = connection_type.of_type
-
         on_resolve = partial(cls.resolve_connection, connection_type, args)
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)
-
         return on_resolve(iterable)
 
     def get_resolver(self, parent_resolver):

@@ -1,10 +1,12 @@
 import graphene
 from graphene.relay import Node
+from graphene_mongo.tests.nodes import PlayerNode, ReporterNode
+
 from graphene_mongo import MongoengineConnectionField, MongoengineObjectType
-from models import Department as DepartmentModel
-from models import Employee as EmployeeModel
-from models import Role as RoleModel
-from models import Task as TaskModel
+from .models import Department as DepartmentModel
+from .models import Employee as EmployeeModel
+from .models import Role as RoleModel
+from .models import Task as TaskModel
 
 
 class Department(MongoengineObjectType):
@@ -17,6 +19,9 @@ class Role(MongoengineObjectType):
     class Meta:
         model = RoleModel
         interfaces = (Node,)
+        filter_fields = {
+            'name': ['exact', 'icontains', 'istartswith']
+        }
 
 
 class Task(MongoengineObjectType):
@@ -29,6 +34,9 @@ class Employee(MongoengineObjectType):
     class Meta:
         model = EmployeeModel
         interfaces = (Node,)
+        filter_fields = {
+            'name': ['exact', 'icontains', 'istartswith']
+        }
 
 
 class Query(graphene.ObjectType):
