@@ -8,6 +8,7 @@ import mongoengine
 from bson import DBRef
 from graphene import Context
 from graphene.utils.str_converters import to_snake_case
+from graphql import ResolveInfo
 from promise import Promise
 from graphql_relay import from_global_id
 from graphene.relay import ConnectionField
@@ -232,6 +233,10 @@ class MongoengineConnectionField(ConnectionField):
 
         if callable(getattr(self.model, "objects", None)):
             iterables = self.get_queryset(self.model, info, only_fields, **args)
+            if isinstance(info, ResolveInfo):
+                if not info.context:
+                    info.context = Context()
+                info.context.queryset = iterables
             list_length = iterables.count()
         else:
             iterables = []
@@ -265,9 +270,10 @@ class MongoengineConnectionField(ConnectionField):
                 for arg_name, arg in args.copy().items():
                     if arg_name not in self.model._fields_ordered:
                         args_copy.pop(arg_name)
-                if not info.context:
-                    info.context = Context()
-                info.context.queryset = self.get_queryset(self.model, info, only_fields, **args_copy)
+                if isinstance(info, ResolveInfo):
+                    if not info.context:
+                        info.context = Context()
+                    info.context.queryset = self.get_queryset(self.model, info, only_fields, **args_copy)
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
