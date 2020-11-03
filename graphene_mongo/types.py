@@ -18,7 +18,7 @@ def construct_fields(model, registry, required_fields, exclude_fields):
     Args:
         model (mongoengine.Document):
         registry (graphene_mongo.registry.Registry):
-        required_fields ([str]):
+        only_fields ([str]):
         exclude_fields ([str]):
 
     Returns:
