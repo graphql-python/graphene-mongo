@@ -28,6 +28,7 @@ setup(
         "mongoengine>=0.15.0",
         "singledispatch>=3.4.0.3",
         "iso8601>=0.1.12",
+        'futures; python_version < "3.0"'
     ],
     python_requires=">=2.7",
     zip_safe=True,
