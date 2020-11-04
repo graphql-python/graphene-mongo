@@ -40,12 +40,12 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def type(self):
-        from .types import MongoengineObjectType
+        from .types import GrapheneMongoengineObjectTypes
 
         _type = super(ConnectionField, self).type
         assert issubclass(
-            _type, MongoengineObjectType
-        ), "MongoengineConnectionField only accepts MongoengineObjectType types"
+            _type, GrapheneMongoengineObjectTypes
+        ), "MongoengineConnectionField only accepts Mongoengine object types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
