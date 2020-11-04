@@ -112,9 +112,9 @@ def convert_field_to_list(field, registry=None):
                     document_field = mongoengine.ReferenceField(document)
                     document_field = convert_mongoengine_field(document_field, registry)
                     document_field_type = document_field.get_type().type._meta.name
-                    only_fields = [to_snake_case(i) for i in
+                    required_fields = [to_snake_case(i) for i in
                                    get_query_fields(args[0][3][0])[document_field_type].keys()]
-                    return document.objects().no_dereference().only(*only_fields).filter(pk__in=args[0][1])
+                    return document.objects().no_dereference().only(*required_fields).filter(pk__in=args[0][1])
                 else:
                     return []
 
@@ -237,20 +237,20 @@ def convert_field_to_dynamic(field, registry=None):
         document = getattr(root, field.name or field.db_name)
         if document:
             _type = registry.get_type_for_model(field.document_type)
-            only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
+            required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
                                                                            str) else list()
             return field.document_type.objects().no_dereference().only(
-                *((list(set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
+                *((list(set(required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
                 pk=document.id)
         return None
 
     def cached_reference_resolver(root, *args, **kwargs):
         if field:
             _type = registry.get_type_for_model(field.document_type)
-            only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
+            required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
                                                                            str) else list()
             return field.document_type.objects().no_dereference().only(
-                *(list(set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))
+                *(list(set(required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))
                   )).get(
                 pk=getattr(root, field.name or field.db_name))
         return None
@@ -279,10 +279,10 @@ def convert_lazy_field_to_dynamic(field, registry=None):
         document = getattr(root, field.name or field.db_name)
         if document:
             _type = registry.get_type_for_model(document.document_type)
-            only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
+            required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
                                                                            str) else list()
             return document.document_type.objects().no_dereference().only(
-                *(list(set((only_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
+                *(list(set((required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
                 pk=document.pk)
         return None
 

@@ -64,10 +64,8 @@ class MongoengineConnectionField(ConnectionField):
         return self.node_type._meta.order_by
 
     @property
-    def only_fields(self):
-        if isinstance(self.node_type._meta.only_fields, str):
-            return self.node_type._meta.only_fields.split(",")
-        return list()
+    def required_fields(self):
+        return tuple(set(self.node_type._meta.required_fields + self.node_type._meta.only_fields))
 
     @property
     def registry(self):
@@ -190,7 +188,7 @@ class MongoengineConnectionField(ConnectionField):
     def fields(self):
         return self._type._meta.fields
 
-    def get_queryset(self, model, info, only_fields=list(), **args):
+    def get_queryset(self, model, info, required_fields=list(), **args):
         if args:
             reference_fields = get_model_reference_fields(self.model)
             hydrated_references = {}
@@ -209,9 +207,9 @@ class MongoengineConnectionField(ConnectionField):
             else:
                 args.update(queryset_or_filters)
 
-        return model.objects(**args).no_dereference().only(*only_fields).order_by(self.order_by)
+        return model.objects(**args).no_dereference().only(*required_fields).order_by(self.order_by)
 
-    def default_resolver(self, _root, info, only_fields=list(), **args):
+    def default_resolver(self, _root, info, required_fields=list(), **args):
         args = args or {}
 
         if _root is not None:
@@ -232,7 +230,7 @@ class MongoengineConnectionField(ConnectionField):
             args['pk'] = from_global_id(_id)[-1]
 
         if callable(getattr(self.model, "objects", None)):
-            iterables = self.get_queryset(self.model, info, only_fields, **args)
+            iterables = self.get_queryset(self.model, info, required_fields, **args)
             if isinstance(info, ResolveInfo):
                 if not info.context:
                     info.context = Context()
@@ -256,13 +254,13 @@ class MongoengineConnectionField(ConnectionField):
         return connection
 
     def chained_resolver(self, resolver, is_partial, root, info, **args):
-        only_fields = list()
-        for field in self.only_fields:
+        required_fields = list()
+        for field in self.required_fields:
             if field in self.model._fields_ordered:
-                only_fields.append(field)
+                required_fields.append(field)
         for field in get_query_fields(info):
             if to_snake_case(field) in self.model._fields_ordered:
-                only_fields.append(to_snake_case(field))
+                required_fields.append(to_snake_case(field))
         if not bool(args) or not is_partial:
             if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
                                                                           mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
@@ -273,7 +271,7 @@ class MongoengineConnectionField(ConnectionField):
                 if isinstance(info, ResolveInfo):
                     if not info.context:
                         info.context = Context()
-                    info.context.queryset = self.get_queryset(self.model, info, only_fields, **args_copy)
+                    info.context.queryset = self.get_queryset(self.model, info, required_fields, **args_copy)
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
@@ -284,7 +282,7 @@ class MongoengineConnectionField(ConnectionField):
                         return resolved
                 else:
                     return resolved
-        return self.default_resolver(root, info, only_fields, **args)
+        return self.default_resolver(root, info, required_fields, **args)
 
     @classmethod
     def connection_resolver(cls, resolver, connection_type, root, info, **args):

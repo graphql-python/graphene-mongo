@@ -13,7 +13,7 @@ from .registry import Registry, get_global_registry
 from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields
 
 
-def construct_fields(model, registry, only_fields, exclude_fields):
+def construct_fields(model, registry, required_fields, exclude_fields):
     """
     Args:
         model (mongoengine.Document):
@@ -29,10 +29,10 @@ def construct_fields(model, registry, only_fields, exclude_fields):
     fields = OrderedDict()
     self_referenced = OrderedDict()
     for name, field in _model_fields.items():
-        is_not_in_only = only_fields and name not in only_fields
+        is_not_in_only = required_fields and name not in required_fields
         is_excluded = name in exclude_fields
         if is_not_in_only or is_excluded:
-            # We skip this field if we specify only_fields and is not
+            # We skip this field if we specify required_fields and is not
             # in there. Or when we exclude this field in exclude_fields
             continue
         if isinstance(field, mongoengine.ListField):
@@ -83,6 +83,7 @@ class MongoengineObjectType(ObjectType):
         registry=None,
         skip_registry=False,
         only_fields=(),
+        required_fields=(),
         exclude_fields=(),
         filter_fields=None,
         connection=None,
@@ -157,6 +158,7 @@ class MongoengineObjectType(ObjectType):
         _meta.connection_field_class = connection_field_class
         # Save them for later
         _meta.only_fields = only_fields
+        _meta.required_fields = required_fields
         _meta.exclude_fields = exclude_fields
         _meta.order_by = order_by
 
@@ -211,15 +213,15 @@ class MongoengineObjectType(ObjectType):
 
     @classmethod
     def get_node(cls, info, id):
-        only_fields = list()
-        for field in cls._meta.only_fields:
+        required_fields = list()
+        for field in cls._meta.required_fields:
             if field in cls._meta.model._fields_ordered:
-                only_fields.append(field)
+                required_fields.append(field)
         for field in get_query_fields(info):
             if to_snake_case(field) in cls._meta.model._fields_ordered:
-                only_fields.append(to_snake_case(field))
-        only_fields = list(set(only_fields))
-        return cls._meta.model.objects.no_dereference().only(*only_fields).get(pk=id)
+                required_fields.append(to_snake_case(field))
+        required_fields = list(set(required_fields))
+        return cls._meta.model.objects.no_dereference().only(*required_fields).get(pk=id)
 
     def resolve_id(self, info):
         return str(self.id)
