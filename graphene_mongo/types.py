@@ -71,7 +71,7 @@ def construct_self_referenced_fields(self_referenced, registry):
     return fields
 
 
-def create_graphene_generic_class(object_type: type, option_type: type):
+def create_graphene_generic_class(object_type, option_type):
 
     class MongoengineGenericObjectTypeOptions(option_type):
 
