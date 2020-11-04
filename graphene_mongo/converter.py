@@ -107,40 +107,52 @@ def convert_field_to_list(field, registry=None):
     if isinstance(base_type, graphene.Field):
         if isinstance(field.field, mongoengine.GenericReferenceField):
             def get_reference_objects(*args, **kwargs):
-                if args[0][1]:
-                    document = get_document(args[0][0])
-                    document_field = mongoengine.ReferenceField(document)
-                    document_field = convert_mongoengine_field(document_field, registry)
-                    document_field_type = document_field.get_type().type._meta.name
-                    required_fields = [to_snake_case(i) for i in
-                                       get_query_fields(args[0][3][0])[document_field_type].keys()]
-                    return document.objects().no_dereference().only(*required_fields).filter(pk__in=args[0][1])
-                else:
-                    return []
+                document = get_document(args[0][0])
+                document_field = mongoengine.ReferenceField(document)
+                document_field = convert_mongoengine_field(document_field, registry)
+                document_field_type = document_field.get_type().type._meta.name
+                required_fields = [to_snake_case(i) for i in
+                                   get_query_fields(args[0][3][0])[document_field_type].keys()]
+                return document.objects().no_dereference().only(*required_fields).filter(pk__in=args[0][1])
+
+            def get_non_querying_object(*args, **kwargs):
+                model = get_document(args[0][0])
+                return [model(pk=each) for each in args[0][1]]
 
             def reference_resolver(root, *args, **kwargs):
-                choice_to_resolve = dict()
                 to_resolve = getattr(root, field.name or field.db_name)
                 if to_resolve:
+                    choice_to_resolve = dict()
+                    querying_union_types = list(get_query_fields(args[0]).keys())
+                    if '__typename' in querying_union_types:
+                        querying_union_types.remove('__typename')
+                    to_resolve_models = list()
+                    for each in querying_union_types:
+                        to_resolve_models.append(registry._registry_string_map[each])
                     for each in to_resolve:
                         if each['_cls'] not in choice_to_resolve:
                             choice_to_resolve[each['_cls']] = list()
                         choice_to_resolve[each['_cls']].append(each["_ref"].id)
-
                     pool = ThreadPoolExecutor(5)
                     futures = list()
                     for model, object_id_list in choice_to_resolve.items():
-                        futures.append(pool.submit(get_reference_objects, (model, object_id_list, registry, args)))
+                        if model in to_resolve_models:
+                            futures.append(pool.submit(get_reference_objects, (model, object_id_list, registry, args)))
+                        else:
+                            futures.append(
+                                pool.submit(get_non_querying_object, (model, object_id_list, registry, args)))
                     result = list()
                     for x in as_completed(futures):
                         result += x.result()
                     to_resolve_object_ids = [each["_ref"].id for each in to_resolve]
-                    result_to_resolve_object_ids = [each.id for each in result]
+                    result_object_ids = list()
+                    for each in result:
+                        result_object_ids.append(each.id)
                     ordered_result = list()
                     for each in to_resolve_object_ids:
-                        ordered_result.append(result[result_to_resolve_object_ids.index(each)])
+                        ordered_result.append(result[result_object_ids.index(each)])
                     return ordered_result
-                return []
+                return None
 
             return graphene.List(
                 base_type._type,
@@ -207,17 +219,20 @@ def convert_field_to_union(field, registry=None):
     _union = type(name, (graphene.Union,), {"Meta": Meta})
 
     def reference_resolver(root, *args, **kwargs):
-        dereferenced = getattr(root, field.name or field.db_name)
-        if dereferenced:
-            document = get_document(dereferenced["_cls"])
+        de_referenced = getattr(root, field.name or field.db_name)
+        if de_referenced:
+            document = get_document(de_referenced["_cls"])
             document_field = mongoengine.ReferenceField(document)
             document_field = convert_mongoengine_field(document_field, registry)
             _type = document_field.get_type().type
-            only_fields = _type._meta.only_fields.split(",") if isinstance(_type._meta.only_fields,
-                                                                           str) else list()
-            return document.objects().no_dereference().only(*list(
-                set(only_fields + [to_snake_case(i) for i in get_query_fields(args[0])[_type._meta.name].keys()]))).get(
-                pk=dereferenced["_ref"].id)
+            querying_types = list(get_query_fields(args[0]).keys())
+            _type = document_field.get_type().type
+            if _type.__name__ in querying_types:
+                return document.objects().no_dereference().only(*list(
+                    set(list(_type._meta.required_fields) + [to_snake_case(i) for i in
+                                                             get_query_fields(args[0])[_type._meta.name].keys()]))).get(
+                    pk=de_referenced["_ref"].id)
+            return document
         return None
 
     if isinstance(field, mongoengine.GenericReferenceField):
@@ -242,21 +257,19 @@ def convert_field_to_dynamic(field, registry=None):
         document = getattr(root, field.name or field.db_name)
         if document:
             _type = registry.get_type_for_model(field.document_type)
-            required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
-                                                                                   str) else list()
             return field.document_type.objects().no_dereference().only(
-                *((list(set(required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
+                *((list(set(list(_type._meta.required_fields) + [to_snake_case(i) for i in
+                                                                 get_query_fields(args[0]).keys()]))))).get(
                 pk=document.id)
         return None
 
     def cached_reference_resolver(root, *args, **kwargs):
         if field:
             _type = registry.get_type_for_model(field.document_type)
-            required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
-                                                                                   str) else list()
             return field.document_type.objects().no_dereference().only(
-                *(list(set(required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))
-                  )).get(
+                *(list(set(
+                    list(_type._meta.required_fields) + [to_snake_case(i) for i in
+                                                         get_query_fields(args[0]).keys()])))).get(
                 pk=getattr(root, field.name or field.db_name))
         return None
 
@@ -290,10 +303,9 @@ def convert_lazy_field_to_dynamic(field, registry=None):
         document = getattr(root, field.name or field.db_name)
         if document:
             _type = registry.get_type_for_model(document.document_type)
-            required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
-                                                                                   str) else list()
             return document.document_type.objects().no_dereference().only(
-                *(list(set((required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
+                *(list(set((list(_type._meta.required_fields) + [to_snake_case(i) for i in
+                                                                 get_query_fields(args[0]).keys()]))))).get(
                 pk=document.pk)
         return None
 
