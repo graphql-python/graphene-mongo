@@ -40,11 +40,8 @@ def get_global_registry():
     return registry
 
 
-def reset_inputs_registry():
-    global inputs_registry
-    inputs_registry = None
-
-
 def reset_global_registry():
     global registry
+    global inputs_registry
     registry = None
+    inputs_registry = None
