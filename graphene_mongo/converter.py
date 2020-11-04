@@ -113,7 +113,7 @@ def convert_field_to_list(field, registry=None):
                     document_field = convert_mongoengine_field(document_field, registry)
                     document_field_type = document_field.get_type().type._meta.name
                     required_fields = [to_snake_case(i) for i in
-                                   get_query_fields(args[0][3][0])[document_field_type].keys()]
+                                       get_query_fields(args[0][3][0])[document_field_type].keys()]
                     return document.objects().no_dereference().only(*required_fields).filter(pk__in=args[0][1])
                 else:
                     return []
@@ -238,7 +238,7 @@ def convert_field_to_dynamic(field, registry=None):
         if document:
             _type = registry.get_type_for_model(field.document_type)
             required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
-                                                                           str) else list()
+                                                                                   str) else list()
             return field.document_type.objects().no_dereference().only(
                 *((list(set(required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
                 pk=document.id)
@@ -248,7 +248,7 @@ def convert_field_to_dynamic(field, registry=None):
         if field:
             _type = registry.get_type_for_model(field.document_type)
             required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
-                                                                           str) else list()
+                                                                                   str) else list()
             return field.document_type.objects().no_dereference().only(
                 *(list(set(required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))
                   )).get(
@@ -280,7 +280,7 @@ def convert_lazy_field_to_dynamic(field, registry=None):
         if document:
             _type = registry.get_type_for_model(document.document_type)
             required_fields = _type._meta.required_fields.split(",") if isinstance(_type._meta.required_fields,
-                                                                           str) else list()
+                                                                                   str) else list()
             return document.document_type.objects().no_dereference().only(
                 *(list(set((required_fields + [to_snake_case(i) for i in get_query_fields(args[0]).keys()]))))).get(
                 pk=document.pk)
