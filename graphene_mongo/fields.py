@@ -7,6 +7,7 @@ import graphene
 import mongoengine
 from bson import DBRef
 from graphene import Context
+from graphene.types.utils import get_type
 from graphene.utils.str_converters import to_snake_case
 from graphql import ResolveInfo
 from promise import Promise
@@ -188,6 +189,7 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def fields(self):
+        self._type = get_type(self._type)
         return self._type._meta.fields
 
     def get_queryset(self, model, info, required_fields=list(), skip=None, limit=None, reversed=False, **args):
@@ -239,8 +241,9 @@ class MongoengineConnectionField(ConnectionField):
 
         if _root is not None:
             field_name = to_snake_case(info.field_name)
-            if getattr(_root, field_name, []) is not None:
-                args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
+            if field_name in _root._fields_ordered:
+                if getattr(_root, field_name, []) is not None:
+                    args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
         _id = args.pop('id', None)
 
