@@ -260,10 +260,6 @@ class MongoengineConnectionField(ConnectionField):
             after = cursor_to_offset(args.pop("after", None))
             last = args.pop("last", None)
             before = cursor_to_offset(args.pop("before", None))
-            if after is not None:
-                has_previous_page = after > 0
-            elif (before is not None and last is not None):
-                has_previous_page = before - last <= 0
             if "pk__in" in args and args["pk__in"]:
                 count = len(args["pk__in"])
                 skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
