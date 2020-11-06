@@ -341,7 +341,7 @@ class MongoengineConnectionField(ConnectionField):
                     for arg_name, arg in args.copy().items():
                         if arg_name not in self.model._fields_ordered + ('first', 'last', 'before', 'after'):
                             args_copy.pop(arg_name)
-                    return self.default_resolver(root, info, required_fields, **args)
+                    return self.default_resolver(root, info, required_fields, **args_copy)
                 else:
                     return resolved
         return self.default_resolver(root, info, required_fields, **args)
