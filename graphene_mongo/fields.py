@@ -337,6 +337,10 @@ class MongoengineConnectionField(ConnectionField):
                         return resolved
                 elif isinstance(resolved, QuerySet):
                     args.update(resolved._query)
+                    args_copy = args.copy()
+                    for arg_name, arg in args.copy().items():
+                        if arg_name not in self.model._fields_ordered + ('first', 'last', 'before', 'after'):
+                            args_copy.pop(arg_name)
                     return self.default_resolver(root, info, required_fields, **args)
                 else:
                     return resolved
