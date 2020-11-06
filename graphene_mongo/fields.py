@@ -119,6 +119,9 @@ class MongoengineConnectionField(ConnectionField):
                     ),
             ):
                 return False
+            if getattr(converted, "type", None) and getattr(converted.type, "_of_type", None) and issubclass(
+                    (get_type(converted.type.of_type)), graphene.Union):
+                return False
             if isinstance(converted, (graphene.List)) and issubclass(
                     getattr(converted, "_of_type", None), graphene.Union
             ):
