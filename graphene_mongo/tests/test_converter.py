@@ -305,8 +305,8 @@ def test_should_description_convert_common_metadata():
         Article._fields["pub_date"], A._meta.registry
     )
     assert (
-        pubDate_field.kwargs["description"]
-        == "Publication Date\nThe date of first press."
+            pubDate_field.kwargs["description"]
+            == "Publication Date\nThe date of first press."
     )
 
     firstName_field = convert_mongoengine_field(
@@ -352,8 +352,12 @@ def test_should_generic_reference_convert_union():
         Reporter._fields["generic_reference"], registry.get_global_registry()
     )
     assert isinstance(generic_reference_field, graphene.Field)
-    assert isinstance(generic_reference_field.type(), graphene.Union)
-    assert generic_reference_field.type()._meta.types == (A, E)
+    if not Reporter._fields["generic_reference"].required:
+        assert isinstance(generic_reference_field.type(), graphene.Union)
+        assert generic_reference_field.type()._meta.types == (A, E)
+    else:
+        assert issubclass(generic_reference_field.type.of_type, graphene.Union)
+        assert generic_reference_field.type.of_type._meta.types == (A, E)
 
 
 def test_should_generic_embedded_document_convert_union():

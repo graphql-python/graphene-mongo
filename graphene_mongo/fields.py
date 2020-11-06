@@ -119,11 +119,13 @@ class MongoengineConnectionField(ConnectionField):
                     ),
             ):
                 return False
+            if getattr(converted, "type", None) and getattr(converted.type, "_of_type", None) and issubclass(
+                    (get_type(converted.type.of_type)), graphene.Union):
+                return False
             if isinstance(converted, (graphene.List)) and issubclass(
                     getattr(converted, "_of_type", None), graphene.Union
             ):
                 return False
-
             return True
 
         def get_filter_type(_type):
@@ -183,6 +185,7 @@ class MongoengineConnectionField(ConnectionField):
                             node.model, (mongoengine.EmbeddedDocument,)
                     ):
                         r.update({kv[0]: node.fields["id"]._type.of_type()})
+
             return r
 
         return reduce(get_reference_field, self.fields.items(), {})
