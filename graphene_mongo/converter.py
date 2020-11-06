@@ -237,12 +237,14 @@ def convert_field_to_union(field, registry=None):
 
     if isinstance(field, mongoengine.GenericReferenceField):
         field_resolver = None
+        required = False
         if field.db_field is not None:
+            required = field.required
             resolver_function = getattr(_union, "resolve_" + field.db_field, None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
         return graphene.Field(_union, resolver=field_resolver if field_resolver else reference_resolver,
-                              description=get_field_description(field, registry))
+                              description=get_field_description(field, registry), required=required)
 
     return graphene.Field(_union)
 
@@ -281,16 +283,18 @@ def convert_field_to_dynamic(field, registry=None):
             return graphene.Field(_type,
                                   description=get_field_description(field, registry))
         field_resolver = None
+        required = False
         if field.db_field is not None:
+            required = field.required
             resolver_function = getattr(_type, "resolve_" + field.db_field, None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
         if isinstance(field, mongoengine.ReferenceField):
             return graphene.Field(_type, resolver=field_resolver if field_resolver else reference_resolver,
-                                  description=get_field_description(field, registry))
+                                  description=get_field_description(field, registry), required=required)
         else:
-            return graphene.Field(_type, resolver=field_resolver if field_resolver else cached_reference_resolver(),
-                                  description=get_field_description(field, registry))
+            return graphene.Field(_type, resolver=field_resolver if field_resolver else cached_reference_resolver,
+                                  description=get_field_description(field, registry), required=required)
 
     return graphene.Dynamic(dynamic_type)
 
@@ -314,14 +318,16 @@ def convert_lazy_field_to_dynamic(field, registry=None):
         if not _type:
             return None
         field_resolver = None
+        required = False
         if field.db_field is not None:
+            required = field.required
             resolver_function = getattr(_type, "resolve_" + field.db_field, None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
         return graphene.Field(
             _type,
             resolver=field_resolver if field_resolver else lazy_resolver,
-            description=get_field_description(field, registry),
+            description=get_field_description(field, registry), required=required,
         )
 
     return graphene.Dynamic(dynamic_type)

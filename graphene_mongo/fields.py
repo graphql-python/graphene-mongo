@@ -117,6 +117,9 @@ class MongoengineConnectionField(ConnectionField):
                     ),
             ):
                 return False
+            if getattr(converted, "type", None) and getattr(converted.type, "_of_type", None) and issubclass(
+                    (get_type(converted.type.of_type)), graphene.Union):
+                return False
             if isinstance(converted, (graphene.List)) and issubclass(
                     getattr(converted, "_of_type", None), graphene.Union
             ):
@@ -176,7 +179,7 @@ class MongoengineConnectionField(ConnectionField):
             if callable(getattr(field, "get_type", None)):
                 _type = field.get_type()
                 if _type:
-                    node = _type._type._meta
+                    node = _type.type._meta if hasattr(_type.type, "_meta") else _type.type._of_type._meta
                     if "id" in node.fields and not issubclass(
                             node.model, (mongoengine.EmbeddedDocument,)
                     ):
@@ -195,7 +198,7 @@ class MongoengineConnectionField(ConnectionField):
             reference_fields = get_model_reference_fields(self.model)
             hydrated_references = {}
             for arg_name, arg in args.copy().items():
-                if arg_name in reference_fields:
+                if arg_name in reference_fields and isinstance(arg, str):
                     reference_obj = get_node_from_global_id(
                         reference_fields[arg_name], info, args.pop(arg_name)
                     )
