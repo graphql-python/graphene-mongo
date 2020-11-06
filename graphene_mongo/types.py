@@ -13,7 +13,7 @@ from .registry import Registry, get_global_registry
 from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields
 
 
-def construct_fields(model, registry, required_fields, exclude_fields):
+def construct_fields(model, registry, only_fields, exclude_fields):
     """
     Args:
         model (mongoengine.Document):
@@ -29,7 +29,7 @@ def construct_fields(model, registry, required_fields, exclude_fields):
     fields = OrderedDict()
     self_referenced = OrderedDict()
     for name, field in _model_fields.items():
-        is_not_in_only = required_fields and name not in required_fields
+        is_not_in_only = only_fields and name not in only_fields
         is_excluded = name in exclude_fields
         if is_not_in_only or is_excluded:
             # We skip this field if we specify required_fields and is not

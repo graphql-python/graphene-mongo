@@ -16,8 +16,7 @@ from graphene.relay import ConnectionField
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
-from graphql_relay.connection.arrayconnection import cursor_to_offset
-from mongoengine import QuerySet
+from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .advanced_types import (
     FileFieldType,
@@ -27,8 +26,7 @@ from .advanced_types import (
 )
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
-from .utils import get_model_reference_fields, get_node_from_global_id, get_query_fields, find_skip_and_limit, \
-    connection_from_iterables
+from .utils import get_model_reference_fields, get_node_from_global_id, get_query_fields
 
 
 class MongoengineConnectionField(ConnectionField):
@@ -178,7 +176,7 @@ class MongoengineConnectionField(ConnectionField):
             if callable(getattr(field, "get_type", None)):
                 _type = field.get_type()
                 if _type:
-                    node = _type._type._meta
+                    node = _type.type._meta if hasattr(_type.type, "_meta") else _type.type._of_type._meta
                     if "id" in node.fields and not issubclass(
                             node.model, (mongoengine.EmbeddedDocument,)
                     ):
@@ -192,12 +190,12 @@ class MongoengineConnectionField(ConnectionField):
         self._type = get_type(self._type)
         return self._type._meta.fields
 
-    def get_queryset(self, model, info, required_fields=list(), skip=None, limit=None, reversed=False, **args):
+    def get_queryset(self, model, info, required_fields=list(), **args):
         if args:
             reference_fields = get_model_reference_fields(self.model)
             hydrated_references = {}
             for arg_name, arg in args.copy().items():
-                if arg_name in reference_fields:
+                if arg_name in reference_fields and isinstance(arg, str):
                     reference_obj = get_node_from_global_id(
                         reference_fields[arg_name], info, args.pop(arg_name)
                     )
@@ -210,94 +208,50 @@ class MongoengineConnectionField(ConnectionField):
                 return queryset_or_filters
             else:
                 args.update(queryset_or_filters)
-        if limit is not None:
-            if reversed:
-                order_by = ""
-                if self.order_by:
-                    order_by = self.order_by + ",-pk"
-                else:
-                    order_by = "-pk"
-                return model.objects(**args).no_dereference().only(*required_fields).order_by(order_by).skip(
-                    skip if skip else 0).limit(limit)
-            else:
-                return model.objects(**args).no_dereference().only(*required_fields).order_by(self.order_by).skip(
-                    skip if skip else 0).limit(limit)
-        elif skip is not None:
-            if reversed:
-                order_by = ""
-                if self.order_by:
-                    order_by = self.order_by + ",-pk"
-                else:
-                    order_by = "-pk"
-                return model.objects(**args).no_dereference().only(*required_fields).order_by(order_by).skip(
-                    skip)
-            else:
-                return model.objects(**args).no_dereference().only(*required_fields).order_by(self.order_by).skip(
-                    skip)
+
         return model.objects(**args).no_dereference().only(*required_fields).order_by(self.order_by)
 
     def default_resolver(self, _root, info, required_fields=list(), **args):
         args = args or {}
+
         if _root is not None:
             field_name = to_snake_case(info.field_name)
             if field_name in _root._fields_ordered:
                 if getattr(_root, field_name, []) is not None:
                     args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
+        connection_args = {
+            "first": args.pop("first", None),
+            "last": args.pop("last", None),
+            "before": args.pop("before", None),
+            "after": args.pop("after", None),
+        }
+
         _id = args.pop('id', None)
+
         if _id is not None:
             args['pk'] = from_global_id(_id)[-1]
-        iterables = []
-        list_length = 0
-        skip = 0
-        count = 0
-        limit = None
-        reverse = False
+
         if callable(getattr(self.model, "objects", None)):
-            first = args.pop("first", None)
-            after = cursor_to_offset(args.pop("after", None))
-            last = args.pop("last", None)
-            before = cursor_to_offset(args.pop("before", None))
-            if "pk__in" in args and args["pk__in"]:
-                count = len(args["pk__in"])
-                skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
-                                                           count=count)
-                if limit:
-                    if reverse:
-                        args["pk__in"] = args["pk__in"][::-1][skip:skip + limit]
-                    else:
-                        args["pk__in"] = args["pk__in"][skip:skip + limit]
-                elif skip:
-                    args["pk__in"] = args["pk__in"][skip:]
-                iterables = self.get_queryset(self.model, info, required_fields, **args)
-                list_length = len(iterables)
-                if isinstance(info, ResolveInfo):
-                    if not info.context:
-                        info.context = Context()
-                    info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
-            else:
-                count = self.get_queryset(self.model, info, required_fields, **args).count()
-                if count != 0:
-                    skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
-                                                               count=count)
-                    iterables = self.get_queryset(self.model, info, required_fields, skip, limit, reverse, **args)
-                    list_length = len(iterables)
-                    if isinstance(info, ResolveInfo):
-                        if not info.context:
-                            info.context = Context()
-                        info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
-        has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
-        has_previous_page = True if skip else False
-        if reverse:
-            iterables = list(iterables)
-            iterables.reverse()
-            skip = limit
-        connection = connection_from_iterables(edges=iterables, start_offset=skip,
-                                               has_previous_page=has_previous_page,
-                                               has_next_page=has_next_page,
-                                               connection_type=self.type,
-                                               edge_type=self.type.Edge,
-                                               pageinfo_type=graphene.PageInfo)
+            iterables = self.get_queryset(self.model, info, required_fields, **args)
+            if isinstance(info, ResolveInfo):
+                if not info.context:
+                    info.context = Context()
+                info.context.queryset = iterables
+            list_length = iterables.count()
+        else:
+            iterables = []
+            list_length = 0
+
+        connection = connection_from_list_slice(
+            list_slice=iterables,
+            args=connection_args,
+            list_length=list_length,
+            list_slice_length=list_length,
+            connection_type=self.type,
+            edge_type=self.type.Edge,
+            pageinfo_type=graphene.PageInfo,
+        )
         connection.iterable = iterables
         connection.list_length = list_length
         return connection
@@ -329,9 +283,6 @@ class MongoengineConnectionField(ConnectionField):
                         return resolved
                     elif not isinstance(resolved[0], DBRef):
                         return resolved
-                elif isinstance(resolved, QuerySet):
-                    args.update(resolved._query)
-                    return self.default_resolver(root, info, required_fields, **args)
                 else:
                     return resolved
         return self.default_resolver(root, info, required_fields, **args)
