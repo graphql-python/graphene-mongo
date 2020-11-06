@@ -244,7 +244,7 @@ def convert_field_to_union(field, registry=None):
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
         return graphene.Field(_union, resolver=field_resolver if field_resolver else reference_resolver,
-                              description=get_field_description(field, registry), required=required)
+                              description=get_field_description(field, registry))
 
     return graphene.Field(_union)
 
