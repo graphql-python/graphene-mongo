@@ -110,10 +110,14 @@ def convert_field_to_list(field, registry=None):
                 document = get_document(args[0][0])
                 document_field = mongoengine.ReferenceField(document)
                 document_field = convert_mongoengine_field(document_field, registry)
-                document_field_type = document_field.get_type().type._meta.name
-                required_fields = [to_snake_case(i) for i in
-                                   get_query_fields(args[0][3][0])[document_field_type].keys()]
-                return document.objects().no_dereference().only(*required_fields).filter(pk__in=args[0][1])
+                document_field_type = document_field.get_type().type
+                queried_fields = list()
+                for each in get_query_fields(args[0][3][0])[document_field_type._meta.name].keys():
+                    item = to_snake_case(each)
+                    if item in document._fields_ordered:
+                        queried_fields.append(item)
+                return document.objects().no_dereference().only(
+                    *set(list(document_field_type._meta.required_fields) + queried_fields)).filter(pk__in=args[0][1])
 
             def get_non_querying_object(*args, **kwargs):
                 model = get_document(args[0][0])
@@ -228,9 +232,13 @@ def convert_field_to_union(field, registry=None):
             querying_types = list(get_query_fields(args[0]).keys())
             _type = document_field.get_type().type
             if _type.__name__ in querying_types:
+                queried_fields = list()
+                for each in get_query_fields(args[0]).keys():
+                    item = to_snake_case(each)
+                    if item in document._fields_ordered:
+                        queried_fields.append(item)
                 return document.objects().no_dereference().only(*list(
-                    set(list(_type._meta.required_fields) + [to_snake_case(i) for i in
-                                                             get_query_fields(args[0])[_type._meta.name].keys()]))).get(
+                    set(list(_type._meta.required_fields) + queried_fields))).get(
                     pk=de_referenced["_ref"].id)
             return document
         return None
@@ -258,20 +266,28 @@ def convert_field_to_dynamic(field, registry=None):
     def reference_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
+            queried_fields = list()
+            for each in get_query_fields(args[0]).keys():
+                item = to_snake_case(each)
+                if item in field.document_type._fields_ordered:
+                    queried_fields.append(item)
             _type = registry.get_type_for_model(field.document_type)
             return field.document_type.objects().no_dereference().only(
-                *((list(set(list(_type._meta.required_fields) + [to_snake_case(i) for i in
-                                                                 get_query_fields(args[0]).keys()]))))).get(
+                *(set(list(_type._meta.required_fields) + queried_fields))).get(
                 pk=document.id)
         return None
 
     def cached_reference_resolver(root, *args, **kwargs):
         if field:
+            queried_fields = list()
+            for each in get_query_fields(args[0]).keys():
+                item = to_snake_case(each)
+                if item in field.document_type._fields_ordered:
+                    queried_fields.append(item)
             _type = registry.get_type_for_model(field.document_type)
             return field.document_type.objects().no_dereference().only(
-                *(list(set(
-                    list(_type._meta.required_fields) + [to_snake_case(i) for i in
-                                                         get_query_fields(args[0]).keys()])))).get(
+                *(set(
+                    list(_type._meta.required_fields) + queried_fields))).get(
                 pk=getattr(root, field.name or field.db_name))
         return None
 
@@ -306,10 +322,14 @@ def convert_lazy_field_to_dynamic(field, registry=None):
     def lazy_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
+            queried_fields = list()
+            for each in get_query_fields(args[0]).keys():
+                item = to_snake_case(each)
+                if item in document.document_type._fields_ordered:
+                    queried_fields.append(item)
             _type = registry.get_type_for_model(document.document_type)
             return document.document_type.objects().no_dereference().only(
-                *(list(set((list(_type._meta.required_fields) + [to_snake_case(i) for i in
-                                                                 get_query_fields(args[0]).keys()]))))).get(
+                *(set((list(_type._meta.required_fields) + queried_fields)))).get(
                 pk=document.pk)
         return None
 
