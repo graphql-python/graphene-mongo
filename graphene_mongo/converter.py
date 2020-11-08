@@ -248,7 +248,7 @@ def convert_field_to_union(field, registry=None):
         required = False
         if field.db_field is not None:
             required = field.required
-            resolver_function = getattr(_union, "resolve_" + field.db_field, None)
+            resolver_function = getattr(registry.get_type_for_model(field.owner_document), "resolve_" + field.db_field, None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
         return graphene.Field(_union, resolver=field_resolver if field_resolver else reference_resolver,
@@ -302,7 +302,7 @@ def convert_field_to_dynamic(field, registry=None):
         required = False
         if field.db_field is not None:
             required = field.required
-            resolver_function = getattr(_type, "resolve_" + field.db_field, None)
+            resolver_function = getattr(registry.get_type_for_model(field.owner_document), "resolve_" + field.db_field, None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
         if isinstance(field, mongoengine.ReferenceField):
@@ -341,7 +341,7 @@ def convert_lazy_field_to_dynamic(field, registry=None):
         required = False
         if field.db_field is not None:
             required = field.required
-            resolver_function = getattr(_type, "resolve_" + field.db_field, None)
+            resolver_function = getattr(registry.get_type_for_model(field.owner_document), "resolve_" + field.db_field, None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
         return graphene.Field(
