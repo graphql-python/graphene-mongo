@@ -321,7 +321,7 @@ class MongoengineConnectionField(ConnectionField):
                                                                           mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
                 args_copy = args.copy()
                 for arg_name, arg in args.copy().items():
-                    if arg_name not in self.model._fields_ordered:
+                    if arg_name not in self.model._fields_ordered + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
                 if isinstance(info, ResolveInfo):
                     if not info.context:
@@ -339,7 +339,8 @@ class MongoengineConnectionField(ConnectionField):
                     args.update(resolved._query)
                     args_copy = args.copy()
                     for arg_name, arg in args.copy().items():
-                        if arg_name not in self.model._fields_ordered + ('first', 'last', 'before', 'after'):
+                        if arg_name not in self.model._fields_ordered + (
+                        'first', 'last', 'before', 'after') + tuple(self.filter_args.keys()):
                             args_copy.pop(arg_name)
                     return self.default_resolver(root, info, required_fields, **args_copy)
                 else:
