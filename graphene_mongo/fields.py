@@ -280,7 +280,7 @@ class MongoengineConnectionField(ConnectionField):
                     if not info.context:
                         info.context = Context()
                     info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
-            elif _root is None:
+            else:
                 count = self.get_queryset(self.model, info, required_fields, **args).count()
                 if count != 0:
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
