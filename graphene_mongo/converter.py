@@ -230,7 +230,6 @@ def convert_field_to_union(field, registry=None):
             document_field = convert_mongoengine_field(document_field, registry)
             _type = document_field.get_type().type
             querying_types = list(get_query_fields(args[0]).keys())
-            _type = document_field.get_type().type
             if _type.__name__ in querying_types:
                 queried_fields = list()
                 for each in get_query_fields(args[0]).keys():
