@@ -272,7 +272,7 @@ class MongoengineConnectionField(ConnectionField):
                                                                           mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
                 args_copy = args.copy()
                 for arg_name, arg in args.copy().items():
-                    if arg_name not in self.model._fields_ordered:
+                    if arg_name not in self.model._fields_ordered + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
                 if isinstance(info, ResolveInfo):
                     if not info.context:
