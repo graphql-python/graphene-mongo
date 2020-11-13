@@ -205,6 +205,8 @@ class MongoengineConnectionField(ConnectionField):
                     except TypeError:
                         reference_obj = reference_fields[arg_name].document_type(pk=arg)
                     hydrated_references[arg_name] = reference_obj
+                elif arg_name == "id":
+                    hydrated_references["id"] = from_global_id(args.pop("id", None))[1]
             args.update(hydrated_references)
 
         if self._get_queryset:
