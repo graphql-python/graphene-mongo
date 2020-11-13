@@ -26,7 +26,7 @@ from .advanced_types import (
 )
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
-from .utils import get_model_reference_fields, get_node_from_global_id, get_query_fields
+from .utils import get_model_reference_fields, get_query_fields
 
 
 class MongoengineConnectionField(ConnectionField):
