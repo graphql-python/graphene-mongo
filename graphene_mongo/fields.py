@@ -27,7 +27,7 @@ from .advanced_types import (
 )
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
-from .utils import get_model_reference_fields, get_node_from_global_id, get_query_fields, find_skip_and_limit, \
+from .utils import get_model_reference_fields, get_query_fields, find_skip_and_limit, \
     connection_from_iterables
 
 
@@ -279,7 +279,7 @@ class MongoengineConnectionField(ConnectionField):
                     if not info.context:
                         info.context = Context()
                     info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
-            else:
+            elif _root is None:
                 count = self.get_queryset(self.model, info, required_fields, **args).count()
                 if count != 0:
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
