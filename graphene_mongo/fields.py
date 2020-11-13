@@ -200,10 +200,9 @@ class MongoengineConnectionField(ConnectionField):
             reference_fields = get_model_reference_fields(self.model)
             hydrated_references = {}
             for arg_name, arg in args.copy().items():
-                if arg_name in reference_fields and isinstance(arg, str):
-                    reference_obj = get_node_from_global_id(
-                        reference_fields[arg_name], info, args.pop(arg_name)
-                    )
+                if arg_name in reference_fields and not isinstance(arg,
+                                                                   mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
+                    reference_obj = reference_fields[arg_name].document_type(pk=from_global_id(arg)[1])
                     hydrated_references[arg_name] = reference_obj
             args.update(hydrated_references)
 
