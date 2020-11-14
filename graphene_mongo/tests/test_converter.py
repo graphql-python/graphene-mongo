@@ -352,8 +352,12 @@ def test_should_generic_reference_convert_union():
         Reporter._fields["generic_reference"], registry.get_global_registry()
     )
     assert isinstance(generic_reference_field, graphene.Field)
-    assert isinstance(generic_reference_field.type(), graphene.Union)
-    assert generic_reference_field.type()._meta.types == (A, E)
+    if not Reporter._fields["generic_reference"].required:
+        assert isinstance(generic_reference_field.type(), graphene.Union)
+        assert generic_reference_field.type()._meta.types == (A, E)
+    else:
+        assert issubclass(generic_reference_field.type.of_type, graphene.Union)
+        assert generic_reference_field.type.of_type._meta.types == (A, E)
 
 
 def test_should_generic_embedded_document_convert_union():
