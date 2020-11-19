@@ -284,7 +284,7 @@ class MongoengineConnectionField(ConnectionField):
                     if not info.context:
                         info.context = Context()
                     info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
-            elif _root is None:
+            elif _root is None or args:
                 count = self.get_queryset(self.model, info, required_fields, **args).count()
                 if count != 0:
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
@@ -346,6 +346,9 @@ class MongoengineConnectionField(ConnectionField):
                         if arg_name not in self.model._fields_ordered + ('first', 'last', 'before', 'after') + tuple(
                                 self.filter_args.keys()):
                             args_copy.pop(arg_name)
+                            if '.' in arg_name:
+                                operation = list(arg.keys())[0]
+                                args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
                     return self.default_resolver(root, info, required_fields, **args_copy)
                 else:
                     return resolved
