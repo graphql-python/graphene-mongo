@@ -10,6 +10,7 @@ from graphene import Context
 from graphene.types.utils import get_type
 from graphene.utils.str_converters import to_snake_case
 from graphql import ResolveInfo
+from mongoengine.base import get_document
 from promise import Promise
 from graphql_relay import from_global_id
 from graphene.relay import ConnectionField
@@ -177,6 +178,9 @@ class MongoengineConnectionField(ConnectionField):
                     (mongoengine.LazyReferenceField, mongoengine.ReferenceField),
             ):
                 field = convert_mongoengine_field(mongo_field, self.registry)
+            if isinstance(mongo_field, mongoengine.GenericReferenceField):
+                r.update({kv[0]: graphene.ID()})
+                return r
             if callable(getattr(field, "get_type", None)):
                 _type = field.get_type()
                 if _type:
@@ -206,6 +210,11 @@ class MongoengineConnectionField(ConnectionField):
                         reference_obj = reference_fields[arg_name].document_type(pk=from_global_id(arg)[1])
                     except TypeError:
                         reference_obj = reference_fields[arg_name].document_type(pk=arg)
+                    hydrated_references[arg_name] = reference_obj
+                elif arg_name in self.model._fields_ordered and isinstance(getattr(self.model, arg_name),
+                                                                           mongoengine.fields.GenericReferenceField):
+                    reference_obj = get_document(self.registry._registry_string_map[from_global_id(arg)[0]])(
+                        pk=from_global_id(arg)[1])
                     hydrated_references[arg_name] = reference_obj
                 elif arg_name == "id":
                     hydrated_references["id"] = from_global_id(args.pop("id", None))[1]
