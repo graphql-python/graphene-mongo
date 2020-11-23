@@ -4,7 +4,7 @@ import uuid
 
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_snake_case
-from mongoengine.base import get_document
+from mongoengine.base import get_document, LazyReference
 from . import advanced_types
 from .utils import import_single_dispatch, get_field_description, get_query_fields
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -138,10 +138,19 @@ def convert_field_to_list(field, registry=None):
                     to_resolve_models = list()
                     for each in querying_union_types:
                         to_resolve_models.append(registry._registry_string_map[each])
+                    to_resolve_object_ids = list()
                     for each in to_resolve:
-                        if each['_cls'] not in choice_to_resolve:
-                            choice_to_resolve[each['_cls']] = list()
-                        choice_to_resolve[each['_cls']].append(each["_ref"].id)
+                        if isinstance(each, LazyReference):
+                            to_resolve_object_ids.append(each.pk)
+                            model = each.document_type._class_name
+                            if model not in choice_to_resolve:
+                                choice_to_resolve[model] = list()
+                            choice_to_resolve[model].append(each.pk)
+                        else:
+                            to_resolve_object_ids.append(each["_ref"].id)
+                            if each['_cls'] not in choice_to_resolve:
+                                choice_to_resolve[each['_cls']] = list()
+                            choice_to_resolve[each['_cls']].append(each["_ref"].id)
                     pool = ThreadPoolExecutor(5)
                     futures = list()
                     for model, object_id_list in choice_to_resolve.items():
@@ -153,7 +162,6 @@ def convert_field_to_list(field, registry=None):
                     result = list()
                     for x in as_completed(futures):
                         result += x.result()
-                    to_resolve_object_ids = [each["_ref"].id for each in to_resolve]
                     result_object_ids = list()
                     for each in result:
                         result_object_ids.append(each.id)
