@@ -79,7 +79,7 @@ class MongoengineConnectionField(ConnectionField):
     def args(self):
         return to_arguments(
             self._base_args or OrderedDict(),
-            dict(dict(self.field_args, **self.reference_args), **self.filter_args),
+            dict(dict(self.field_args, **self.advance_args), **self.filter_args),
         )
 
     @args.setter
@@ -149,28 +149,31 @@ class MongoengineConnectionField(ConnectionField):
         if self._type._meta.filter_fields:
             for field, filter_collection in self._type._meta.filter_fields.items():
                 for each in filter_collection:
-                    filter_type = getattr(
-                        graphene,
-                        str(self._type._meta.fields[field].type).replace("!", ""),
-                    )
+                    if str(self._type._meta.fields[field].type) == 'PointFieldType':
+                        if each == 'max_distance':
+                            filter_type = graphene.Int
+                        else:
+                            filter_type = PointFieldInputType
+                    else:
+                        filter_type = getattr(
+                            graphene,
+                            str(self._type._meta.fields[field].type).replace("!", ""),
+                        )
                     # handle special cases
                     advanced_filter_types = {
                         "in": graphene.List(filter_type),
                         "nin": graphene.List(filter_type),
                         "all": graphene.List(filter_type),
-                        "max_distance": graphene.Int
                     }
-
                     filter_type = advanced_filter_types.get(each, filter_type)
                     filter_args[field + "__" + each] = graphene.Argument(
                         type=filter_type
                     )
-
         return filter_args
 
     @property
-    def reference_args(self):
-        def get_reference_field(r, kv):
+    def advance_args(self):
+        def get_advance_field(r, kv):
             field = kv[1]
             mongo_field = getattr(self.model, kv[0], None)
             if isinstance(mongo_field, mongoengine.PointField):
@@ -196,7 +199,7 @@ class MongoengineConnectionField(ConnectionField):
 
             return r
 
-        return reduce(get_reference_field, self.fields.items(), {})
+        return reduce(get_advance_field, self.fields.items(), {})
 
     @property
     def fields(self):
