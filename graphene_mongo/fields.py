@@ -113,7 +113,6 @@ class MongoengineConnectionField(ConnectionField):
                     converted.type(),
                     (
                             FileFieldType,
-                            PointFieldType,
                             MultiPolygonFieldType,
                             graphene.Union,
                             PolygonFieldType,
@@ -233,7 +232,6 @@ class MongoengineConnectionField(ConnectionField):
                 args.update(queryset_or_filters)
         if limit is not None:
             if reversed:
-                order_by = ""
                 if self.order_by:
                     order_by = self.order_by + ",-pk"
                 else:
