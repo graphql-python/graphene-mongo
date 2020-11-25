@@ -213,8 +213,8 @@ class MongoengineConnectionField(ConnectionField):
                     reference_obj = get_document(self.registry._registry_string_map[from_global_id(arg)[0]])(
                         pk=from_global_id(arg)[1])
                     hydrated_references[arg_name] = reference_obj
-                elif isinstance(getattr(self.model, arg_name.split('__')[0]),
-                                mongoengine.fields.PointField):
+                elif '__near' in arg_name and isinstance(getattr(self.model, arg_name.split('__')[0]),
+                                                         mongoengine.fields.PointField):
                     location = args.pop(arg_name, None)
                     hydrated_references[arg_name] = location["coordinates"]
                 elif arg_name == "id":
