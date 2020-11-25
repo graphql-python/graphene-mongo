@@ -41,9 +41,9 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # Take care of list of self-reference.
             document_type_obj = field.field.__dict__.get("document_type_obj", None)
             if (
-                document_type_obj == model._class_name
-                or isinstance(document_type_obj, model)
-                or document_type_obj == model
+                    document_type_obj == model._class_name
+                    or isinstance(document_type_obj, model)
+                    or document_type_obj == model
             ):
                 self_referenced[name] = field
                 continue
@@ -67,7 +67,6 @@ def construct_self_referenced_fields(self_referenced, registry):
 
 
 class MongoengineObjectTypeOptions(ObjectTypeOptions):
-
     model = None
     registry = None  # type: Registry
     connection = None
@@ -78,22 +77,22 @@ class MongoengineObjectTypeOptions(ObjectTypeOptions):
 class MongoengineObjectType(ObjectType):
     @classmethod
     def __init_subclass_with_meta__(
-        cls,
-        model=None,
-        registry=None,
-        skip_registry=False,
-        only_fields=(),
-        required_fields=(),
-        exclude_fields=(),
-        filter_fields=None,
-        connection=None,
-        connection_class=None,
-        use_connection=None,
-        connection_field_class=None,
-        interfaces=(),
-        _meta=None,
-        order_by=None,
-        **options
+            cls,
+            model=None,
+            registry=None,
+            skip_registry=False,
+            only_fields=(),
+            required_fields=(),
+            exclude_fields=(),
+            filter_fields=None,
+            connection=None,
+            connection_class=None,
+            use_connection=None,
+            connection_field_class=None,
+            interfaces=(),
+            _meta=None,
+            order_by=None,
+            **options
     ):
 
         assert is_valid_mongoengine_model(model), (

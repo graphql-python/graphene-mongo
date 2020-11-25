@@ -149,10 +149,13 @@ class MongoengineConnectionField(ConnectionField):
         if self._type._meta.filter_fields:
             for field, filter_collection in self._type._meta.filter_fields.items():
                 for each in filter_collection:
-                    filter_type = getattr(
-                        graphene,
-                        str(self._type._meta.fields[field].type).replace("!", ""),
-                    )
+                    if each == 'max_distance' and str(self._type._meta.fields[field].type) == 'PointFieldType':
+                        filter_type = graphene.Int
+                    else:
+                        filter_type = getattr(
+                            graphene,
+                            str(self._type._meta.fields[field].type).replace("!", ""),
+                        )
 
                     # handle special cases
                     advanced_filter_types = {
@@ -175,10 +178,8 @@ class MongoengineConnectionField(ConnectionField):
             mongo_field = getattr(self.model, kv[0], None)
             if isinstance(
                     mongo_field,
-                    (mongoengine.LazyReferenceField, mongoengine.ReferenceField),
+                    (mongoengine.LazyReferenceField, mongoengine.ReferenceField, mongoengine.GenericReferenceField),
             ):
-                field = convert_mongoengine_field(mongo_field, self.registry)
-            if isinstance(mongo_field, mongoengine.GenericReferenceField):
                 r.update({kv[0]: graphene.ID()})
                 return r
             if callable(getattr(field, "get_type", None)):
@@ -216,6 +217,10 @@ class MongoengineConnectionField(ConnectionField):
                     reference_obj = get_document(self.registry._registry_string_map[from_global_id(arg)[0]])(
                         pk=from_global_id(arg)[1])
                     hydrated_references[arg_name] = reference_obj
+                elif '__near' in arg_name and isinstance(getattr(self.model, arg_name.split('__')[0]),
+                                                         mongoengine.fields.PointField):
+                    location = args.pop(arg_name, None)
+                    hydrated_references[arg_name] = location["coordinates"]
                 elif arg_name == "id":
                     hydrated_references["id"] = from_global_id(args.pop("id", None))[1]
             args.update(hydrated_references)
