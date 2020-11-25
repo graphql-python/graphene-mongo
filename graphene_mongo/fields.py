@@ -380,7 +380,7 @@ class MongoengineConnectionField(ConnectionField):
                     elif not isinstance(resolved[0], DBRef):
                         return resolved
                     else:
-                        self.default_resolver(root, info, required_fields, **args_copy)
+                        return self.default_resolver(root, info, required_fields, **args_copy)
                 elif isinstance(resolved, QuerySet):
                     args.update(resolved._query)
                     args_copy = args.copy()
