@@ -24,7 +24,7 @@ from .advanced_types import (
     FileFieldType,
     PointFieldType,
     MultiPolygonFieldType,
-    PolygonFieldType,
+    PolygonFieldType, PointFieldInputType,
 )
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
@@ -113,6 +113,7 @@ class MongoengineConnectionField(ConnectionField):
                     converted.type(),
                     (
                             FileFieldType,
+                            PointFieldType,
                             MultiPolygonFieldType,
                             graphene.Union,
                             PolygonFieldType,
@@ -172,10 +173,16 @@ class MongoengineConnectionField(ConnectionField):
         def get_reference_field(r, kv):
             field = kv[1]
             mongo_field = getattr(self.model, kv[0], None)
+            if isinstance(mongo_field, mongoengine.PointField):
+                r.update({kv[0]: graphene.Argument(PointFieldInputType)})
+                return r
             if isinstance(
                     mongo_field,
                     (mongoengine.LazyReferenceField, mongoengine.ReferenceField, mongoengine.GenericReferenceField),
             ):
+                r.update({kv[0]: graphene.ID()})
+                return r
+            if isinstance(mongo_field, mongoengine.GenericReferenceField):
                 r.update({kv[0]: graphene.ID()})
                 return r
             if callable(getattr(field, "get_type", None)):
@@ -217,6 +224,8 @@ class MongoengineConnectionField(ConnectionField):
                                                          mongoengine.fields.PointField):
                     location = args.pop(arg_name, None)
                     hydrated_references[arg_name] = location["coordinates"]
+                    if (arg_name.split('__')[0] + "__max_distance") not in args:
+                        hydrated_references[arg_name.split('__')[0] + "__max_distance"] = 10000
                 elif arg_name == "id":
                     hydrated_references["id"] = from_global_id(args.pop("id", None))[1]
             args.update(hydrated_references)
@@ -229,6 +238,7 @@ class MongoengineConnectionField(ConnectionField):
                 args.update(queryset_or_filters)
         if limit is not None:
             if reversed:
+                order_by = ""
                 if self.order_by:
                     order_by = self.order_by + ",-pk"
                 else:
