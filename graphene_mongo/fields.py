@@ -360,10 +360,10 @@ class MongoengineConnectionField(ConnectionField):
         for field in get_query_fields(info):
             if to_snake_case(field) in self.model._fields_ordered:
                 required_fields.append(to_snake_case(field))
+        args_copy = args.copy()
         if not bool(args) or not is_partial:
             if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
                                                                           mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
-                args_copy = args.copy()
                 for arg_name, arg in args.copy().items():
                     if arg_name not in self.model._fields_ordered + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
@@ -379,6 +379,8 @@ class MongoengineConnectionField(ConnectionField):
                         return resolved
                     elif not isinstance(resolved[0], DBRef):
                         return resolved
+                    else:
+                        self.default_resolver(root, info, required_fields, **args_copy)
                 elif isinstance(resolved, QuerySet):
                     args.update(resolved._query)
                     args_copy = args.copy()
