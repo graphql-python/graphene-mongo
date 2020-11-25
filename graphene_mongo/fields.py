@@ -148,19 +148,16 @@ class MongoengineConnectionField(ConnectionField):
         if self._type._meta.filter_fields:
             for field, filter_collection in self._type._meta.filter_fields.items():
                 for each in filter_collection:
-                    if each == 'max_distance' and str(self._type._meta.fields[field].type) == 'PointFieldType':
-                        filter_type = graphene.Int
-                    else:
-                        filter_type = getattr(
-                            graphene,
-                            str(self._type._meta.fields[field].type).replace("!", ""),
-                        )
-
+                    filter_type = getattr(
+                        graphene,
+                        str(self._type._meta.fields[field].type).replace("!", ""),
+                    )
                     # handle special cases
                     advanced_filter_types = {
                         "in": graphene.List(filter_type),
                         "nin": graphene.List(filter_type),
                         "all": graphene.List(filter_type),
+                        "max_distance": graphene.Int
                     }
 
                     filter_type = advanced_filter_types.get(each, filter_type)
