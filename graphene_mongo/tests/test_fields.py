@@ -9,7 +9,7 @@ def test_article_field_args():
     assert set(field.field_args.keys()) == field_args
 
     reference_args = {"editor", "reporter"}
-    assert set(field.reference_args.keys()) == reference_args
+    assert reference_args in list(set(field.advance_args.keys()))
 
     default_args = {"after", "last", "first", "before"}
     args = field_args | reference_args | default_args
