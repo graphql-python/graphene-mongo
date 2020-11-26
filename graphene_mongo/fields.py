@@ -388,6 +388,8 @@ class MongoengineConnectionField(ConnectionField):
                         if arg_name not in self.model._fields_ordered + ('first', 'last', 'before', 'after') + tuple(
                                 self.filter_args.keys()):
                             args_copy.pop(arg_name)
+                            if arg_name == '_id' and isinstance(arg, dict):
+                                args_copy['pk__in'] = arg['$in']
                             if '.' in arg_name:
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
