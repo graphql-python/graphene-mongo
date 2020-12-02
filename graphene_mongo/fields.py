@@ -228,7 +228,6 @@ class MongoengineConnectionField(ConnectionField):
                 args.update(queryset_or_filters)
         if limit is not None:
             if reversed:
-                order_by = ""
                 if self.order_by:
                     order_by = self.order_by + ",-pk"
                 else:
@@ -240,7 +239,6 @@ class MongoengineConnectionField(ConnectionField):
                     skip if skip else 0).limit(limit)
         elif skip is not None:
             if reversed:
-                order_by = ""
                 if self.order_by:
                     order_by = self.order_by + ",-pk"
                 else:
@@ -256,10 +254,13 @@ class MongoengineConnectionField(ConnectionField):
         args = args or {}
         if _root is not None:
             field_name = to_snake_case(info.field_name)
-            if field_name in _root._fields_ordered and not (isinstance(_root._fields[field_name].field,
-                                                                       mongoengine.EmbeddedDocumentField) or
-                                                            isinstance(_root._fields[field_name].field,
-                                                                       mongoengine.GenericEmbeddedDocumentField)):
+            if not hasattr(_root, "_fields_ordered"):
+                if getattr(_root, field_name, []) is not None:
+                    args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
+            elif field_name in _root._fields_ordered and not (isinstance(_root._fields[field_name].field,
+                                                                         mongoengine.EmbeddedDocumentField) or
+                                                              isinstance(_root._fields[field_name].field,
+                                                                         mongoengine.GenericEmbeddedDocumentField)):
                 if getattr(_root, field_name, []) is not None:
                     args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
