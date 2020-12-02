@@ -257,7 +257,7 @@ def convert_field_to_union(field, registry=None):
                 return document.objects().no_dereference().only(*list(
                     set(list(_type._meta.required_fields) + queried_fields))).get(
                     pk=de_referenced["_ref"].id)
-            return document
+            return document()
         return None
 
     def lazy_reference_resolver(root, *args, **kwargs):
