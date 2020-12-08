@@ -84,22 +84,26 @@ def convert_field_to_jsonstring(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.PointField)
 def convert_point_to_field(field, registry=None):
-    return graphene.Field(advanced_types.PointFieldType, required=field.required)
+    return graphene.Field(advanced_types.PointFieldType, description=get_field_description(field, registry),
+                          required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.PolygonField)
 def convert_polygon_to_field(field, registry=None):
-    return graphene.Field(advanced_types.PolygonFieldType, required=field.required)
+    return graphene.Field(advanced_types.PolygonFieldType, description=get_field_description(field, registry),
+                          required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.MultiPolygonField)
-def convert_multipolygon_to_field(field, register=None):
-    return graphene.Field(advanced_types.MultiPolygonFieldType, required=field.required)
+def convert_multipolygon_to_field(field, registry=None):
+    return graphene.Field(advanced_types.MultiPolygonFieldType, description=get_field_description(field, registry),
+                          required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.FileField)
 def convert_file_to_field(field, registry=None):
-    return graphene.Field(advanced_types.FileFieldType, required=field.required)
+    return graphene.Field(advanced_types.FileFieldType, description=get_field_description(field, registry),
+                          required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
