@@ -391,6 +391,8 @@ class MongoengineConnectionField(ConnectionField):
                             args_copy.pop(arg_name)
                             if arg_name == '_id' and isinstance(arg, dict):
                                 args_copy['pk__in'] = arg['$in']
+                            elif "$ne" in arg:
+                                args_copy['pk__ne'] = arg['$ne']
                             if '.' in arg_name:
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
