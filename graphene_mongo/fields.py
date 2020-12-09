@@ -213,8 +213,12 @@ class MongoengineConnectionField(ConnectionField):
                     hydrated_references[arg_name] = reference_obj
                 elif arg_name in self.model._fields_ordered and isinstance(getattr(self.model, arg_name),
                                                                            mongoengine.fields.GenericReferenceField):
-                    reference_obj = get_document(self.registry._registry_string_map[from_global_id(arg)[0]])(
-                        pk=from_global_id(arg)[1])
+                    try:
+                        reference_obj = get_document(self.registry._registry_string_map[from_global_id(arg)[0]])(
+                            pk=from_global_id(arg)[1])
+                    except TypeError:
+                        reference_obj = get_document(arg["_cls"])(
+                            pk=arg["_ref"].id)
                     hydrated_references[arg_name] = reference_obj
                 elif arg_name == "id":
                     hydrated_references["id"] = from_global_id(args.pop("id", None))[1]
