@@ -400,6 +400,11 @@ class MongoengineConnectionField(ConnectionField):
                             if '.' in arg_name:
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
+                        else:
+                            if isinstance(arg, dict) and ('$lte' in arg or '$gte' in arg):
+                                operation = list(arg.keys())[0]
+                                args_copy[arg_name + operation.replace('$', '__')] = arg[operation]
+                                del args_copy[arg_name]
                     return self.default_resolver(root, info, required_fields, **args_copy)
                 else:
                     return resolved
