@@ -391,9 +391,16 @@ class MongoengineConnectionField(ConnectionField):
                             args_copy.pop(arg_name)
                             if arg_name == '_id' and isinstance(arg, dict):
                                 args_copy['pk__in'] = arg['$in']
+                            elif "$ne" in arg:
+                                args_copy['pk__ne'] = arg['$ne']
                             if '.' in arg_name:
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
+                        else:
+                            if isinstance(arg, dict) and ('$lte' in arg or '$gte' in arg):
+                                operation = list(arg.keys())[0]
+                                args_copy[arg_name + operation.replace('$', '__')] = arg[operation]
+                                del args_copy[arg_name]
                     return self.default_resolver(root, info, required_fields, **args_copy)
                 else:
                     return resolved
