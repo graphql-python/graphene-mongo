@@ -396,7 +396,7 @@ class MongoengineConnectionField(ConnectionField):
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
                         else:
-                            operations = ["$lte", "$gte", "$ne"]
+                            operations = ["$lte", "$gte", "$ne", "$in"]
                             if isinstance(arg, dict) and any(op in arg for op in operations):
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name + operation.replace('$', '__')] = arg[operation]
