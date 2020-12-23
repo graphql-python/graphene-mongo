@@ -190,6 +190,7 @@ def create_graphene_generic_class(object_type, option_type):
                     )
                     cls._meta.fields.update(mongoengine_fields)
                     registry.register(cls)
+
         @classmethod
         def rescan_fields(cls):
             """Attempts to rescan fields and will insert any not converted initially"""
