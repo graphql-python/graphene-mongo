@@ -9,6 +9,7 @@ from graphene.types.interface import Interface, InterfaceOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
 
+from graphene_mongo import MongoengineConnectionField
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry, get_inputs_registry
 from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields
@@ -128,22 +129,29 @@ def create_graphene_generic_class(object_type, option_type):
                 use_connection = any(
                     (issubclass(interface, Node) for interface in interfaces)
                 )
-                mongoengine_fields = yank_fields_from_attrs(
-                    converted_fields, _as=graphene.Field
+
+            if use_connection and not connection:
+                # We create the connection automatically
+                if not connection_class:
+                    connection_class = Connection
+
+                connection = connection_class.create_type(
+                    "{}Connection".format(cls.__name__), node=cls
                 )
-                if use_connection is None and interfaces:
-                    use_connection = any(
-                        (issubclass(interface, Node) for interface in interfaces)
-                    )
 
-                if use_connection and not connection:
-                    # We create the connection automatically
-                    if not connection_class:
-                        connection_class = Connection
+            if connection is not None:
+                assert issubclass(connection, Connection), (
+                    "The attribute connection in {}.Meta must be of type Connection. "
+                    'Received "{}" instead.'
+                ).format(cls.__name__, type(connection))
 
-                    connection = connection_class.create_type(
-                        "{}Connection".format(cls.__name__), node=cls
-                    )
+            if connection_field_class is not None:
+                assert issubclass(connection_field_class, graphene.ConnectionField), (
+                    "The attribute connection_field_class in {}.Meta must be of type graphene.ConnectionField. "
+                    'Received "{}" instead.'
+                ).format(cls.__name__, type(connection_field_class))
+            else:
+                connection_field_class = MongoengineConnectionField
 
             if _meta:
                 assert isinstance(_meta, MongoengineGenericObjectTypeOptions), (
@@ -176,7 +184,12 @@ def create_graphene_generic_class(object_type, option_type):
                 converted_fields = construct_self_referenced_fields(
                     self_referenced, registry
                 )
-
+                if converted_fields:
+                    mongoengine_fields = yank_fields_from_attrs(
+                        converted_fields, _as=graphene.Field
+                    )
+                    cls._meta.fields.update(mongoengine_fields)
+                    registry.register(cls)
         @classmethod
         def rescan_fields(cls):
             """Attempts to rescan fields and will insert any not converted initially"""
