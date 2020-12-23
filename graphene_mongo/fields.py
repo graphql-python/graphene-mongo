@@ -245,10 +245,12 @@ class MongoengineConnectionField(ConnectionField):
 
     def default_resolver(self, _root, info, required_fields=list(), **args):
         args = args or {}
-
         if _root is not None:
             field_name = to_snake_case(info.field_name)
-            if field_name in _root._fields_ordered:
+            if field_name in _root._fields_ordered and not (isinstance(_root._fields[field_name].field,
+                                                                       mongoengine.EmbeddedDocumentField) or
+                                                            isinstance(_root._fields[field_name].field,
+                                                                       mongoengine.GenericEmbeddedDocumentField)):
                 if getattr(_root, field_name, []) is not None:
                     args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
@@ -262,11 +264,11 @@ class MongoengineConnectionField(ConnectionField):
         count = 0
         limit = None
         reverse = False
+        first = args.pop("first", None)
+        after = cursor_to_offset(args.pop("after", None))
+        last = args.pop("last", None)
+        before = cursor_to_offset(args.pop("before", None))
         if callable(getattr(self.model, "objects", None)):
-            first = args.pop("first", None)
-            after = cursor_to_offset(args.pop("after", None))
-            last = args.pop("last", None)
-            before = cursor_to_offset(args.pop("before", None))
             if "pk__in" in args and args["pk__in"]:
                 count = len(args["pk__in"])
                 skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
@@ -295,6 +297,22 @@ class MongoengineConnectionField(ConnectionField):
                         if not info.context:
                             info.context = Context()
                         info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
+
+        elif _root is not None:
+            field_name = to_snake_case(info.field_name)
+            items = getattr(_root, field_name, [])
+            count = len(items)
+            skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
+                                                       count=count)
+            if limit:
+                if reverse:
+                    items = items[::-1][skip:skip + limit]
+                else:
+                    items = items[skip:skip + limit]
+            elif skip:
+                items = items[skip:]
+            iterables = items
+            list_length = len(iterables)
         has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
         has_previous_page = True if skip else False
         if reverse:
