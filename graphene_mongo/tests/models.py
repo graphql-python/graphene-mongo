@@ -6,11 +6,12 @@ gridfs.enable_gridfs_integration()
 mongoengine.connect(
     "graphene-mongo-test", host="mongomock://localhost", alias="default"
 )
+
+
 # mongoengine.connect('graphene-mongo-test', host='mongodb://localhost/graphene-mongo-dev')
 
 
 class Publisher(mongoengine.Document):
-
     meta = {"collection": "test_publisher"}
     name = mongoengine.StringField()
 
@@ -42,7 +43,6 @@ class Editor(mongoengine.Document):
 
 
 class Article(mongoengine.Document):
-
     meta = {"collection": "test_article"}
     headline = mongoengine.StringField(required=True, help_text="The article headline.")
     pub_date = mongoengine.DateTimeField(
@@ -58,7 +58,6 @@ class Article(mongoengine.Document):
 
 
 class EmbeddedArticle(mongoengine.EmbeddedDocument):
-
     meta = {"collection": "test_embedded_article"}
     headline = mongoengine.StringField(required=True)
     pub_date = mongoengine.DateTimeField(default=datetime.now)
@@ -72,7 +71,6 @@ class EmbeddedFoo(mongoengine.EmbeddedDocument):
 
 
 class Reporter(mongoengine.Document):
-
     meta = {"collection": "test_reporter"}
     id = mongoengine.StringField(primary_key=True)
     first_name = mongoengine.StringField(required=True)
@@ -84,7 +82,7 @@ class Reporter(mongoengine.Document):
         mongoengine.EmbeddedDocumentField(EmbeddedArticle)
     )
     embedded_list_articles = mongoengine.EmbeddedDocumentListField(EmbeddedArticle)
-    generic_reference = mongoengine.GenericReferenceField(choices=[Article, Editor])
+    generic_reference = mongoengine.GenericReferenceField(choices=[Article, Editor], required=True)
     generic_embedded_document = mongoengine.GenericEmbeddedDocumentField(
         choices=[EmbeddedArticle, EmbeddedFoo]
     )
@@ -94,7 +92,6 @@ class Reporter(mongoengine.Document):
 
 
 class Player(mongoengine.Document):
-
     meta = {"collection": "test_player"}
     first_name = mongoengine.StringField(required=True)
     last_name = mongoengine.StringField(required=True)
@@ -105,14 +102,12 @@ class Player(mongoengine.Document):
 
 
 class Parent(mongoengine.Document):
-
     meta = {"collection": "test_parent", "allow_inheritance": True}
     bar = mongoengine.StringField()
     loc = mongoengine.MultiPolygonField()
 
 
 class CellTower(mongoengine.Document):
-
     meta = {"collection": "test_cell_tower"}
     code = mongoengine.StringField()
     base = mongoengine.PolygonField()
@@ -134,7 +129,6 @@ class AnotherChild(Parent):
 
 
 class ProfessorMetadata(mongoengine.EmbeddedDocument):
-
     meta = {"collection": "test_professor_metadata"}
     id = mongoengine.StringField(primary_key=False)
     first_name = mongoengine.StringField()
@@ -143,14 +137,12 @@ class ProfessorMetadata(mongoengine.EmbeddedDocument):
 
 
 class ProfessorVector(mongoengine.Document):
-
     meta = {"collection": "test_professor_vector"}
     vec = mongoengine.ListField(mongoengine.FloatField())
     metadata = mongoengine.EmbeddedDocumentField(ProfessorMetadata)
 
 
 class ParentWithRelationship(mongoengine.Document):
-
     meta = {"collection": "test_parent_reference"}
     before_child = mongoengine.ListField(
         mongoengine.ReferenceField("ChildRegisteredBefore")
@@ -162,14 +154,12 @@ class ParentWithRelationship(mongoengine.Document):
 
 
 class ChildRegisteredBefore(mongoengine.Document):
-
     meta = {"collection": "test_child_before_reference"}
     parent = mongoengine.ReferenceField(ParentWithRelationship)
     name = mongoengine.StringField()
 
 
 class ChildRegisteredAfter(mongoengine.Document):
-
     meta = {"collection": "test_child_after_reference"}
     parent = mongoengine.ReferenceField(ParentWithRelationship)
     name = mongoengine.StringField()

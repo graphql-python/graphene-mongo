@@ -34,7 +34,7 @@ def construct_fields(model, registry, only_fields, exclude_fields, non_required_
         is_not_in_only = only_fields and name not in only_fields
         is_excluded = name in exclude_fields
         if is_not_in_only or is_excluded:
-            # We skip this field if we specify only_fields and is not
+            # We skip this field if we specify required_fields and is not
             # in there. Or when we exclude this field in exclude_fields
             continue
         if isinstance(field, mongoengine.ListField):
@@ -71,56 +71,57 @@ def construct_self_referenced_fields(self_referenced, registry):
     return fields
 
 
-def create_graphene_generic_class(object_type, option_type):
+class MongoengineObjectTypeOptions(ObjectTypeOptions):
 
-    class MongoengineGenericObjectTypeOptions(option_type):
+    model = None
+    registry = None  # type: Registry
+    connection = None
+    filter_fields = ()
+    order_by = None
 
-        model = None
-        registry = None  # type: Registry
-        connection = None
-        filter_fields = ()
-        non_required_fields = ()
-        order_by = None
 
-    class GrapheneMongoengineGenericType(object_type):
-        @classmethod
-        def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            registry=None,
-            skip_registry=False,
-            only_fields=(),
-            exclude_fields=(),
-            non_required_fields=(),
-            filter_fields=None,
-            connection=None,
-            connection_class=None,
-            use_connection=None,
-            connection_field_class=None,
-            interfaces=(),
-            _meta=None,
-            order_by=None,
-            **options
-        ):
+class MongoengineObjectType(ObjectType):
+    @classmethod
+    def __init_subclass_with_meta__(
+        cls,
+        model=None,
+        registry=None,
+        skip_registry=False,
+        only_fields=(),
+        required_fields=(),
+        exclude_fields=(),
+        filter_fields=None,
+        connection=None,
+        connection_class=None,
+        use_connection=None,
+        connection_field_class=None,
+        interfaces=(),
+        _meta=None,
+        order_by=None,
+        **options
+    ):
 
-            assert is_valid_mongoengine_model(model), (
-                "The attribute model in {}.Meta must be a valid Mongoengine Model. "
-                'Received "{}" instead.'
-            ).format(cls.__name__, type(model))
+        assert is_valid_mongoengine_model(model), (
+            "The attribute model in {}.Meta must be a valid Mongoengine Model. "
+            'Received "{}" instead.'
+        ).format(cls.__name__, type(model))
 
-            if not registry:
-                # input objects shall be registred in a separated registry
-                if issubclass(cls, InputObjectType):
-                    registry = get_inputs_registry()
-                else:
-                    registry = get_global_registry()
+        if not registry:
+            registry = get_global_registry()
 
-            assert isinstance(registry, Registry), (
-                "The attribute registry in {}.Meta needs to be an instance of "
-                'Registry({}), received "{}".'
-            ).format(object_type, cls.__name__, registry)
-            converted_fields, self_referenced = construct_fields(
-                model, registry, only_fields, exclude_fields, non_required_fields
+        assert isinstance(registry, Registry), (
+            "The attribute registry in {}.Meta needs to be an instance of "
+            'Registry, received "{}".'
+        ).format(cls.__name__, registry)
+        converted_fields, self_referenced = construct_fields(
+            model, registry, only_fields, exclude_fields
+        )
+        mongoengine_fields = yank_fields_from_attrs(
+            converted_fields, _as=graphene.Field
+        )
+        if use_connection is None and interfaces:
+            use_connection = any(
+                (issubclass(interface, Node) for interface in interfaces)
             )
             mongoengine_fields = yank_fields_from_attrs(
                 converted_fields, _as=graphene.Field
@@ -139,42 +140,35 @@ def create_graphene_generic_class(object_type, option_type):
                     "{}Connection".format(cls.__name__), node=cls
                 )
 
-            if connection is not None:
-                assert issubclass(connection, Connection), (
-                    "The attribute connection in {}.Meta must be of type Connection. "
-                    'Received "{}" instead.'
-                ).format(cls.__name__, type(connection))
+        if _meta:
+            assert isinstance(_meta, MongoengineObjectTypeOptions), (
+                "_meta must be an instance of MongoengineObjectTypeOptions, "
+                "received {}"
+            ).format(_meta.__class__)
+        else:
+            _meta = MongoengineObjectTypeOptions(cls)
 
-            if connection_field_class is not None:
-                assert issubclass(connection_field_class, graphene.ConnectionField), (
-                    "The attribute connection_field_class in {}.Meta must be of type graphene.ConnectionField. "
-                    'Received "{}" instead.'
-                ).format(cls.__name__, type(connection_field_class))
-            else:
-                connection_field_class = MongoengineConnectionField
+        _meta.model = model
+        _meta.registry = registry
+        _meta.fields = mongoengine_fields
+        _meta.filter_fields = filter_fields
+        _meta.connection = connection
+        _meta.connection_field_class = connection_field_class
+        # Save them for later
+        _meta.only_fields = only_fields
+        _meta.required_fields = required_fields
+        _meta.exclude_fields = exclude_fields
+        _meta.order_by = order_by
 
-            if _meta:
-                assert isinstance(_meta, MongoengineGenericObjectTypeOptions), (
-                    "_meta must be an instance of MongoengineGenericObjectTypeOptions, "
-                    "received {}"
-                ).format(_meta.__class__)
-            else:
-                _meta = MongoengineGenericObjectTypeOptions(option_type)
+        super(MongoengineObjectType, cls).__init_subclass_with_meta__(
+            _meta=_meta, interfaces=interfaces, **options
+        )
 
-            _meta.model = model
-            _meta.registry = registry
-            _meta.fields = mongoengine_fields
-            _meta.filter_fields = filter_fields
-            _meta.connection = connection
-            _meta.connection_field_class = connection_field_class
-            # Save them for later
-            _meta.only_fields = only_fields
-            _meta.exclude_fields = exclude_fields
-            _meta.non_required_fields = non_required_fields
-            _meta.order_by = order_by
-
-            super(GrapheneMongoengineGenericType, cls).__init_subclass_with_meta__(
-                _meta=_meta, interfaces=interfaces, **options
+        if not skip_registry:
+            registry.register(cls)
+            # Notes: Take care list of self-reference fields.
+            converted_fields = construct_self_referenced_fields(
+                self_referenced, registry
             )
 
             if not skip_registry:
@@ -206,43 +200,49 @@ def create_graphene_generic_class(object_type, option_type):
                 converted_fields, _as=graphene.Field
             )
 
-            # The initial scan should take precedence
-            for field in mongoengine_fields:
-                if field not in cls._meta.fields:
-                    cls._meta.fields.update({field: mongoengine_fields[field]})
-            # Self-referenced fields can't change between scans!
+    @classmethod
+    def rescan_fields(cls):
+        """Attempts to rescan fields and will insert any not converted initially"""
 
-        @classmethod
-        def is_type_of(cls, root, info):
-            if isinstance(root, cls):
-                return True
-            # XXX: Take care FileField
-            if isinstance(root, mongoengine.GridFSProxy):
-                return True
-            if not is_valid_mongoengine_model(type(root)):
-                raise Exception(('Received incompatible instance "{}".').format(root))
-            return isinstance(root, cls._meta.model)
+        converted_fields, self_referenced = construct_fields(
+            cls._meta.model,
+            cls._meta.registry,
+            cls._meta.only_fields,
+            cls._meta.exclude_fields,
+        )
 
-        @classmethod
-        def get_node(cls, info, id):
-            only_fields = list()
-            for field in cls._meta.only_fields:
-                if field in cls._meta.model._fields_ordered:
-                    only_fields.append(field)
-            for field in get_query_fields(info):
-                if to_snake_case(field) in cls._meta.model._fields_ordered:
-                    only_fields.append(to_snake_case(field))
-            only_fields = list(set(only_fields))
-            return cls._meta.model.objects.no_dereference().only(*only_fields).get(pk=id)
+        mongoengine_fields = yank_fields_from_attrs(
+            converted_fields, _as=graphene.Field
+        )
 
-        def resolve_id(self, info):
-            return str(self.id)
+        # The initial scan should take precedence
+        for field in mongoengine_fields:
+            if field not in cls._meta.fields:
+                cls._meta.fields.update({field: mongoengine_fields[field]})
+        # Self-referenced fields can't change between scans!
 
-    return GrapheneMongoengineGenericType, MongoengineGenericObjectTypeOptions
+    @classmethod
+    def is_type_of(cls, root, info):
+        if isinstance(root, cls):
+            return True
+        # XXX: Take care FileField
+        if isinstance(root, mongoengine.GridFSProxy):
+            return True
+        if not is_valid_mongoengine_model(type(root)):
+            raise Exception(('Received incompatible instance "{}".').format(root))
+        return isinstance(root, cls._meta.model)
 
+    @classmethod
+    def get_node(cls, info, id):
+        required_fields = list()
+        for field in cls._meta.required_fields:
+            if field in cls._meta.model._fields_ordered:
+                required_fields.append(field)
+        for field in get_query_fields(info):
+            if to_snake_case(field) in cls._meta.model._fields_ordered:
+                required_fields.append(to_snake_case(field))
+        required_fields = list(set(required_fields))
+        return cls._meta.model.objects.no_dereference().only(*required_fields).get(pk=id)
 
-MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(ObjectType, ObjectTypeOptions)
-MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(Interface, InterfaceOptions)
-MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(InputObjectType, InputObjectTypeOptions)
-
-GrapheneMongoengineObjectTypes = (MongoengineObjectType, MongoengineInputType, MongoengineInterfaceType)
+    def resolve_id(self, info):
+        return str(self.id)
