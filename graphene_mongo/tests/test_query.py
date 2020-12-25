@@ -262,6 +262,96 @@ def test_should_query_child(fixtures):
     assert result.data == expected
 
 
+def test_should_query_other_childs(fixtures):
+    class Query(graphene.ObjectType):
+
+        children = graphene.List(types.AnotherChildType)
+
+        def resolve_children(self, *args, **kwargs):
+            return list(models.AnotherChild.objects.all())
+
+    query = """
+        query Query {
+            children {
+                bar,
+                qux,
+                loc {
+                     type,
+                     coordinates
+                }
+            }
+        }
+    """
+    expected = {
+        "children": [
+            {"bar": "BAR", "qux": "QUX", "loc": None},
+            {
+                "bar": "bar",
+                "qux": "qux",
+                "loc": {"type": "Point", "coordinates": [20, 10]},
+            },
+        ]
+    }
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_query_all_childs(fixtures):
+    class Query(graphene.ObjectType):
+        children = graphene.List(types.ChildUnionType)
+
+        def resolve_children(self, *args, **kwargs):
+            return list(models.Parent.objects.all())
+
+    query = """
+        query Query {
+            children {
+                ... on ParentInterface {
+                    bar
+                }
+                ... on ChildType{
+                    baz
+                    loc {
+                        type,
+                        coordinates
+                    }
+                }
+                ... on AnotherChildType {
+                    qux
+                    loc {
+                        type,
+                        coordinates
+                    }
+                }
+            }
+        }
+    """
+    expected = {
+        "children": [
+            {"bar": "BAR", "baz": "BAZ", "loc": None},
+            {
+                "bar": "bar",
+                "baz": "baz",
+                "loc": {"type": "Point", "coordinates": [10.0, 20.0]},
+            },
+            {"bar": "BAR", "qux": "QUX", "loc": None},
+            {
+                "bar": "bar",
+                "qux": "qux",
+                "loc": {"type": "Point", "coordinates":  [20, 10]},
+            },
+        ]
+    }
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
 def test_should_query_cell_tower(fixtures):
     class Query(graphene.ObjectType):
 
