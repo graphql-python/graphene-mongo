@@ -305,8 +305,8 @@ def test_should_description_convert_common_metadata():
         Article._fields["pub_date"], A._meta.registry
     )
     assert (
-        pubDate_field.kwargs["description"]
-        == "Publication Date\nThe date of first press."
+            pubDate_field.kwargs["description"]
+            == "Publication Date\nThe date of first press."
     )
 
     firstName_field = convert_mongoengine_field(
