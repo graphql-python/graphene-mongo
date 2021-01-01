@@ -232,7 +232,6 @@ class MongoengineConnectionField(ConnectionField):
                 args.update(queryset_or_filters)
         if limit is not None:
             if reversed:
-                order_by = ""
                 if self.order_by:
                     order_by = self.order_by + ",-pk"
                 else:
@@ -244,7 +243,6 @@ class MongoengineConnectionField(ConnectionField):
                     skip if skip else 0).limit(limit)
         elif skip is not None:
             if reversed:
-                order_by = ""
                 if self.order_by:
                     order_by = self.order_by + ",-pk"
                 else:
@@ -260,10 +258,13 @@ class MongoengineConnectionField(ConnectionField):
         args = args or {}
         if _root is not None:
             field_name = to_snake_case(info.field_name)
-            if field_name in _root._fields_ordered and not (isinstance(_root._fields[field_name].field,
-                                                                       mongoengine.EmbeddedDocumentField) or
-                                                            isinstance(_root._fields[field_name].field,
-                                                                       mongoengine.GenericEmbeddedDocumentField)):
+            if not hasattr(_root, "_fields_ordered"):
+                if getattr(_root, field_name, []) is not None:
+                    args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
+            elif field_name in _root._fields_ordered and not (isinstance(_root._fields[field_name].field,
+                                                                         mongoengine.EmbeddedDocumentField) or
+                                                              isinstance(_root._fields[field_name].field,
+                                                                         mongoengine.GenericEmbeddedDocumentField)):
                 if getattr(_root, field_name, []) is not None:
                     args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
@@ -351,10 +352,10 @@ class MongoengineConnectionField(ConnectionField):
         for field in get_query_fields(info):
             if to_snake_case(field) in self.model._fields_ordered:
                 required_fields.append(to_snake_case(field))
+        args_copy = args.copy()
         if not bool(args) or not is_partial:
             if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
                                                                           mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
-                args_copy = args.copy()
                 for arg_name, arg in args.copy().items():
                     if arg_name not in self.model._fields_ordered + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
@@ -370,6 +371,8 @@ class MongoengineConnectionField(ConnectionField):
                         return resolved
                     elif not isinstance(resolved[0], DBRef):
                         return resolved
+                    else:
+                        return self.default_resolver(root, info, required_fields, **args_copy)
                 elif isinstance(resolved, QuerySet):
                     args.update(resolved._query)
                     args_copy = args.copy()
@@ -377,6 +380,8 @@ class MongoengineConnectionField(ConnectionField):
                         if arg_name not in self.model._fields_ordered + ('first', 'last', 'before', 'after') + tuple(
                                 self.filter_args.keys()):
                             args_copy.pop(arg_name)
+                            if arg_name == '_id' and isinstance(arg, dict):
+                                args_copy['pk__in'] = arg['$in']
                             if '.' in arg_name:
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
