@@ -44,12 +44,12 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def type(self):
-        from .types import MongoengineObjectType
+        from .types import GrapheneMongoengineObjectTypes
 
         _type = super(ConnectionField, self).type
         assert issubclass(
-            _type, MongoengineObjectType
-        ), "MongoengineConnectionField only accepts MongoengineObjectType types"
+            _type, GrapheneMongoengineObjectTypes
+        ), "MongoengineConnectionField only accepts Mongoengine object types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
@@ -220,8 +220,12 @@ class MongoengineConnectionField(ConnectionField):
                     hydrated_references[arg_name] = reference_obj
                 elif arg_name in self.model._fields_ordered and isinstance(getattr(self.model, arg_name),
                                                                            mongoengine.fields.GenericReferenceField):
-                    reference_obj = get_document(self.registry._registry_string_map[from_global_id(arg)[0]])(
-                        pk=from_global_id(arg)[1])
+                    try:
+                        reference_obj = get_document(self.registry._registry_string_map[from_global_id(arg)[0]])(
+                            pk=from_global_id(arg)[1])
+                    except TypeError:
+                        reference_obj = get_document(arg["_cls"])(
+                            pk=arg["_ref"].id)
                     hydrated_references[arg_name] = reference_obj
                 elif '__near' in arg_name and isinstance(getattr(self.model, arg_name.split('__')[0]),
                                                          mongoengine.fields.PointField):

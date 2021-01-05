@@ -455,7 +455,6 @@ def test_should_filter_by_list_contains(fixtures):
         }
     }
     schema = graphene.Schema(query=Query)
-    print(schema)
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
