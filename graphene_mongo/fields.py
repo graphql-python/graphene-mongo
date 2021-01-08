@@ -24,7 +24,7 @@ from .advanced_types import (
     FileFieldType,
     PointFieldType,
     MultiPolygonFieldType,
-    PolygonFieldType,
+    PolygonFieldType, PointFieldInputType,
 )
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
@@ -79,7 +79,7 @@ class MongoengineConnectionField(ConnectionField):
     def args(self):
         return to_arguments(
             self._base_args or OrderedDict(),
-            dict(dict(self.field_args, **self.reference_args), **self.filter_args),
+            dict(dict(self.field_args, **self.advance_args), **self.filter_args),
         )
 
     @args.setter
@@ -149,35 +149,42 @@ class MongoengineConnectionField(ConnectionField):
         if self._type._meta.filter_fields:
             for field, filter_collection in self._type._meta.filter_fields.items():
                 for each in filter_collection:
-                    filter_type = getattr(
-                        graphene,
-                        str(self._type._meta.fields[field].type).replace("!", ""),
-                    )
-
+                    if str(self._type._meta.fields[field].type) == 'PointFieldType':
+                        if each == 'max_distance':
+                            filter_type = graphene.Int
+                        else:
+                            filter_type = PointFieldInputType
+                    else:
+                        filter_type = getattr(
+                            graphene,
+                            str(self._type._meta.fields[field].type).replace("!", ""),
+                        )
                     # handle special cases
                     advanced_filter_types = {
                         "in": graphene.List(filter_type),
                         "nin": graphene.List(filter_type),
                         "all": graphene.List(filter_type),
                     }
-
                     filter_type = advanced_filter_types.get(each, filter_type)
                     filter_args[field + "__" + each] = graphene.Argument(
                         type=filter_type
                     )
-
         return filter_args
 
     @property
-    def reference_args(self):
-        def get_reference_field(r, kv):
+    def advance_args(self):
+        def get_advance_field(r, kv):
             field = kv[1]
             mongo_field = getattr(self.model, kv[0], None)
+            if isinstance(mongo_field, mongoengine.PointField):
+                r.update({kv[0]: graphene.Argument(PointFieldInputType)})
+                return r
             if isinstance(
                     mongo_field,
-                    (mongoengine.LazyReferenceField, mongoengine.ReferenceField),
+                    (mongoengine.LazyReferenceField, mongoengine.ReferenceField, mongoengine.GenericReferenceField),
             ):
-                field = convert_mongoengine_field(mongo_field, self.registry)
+                r.update({kv[0]: graphene.ID()})
+                return r
             if isinstance(mongo_field, mongoengine.GenericReferenceField):
                 r.update({kv[0]: graphene.ID()})
                 return r
@@ -192,7 +199,7 @@ class MongoengineConnectionField(ConnectionField):
 
             return r
 
-        return reduce(get_reference_field, self.fields.items(), {})
+        return reduce(get_advance_field, self.fields.items(), {})
 
     @property
     def fields(self):
@@ -220,6 +227,12 @@ class MongoengineConnectionField(ConnectionField):
                         reference_obj = get_document(arg["_cls"])(
                             pk=arg["_ref"].id)
                     hydrated_references[arg_name] = reference_obj
+                elif '__near' in arg_name and isinstance(getattr(self.model, arg_name.split('__')[0]),
+                                                         mongoengine.fields.PointField):
+                    location = args.pop(arg_name, None)
+                    hydrated_references[arg_name] = location["coordinates"]
+                    if (arg_name.split('__')[0] + "__max_distance") not in args:
+                        hydrated_references[arg_name.split('__')[0] + "__max_distance"] = 10000
                 elif arg_name == "id":
                     hydrated_references["id"] = from_global_id(args.pop("id", None))[1]
             args.update(hydrated_references)
@@ -381,10 +394,17 @@ class MongoengineConnectionField(ConnectionField):
                                 self.filter_args.keys()):
                             args_copy.pop(arg_name)
                             if arg_name == '_id' and isinstance(arg, dict):
-                                args_copy['pk__in'] = arg['$in']
+                                operation = list(arg.keys())[0]
+                                args_copy['pk' + operation.replace('$', '__')] = arg[operation]
                             if '.' in arg_name:
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
+                        else:
+                            operations = ["$lte", "$gte", "$ne", "$in"]
+                            if isinstance(arg, dict) and any(op in arg for op in operations):
+                                operation = list(arg.keys())[0]
+                                args_copy[arg_name + operation.replace('$', '__')] = arg[operation]
+                                del args_copy[arg_name]
                     return self.default_resolver(root, info, required_fields, **args_copy)
                 else:
                     return resolved

@@ -82,22 +82,22 @@ def convert_field_to_jsonstring(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.PointField)
 def convert_point_to_field(field, registry=None):
-    return graphene.Field(advanced_types.PointFieldType)
+    return graphene.Field(advanced_types.PointFieldType, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.PolygonField)
 def convert_polygon_to_field(field, registry=None):
-    return graphene.Field(advanced_types.PolygonFieldType)
+    return graphene.Field(advanced_types.PolygonFieldType, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.MultiPolygonField)
 def convert_multipolygon_to_field(field, register=None):
-    return graphene.Field(advanced_types.MultiPolygonFieldType)
+    return graphene.Field(advanced_types.MultiPolygonFieldType, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.FileField)
 def convert_file_to_field(field, registry=None):
-    return graphene.Field(advanced_types.FileFieldType)
+    return graphene.Field(advanced_types.FileFieldType, required=field.required)
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
@@ -360,7 +360,7 @@ def convert_field_to_dynamic(field, registry=None):
             return None
         if isinstance(field, mongoengine.EmbeddedDocumentField):
             return graphene.Field(_type,
-                                  description=get_field_description(field, registry))
+                                  description=get_field_description(field, registry), required=field.required)
         field_resolver = None
         required = False
         if field.db_field is not None:

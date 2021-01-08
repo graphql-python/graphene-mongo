@@ -3,7 +3,6 @@ import graphene
 
 
 class FileFieldType(graphene.ObjectType):
-
     content_type = graphene.String()
     md5 = graphene.String()
     chunk_size = graphene.Int()
@@ -36,7 +35,6 @@ class FileFieldType(graphene.ObjectType):
 
 
 class _CoordinatesTypeField(graphene.ObjectType):
-
     type = graphene.String()
 
     def resolve_type(self, info):
@@ -47,17 +45,19 @@ class _CoordinatesTypeField(graphene.ObjectType):
 
 
 class PointFieldType(_CoordinatesTypeField):
-
     coordinates = graphene.List(graphene.Float)
 
 
-class PolygonFieldType(_CoordinatesTypeField):
+class PointFieldInputType(graphene.InputObjectType):
+    type = graphene.String(default_value="Point")
+    coordinates = graphene.List(graphene.Float, required=True)
 
+
+class PolygonFieldType(_CoordinatesTypeField):
     coordinates = graphene.List(graphene.List(graphene.List(graphene.Float)))
 
 
 class MultiPolygonFieldType(_CoordinatesTypeField):
-
     coordinates = graphene.List(
         graphene.List(graphene.List(graphene.List(graphene.Float)))
     )
