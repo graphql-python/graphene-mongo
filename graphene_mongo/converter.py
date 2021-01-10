@@ -88,7 +88,6 @@ def convert_point_to_field(field, registry=None):
                           required=field.required)
 
 
-
 @convert_mongoengine_field.register(mongoengine.PolygonField)
 def convert_polygon_to_field(field, registry=None):
     return graphene.Field(advanced_types.PolygonFieldType, description=get_field_description(field, registry),
@@ -105,7 +104,6 @@ def convert_multipolygon_to_field(field, registry=None):
 def convert_file_to_field(field, registry=None):
     return graphene.Field(advanced_types.FileFieldType, description=get_field_description(field, registry),
                           required=field.required)
-
 
 
 @convert_mongoengine_field.register(mongoengine.ListField)
