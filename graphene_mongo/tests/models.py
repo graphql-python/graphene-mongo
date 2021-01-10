@@ -115,8 +115,16 @@ class CellTower(mongoengine.Document):
 
 
 class Child(Parent):
-    meta = {"collection": "test_child"}
+
+    meta = {"collection": "test_parent"}
     baz = mongoengine.StringField()
+    loc = mongoengine.PointField()
+
+
+class AnotherChild(Parent):
+
+    meta = {"collection": "test_parent"}
+    qux = mongoengine.StringField()
     loc = mongoengine.PointField()
 
 
