@@ -6,11 +6,11 @@ future==0.18.2
 graphene>=2.1.8,<3
 iso8601==0.1.13
 mongoengine==0.19.1; python_version <= '3.4'
-mongoengine==0.21.0; python_version > '3.4'
-mongomock==3.21.0
+mongoengine==0.22.1; python_version > '3.4'
+mongomock==3.22.0
 pymongo==3.11.2
 pytest==4.6.11; python_version <= '3.4'
-pytest==6.1.2; python_version > '3.4'
+pytest==6.2.1; python_version > '3.4'
 pytest-cov==2.8.1; python_version == '3.4'
 pytest-cov==2.10.1; python_version < '3.4' or python_version > '3.4'
 singledispatch==3.4.0.3
