@@ -5,8 +5,8 @@ flake8-per-file-ignores==0.6
 future==0.18.2
 graphene>=2.1.8,<3
 iso8601==0.1.13
-mongoengine==0.19.1; python_version <= '3.4'
-mongoengine==0.22.1; python_version > '3.4'
+mongoengine==0.19.1; python_version <= '3.5'
+mongoengine==0.22.1; python_version > '3.5'
 mongomock==3.22.0
 pymongo==3.11.2
 pytest==4.6.11; python_version <= '3.4'
