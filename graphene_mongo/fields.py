@@ -96,7 +96,6 @@ class MongoengineConnectionField(ConnectionField):
             Returns:
                 bool
             """
-            
             if hasattr(self.fields[k].type, '_sdl'):
                 return False
             if not hasattr(self.model, k):
