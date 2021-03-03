@@ -79,7 +79,7 @@ class MongoengineConnectionField(ConnectionField):
     def args(self):
         return to_arguments(
             self._base_args or OrderedDict(),
-            dict(dict(self.field_args, **self.advance_args), **self.filter_args),
+            dict(dict(dict(self.field_args, **self.advance_args), **self.filter_args), **self.extended_args),
         )
 
     @args.setter
@@ -96,7 +96,9 @@ class MongoengineConnectionField(ConnectionField):
             Returns:
                 bool
             """
-
+            
+            if hasattr(self.fields[k].type, '_sdl'):
+                return False
             if not hasattr(self.model, k):
                 return False
             if isinstance(getattr(self.model, k), property):
@@ -200,6 +202,14 @@ class MongoengineConnectionField(ConnectionField):
             return r
 
         return reduce(get_advance_field, self.fields.items(), {})
+
+    @property
+    def extended_args(self):
+        args = OrderedDict()
+        for k, each in self.fields.items():
+            if hasattr(each.type, '_sdl'):
+                args.update({k: graphene.ID()})
+        return args
 
     @property
     def fields(self):
