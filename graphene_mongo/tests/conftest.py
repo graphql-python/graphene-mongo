@@ -9,6 +9,7 @@ from .models import (
     Player,
     Reporter,
     Child,
+    AnotherChild,
     ProfessorMetadata,
     ProfessorVector,
     ChildRegisteredBefore,
@@ -107,6 +108,12 @@ def fixtures():
 
     child2 = Child(bar="bar", baz="baz", loc=[10, 20])
     child2.save()
+
+    another_child1 = AnotherChild(bar="BAR", qux="QUX")
+    another_child1.save()
+
+    another_child2 = AnotherChild(bar="bar", qux="qux", loc=[20, 10])
+    another_child2.save()
 
     CellTower.drop_collection()
     ct = CellTower(
