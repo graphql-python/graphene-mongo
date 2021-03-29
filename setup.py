@@ -10,7 +10,7 @@ setup(
     author_email="abaw.chen@gmail.com",
     license="MIT",
     classifiers=[
-        "Development Status :: 1 - Beta",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries",
         "Programming Language :: Python :: 3.6",
