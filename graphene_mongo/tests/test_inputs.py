@@ -21,11 +21,9 @@ def test_should_create(fixtures):
             return CreateArticle(article=article)
 
     class Query(graphene.ObjectType):
-
         node = Node.Field()
 
     class Mutation(graphene.ObjectType):
-
         create_article = CreateArticle.Field()
 
     query = """
@@ -57,7 +55,8 @@ def test_should_update(fixtures):
         def mutate(self, info, id, editor):
             editor_to_update = Editor.objects.get(id=id)
             for key, value in editor.items():
-                setattr(editor_to_update, key, value)
+                if value:
+                    setattr(editor_to_update, key, value)
             editor_to_update.save()
             return UpdateEditor(editor=editor_to_update)
 

@@ -9,7 +9,7 @@ from bson import DBRef
 from graphene import Context
 from graphene.types.utils import get_type
 from graphene.utils.str_converters import to_snake_case
-from graphql import ResolveInfo
+from graphql import GraphQLResolveInfo
 from mongoengine.base import get_document
 from promise import Promise
 from graphql_relay import from_global_id
@@ -168,7 +168,7 @@ class MongoengineConnectionField(ConnectionField):
                     }
                     filter_type = advanced_filter_types.get(each, filter_type)
                     filter_args[field + "__" + each] = graphene.Argument(
-                        type=filter_type
+                        type_=filter_type
                     )
         return filter_args
 
@@ -278,6 +278,9 @@ class MongoengineConnectionField(ConnectionField):
 
     def default_resolver(self, _root, info, required_fields=list(), **args):
         args = args or {}
+        for key, value in dict(args).items():
+            if value is None:
+                del args[key]
         if _root is not None:
             field_name = to_snake_case(info.field_name)
             if not hasattr(_root, "_fields_ordered"):
@@ -301,9 +304,13 @@ class MongoengineConnectionField(ConnectionField):
         limit = None
         reverse = False
         first = args.pop("first", None)
-        after = cursor_to_offset(args.pop("after", None))
+        after = args.pop("after", None)
+        if after:
+            after = cursor_to_offset(after)
         last = args.pop("last", None)
-        before = cursor_to_offset(args.pop("before", None))
+        before = args.pop("before", None)
+        if before:
+            before = cursor_to_offset(before)
         if callable(getattr(self.model, "objects", None)):
             if "pk__in" in args and args["pk__in"]:
                 count = len(args["pk__in"])
@@ -318,10 +325,10 @@ class MongoengineConnectionField(ConnectionField):
                     args["pk__in"] = args["pk__in"][skip:]
                 iterables = self.get_queryset(self.model, info, required_fields, **args)
                 list_length = len(iterables)
-                if isinstance(info, ResolveInfo):
-                    if not info.context:
-                        info.context = Context()
-                    info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
+                # if isinstance(info, GraphQLResolveInfo):
+                #     if not info.context:
+                #         info.context = Context()
+                #     info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
             elif _root is None or args:
                 count = self.get_queryset(self.model, info, required_fields, **args).count()
                 if count != 0:
@@ -329,10 +336,10 @@ class MongoengineConnectionField(ConnectionField):
                                                                count=count)
                     iterables = self.get_queryset(self.model, info, required_fields, skip, limit, reverse, **args)
                     list_length = len(iterables)
-                    if isinstance(info, ResolveInfo):
-                        if not info.context:
-                            info.context = Context()
-                        info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
+                    # if isinstance(info, GraphQLResolveInfo):
+                    #     if not info.context:
+                    #         info.context = Context()
+                    #     info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
 
         elif _root is not None:
             field_name = to_snake_case(info.field_name)
@@ -381,10 +388,10 @@ class MongoengineConnectionField(ConnectionField):
                 for arg_name, arg in args.copy().items():
                     if arg_name not in self.model._fields_ordered + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
-                if isinstance(info, ResolveInfo):
-                    if not info.context:
-                        info.context = Context()
-                    info.context.queryset = self.get_queryset(self.model, info, required_fields, **args_copy)
+                # if isinstance(info, GraphQLResolveInfo):
+                #     if not info.context:
+                #         info.context = Context()
+                #     info.context.queryset = self.get_queryset(self.model, info, required_fields, **args_copy)
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
             if resolved is not None:
@@ -415,6 +422,8 @@ class MongoengineConnectionField(ConnectionField):
                                 args_copy[arg_name + operation.replace('$', '__')] = arg[operation]
                                 del args_copy[arg_name]
                     return self.default_resolver(root, info, required_fields, **args_copy)
+                elif isinstance(resolved, Promise):
+                    return resolved.value
                 else:
                     return resolved
         return self.default_resolver(root, info, required_fields, **args)
