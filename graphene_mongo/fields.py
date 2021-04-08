@@ -44,12 +44,12 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def type(self):
-        from .types import GrapheneMongoengineObjectTypes
+        from .types import MongoengineObjectType
 
         _type = super(ConnectionField, self).type
         assert issubclass(
-            _type, GrapheneMongoengineObjectTypes
-        ), "MongoengineConnectionField only accepts Mongoengine object types"
+            _type, MongoengineObjectType
+        ), "MongoengineConnectionField only accepts MongoengineObjectType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
@@ -79,7 +79,7 @@ class MongoengineConnectionField(ConnectionField):
     def args(self):
         return to_arguments(
             self._base_args or OrderedDict(),
-            dict(dict(self.field_args, **self.advance_args), **self.filter_args),
+            dict(dict(dict(self.field_args, **self.advance_args), **self.filter_args), **self.extended_args),
         )
 
     @args.setter
@@ -96,7 +96,8 @@ class MongoengineConnectionField(ConnectionField):
             Returns:
                 bool
             """
-
+            if hasattr(self.fields[k].type, '_sdl'):
+                return False
             if not hasattr(self.model, k):
                 return False
             if isinstance(getattr(self.model, k), property):
@@ -200,6 +201,14 @@ class MongoengineConnectionField(ConnectionField):
             return r
 
         return reduce(get_advance_field, self.fields.items(), {})
+
+    @property
+    def extended_args(self):
+        args = OrderedDict()
+        for k, each in self.fields.items():
+            if hasattr(each.type, '_sdl'):
+                args.update({k: graphene.ID()})
+        return args
 
     @property
     def fields(self):
@@ -394,9 +403,6 @@ class MongoengineConnectionField(ConnectionField):
                                 self.filter_args.keys()):
                             args_copy.pop(arg_name)
                             if arg_name == '_id' and isinstance(arg, dict):
-                                args_copy['pk__in'] = arg['$in']
-                            elif "$ne" in arg:
-                                args_copy['pk__ne'] = arg['$ne']
                                 operation = list(arg.keys())[0]
                                 args_copy['pk' + operation.replace('$', '__')] = arg[operation]
                             if '.' in arg_name:
