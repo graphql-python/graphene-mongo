@@ -1,7 +1,11 @@
+from graphene import Enum
+
+
 class Registry(object):
     def __init__(self):
         self._registry = {}
         self._registry_string_map = {}
+        self._registry_enum = {}
 
     def register(self, cls):
         from .types import GrapheneMongoengineObjectTypes
@@ -9,7 +13,7 @@ class Registry(object):
         assert issubclass(
             cls,
             GrapheneMongoengineObjectTypes
-            ), 'Only Mongoengine object types can be registered, received "{}"'.format(
+        ), 'Only Mongoengine object types can be registered, received "{}"'.format(
             cls.__name__
         )
         assert cls._meta.registry == self, "Registry for a Model have to match."
@@ -20,8 +24,21 @@ class Registry(object):
         for model, cls in self._registry.items():
             cls.rescan_fields()
 
+    def register_enum(self, cls):
+        from enum import EnumMeta
+        assert type(cls) == EnumMeta, 'Only EnumMeta can be registered, received "{}"'.format(
+            cls.__name__
+        )
+        self._registry_enum[cls] = Enum.from_enum(cls)
+
     def get_type_for_model(self, model):
         return self._registry.get(model)
+
+    def check_enum_already_exist(self, cls):
+        return cls in self._registry_enum
+
+    def get_type_for_enum(self, cls):
+        return self._registry_enum.get(cls)
 
 
 registry = None
