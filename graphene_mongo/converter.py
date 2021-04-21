@@ -429,7 +429,7 @@ def convert_lazy_field_to_dynamic(field, registry=None):
     return graphene.Dynamic(dynamic_type)
 
 
-if sys.version_info > (3, 5):
+if sys.version_info >= (3, 6):
     @convert_mongoengine_field.register(mongoengine.EnumField)
     def convert_field_to_enum(field, registry=None):
         if not registry.check_enum_already_exist(field._enum_cls):
