@@ -330,7 +330,18 @@ class MongoengineConnectionField(ConnectionField):
                         info = info._replace(context=Context())
                     info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
             elif _root is None or args:
-                count = self.get_queryset(self.model, info, required_fields, **args).count()
+                args_copy = args.copy()
+                for key in args.copy():
+                    if key not in self.model._fields_ordered:
+                        args_copy.pop(key)
+                    elif isinstance(getattr(self.model, key),
+                                    mongoengine.fields.ReferenceField) or isinstance(getattr(self.model, key),
+                                                                                     mongoengine.fields.GenericReferenceField) or isinstance(
+                        getattr(self.model, key),
+                        mongoengine.fields.LazyReferenceField) or isinstance(getattr(self.model, key),
+                                                                             mongoengine.fields.CachedReferenceField):
+                        args_copy[key] = from_global_id(args_copy[key])[1]
+                count = mongoengine.get_db()[self.model._get_collection_name()].find(args_copy).count()
                 if count != 0:
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
                                                                count=count)
@@ -388,13 +399,40 @@ class MongoengineConnectionField(ConnectionField):
         if not bool(args) or not is_partial:
             if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
                                                                           mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
+
+                skip = 0
+                count = 0
+                limit = None
+                reverse = False
+                first = args_copy.get("first")
+                after = args_copy.get("after")
+                if after:
+                    after = cursor_to_offset(after)
+                last = args_copy.get("last")
+                before = args_copy.get("before")
                 for arg_name, arg in args.copy().items():
                     if arg_name not in self.model._fields_ordered + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
                 if isinstance(info, GraphQLResolveInfo):
                     if not info.context:
                         info = info._replace(context=Context())
-                    info.context.queryset = self.get_queryset(self.model, info, required_fields, **args_copy)
+                    args_count_copy = args.copy()
+                    for key in args.copy():
+                        if key not in self.model._fields_ordered:
+                            args_count_copy.pop(key)
+                        elif isinstance(getattr(self.model, key),
+                                        mongoengine.fields.ReferenceField) or isinstance(getattr(self.model, key),
+                                                                                         mongoengine.fields.GenericReferenceField) or isinstance(
+                            getattr(self.model, key),
+                            mongoengine.fields.LazyReferenceField) or isinstance(getattr(self.model, key),
+                                                                                 mongoengine.fields.CachedReferenceField):
+                            args_count_copy[key] = from_global_id(args_count_copy[key])[1]
+                    count = mongoengine.get_db()[self.model._get_collection_name()].find(args_count_copy).count()
+                    if count != 0:
+                        skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last,
+                                                                   before=before,
+                                                                   count=count)
+                    info.context.queryset = self.get_queryset(self.model, info, required_fields, skip, limit, reverse)
 
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
