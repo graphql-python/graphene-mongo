@@ -433,7 +433,7 @@ class MongoengineConnectionField(ConnectionField):
                             if arg_name == '_id' and isinstance(arg, dict):
                                 operation = list(arg.keys())[0]
                                 args_copy['pk' + operation.replace('$', '__')] = arg[operation]
-                            if '.' in arg_name and not isinstance(arg, ObjectId):
+                            if not isinstance(arg, ObjectId) and '.' in arg_name:
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[operation]
                         else:
