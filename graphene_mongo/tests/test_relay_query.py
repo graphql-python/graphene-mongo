@@ -173,7 +173,7 @@ def test_should_query_all_editors(fixtures, fixtures_dirname):
                         "avatar": {
                             "contentType": "image/jpeg",
                             "length": 46928,
-                            "data": str(data),
+                            "data": data.decode("utf-8"),
                         },
                     }
                 },
@@ -489,7 +489,6 @@ def test_should_filter_by_id(fixtures):
 
 def test_should_first_n(fixtures):
     class Query(graphene.ObjectType):
-
         editors = MongoengineConnectionField(nodes.EditorNode)
 
     query = """
@@ -533,7 +532,6 @@ def test_should_first_n(fixtures):
 
 def test_should_after(fixtures):
     class Query(graphene.ObjectType):
-
         players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = """
@@ -566,7 +564,6 @@ def test_should_after(fixtures):
 
 def test_should_before(fixtures):
     class Query(graphene.ObjectType):
-
         players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = """
@@ -632,7 +629,6 @@ def test_should_last_n(fixtures):
 
 def test_should_self_reference(fixtures):
     class Query(graphene.ObjectType):
-
         players = MongoengineConnectionField(nodes.PlayerNode)
 
     query = """
@@ -767,7 +763,6 @@ def test_should_lazy_reference(fixtures):
 
 def test_should_query_with_embedded_document(fixtures):
     class Query(graphene.ObjectType):
-
         professors = MongoengineConnectionField(nodes.ProfessorVectorNode)
 
     query = """
@@ -1026,7 +1021,6 @@ def test_should_get_correct_list_of_documents(fixtures):
 
 
 def test_should_filter_mongoengine_queryset_by_id_and_other_fields(fixtures):
-
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
 

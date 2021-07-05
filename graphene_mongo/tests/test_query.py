@@ -55,7 +55,7 @@ def test_should_query_editor(fixtures, fixtures_dirname):
                 "chunkSize": 261120,
                 "length": 46928,
                 "md5": "f3c657fd472fdc4bc2ca9056a1ae6106",
-                "data": str(data),
+                "data": data.decode("utf-8"),
             },
         },
         "editors": [

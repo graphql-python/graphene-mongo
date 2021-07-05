@@ -6,7 +6,8 @@ from collections import OrderedDict
 import mongoengine
 from graphene import Node
 from graphene.utils.trim_docstring import trim_docstring
-from graphql.utils.ast_to_dict import ast_to_dict
+# from graphql.utils.ast_to_dict import ast_to_dict
+from graphql import FieldNode
 from graphql_relay.connection.arrayconnection import offset_to_cursor
 
 
@@ -126,21 +127,24 @@ def collect_query_fields(node, fragments):
     """
 
     field = {}
-
-    if node.get('selection_set'):
-        for leaf in node['selection_set']['selections']:
-            if leaf['kind'] == 'Field':
+    selection_set = None
+    if type(node) == dict:
+        selection_set = node.get('selection_set')
+    else:
+        selection_set = node.selection_set
+    if selection_set:
+        for leaf in selection_set.selections:
+            if leaf.kind == 'field':
                 field.update({
-                    leaf['name']['value']: collect_query_fields(leaf, fragments)
+                    leaf.name.value: collect_query_fields(leaf, fragments)
                 })
-            elif leaf['kind'] == 'FragmentSpread':
+            elif leaf.kind == 'fragment_spread':
                 field.update(collect_query_fields(fragments[leaf['name']['value']],
                                                   fragments))
-            elif leaf['kind'] == 'InlineFragment':
+            elif leaf.kind == 'inline_fragment':
                 field.update({
-                    leaf["type_condition"]["name"]['value']: collect_query_fields(leaf, fragments)
+                    leaf.type_condition.name.value: collect_query_fields(leaf, fragments)
                 })
-                pass
 
     return field
 
@@ -156,7 +160,7 @@ def get_query_fields(info):
     """
 
     fragments = {}
-    node = ast_to_dict(info.field_asts[0])
+    node = ast_to_dict(info.field_nodes[0])
 
     for name, value in info.fragments.items():
         fragments[name] = ast_to_dict(value)
@@ -165,6 +169,24 @@ def get_query_fields(info):
     if "edges" in query:
         return query["edges"]["node"].keys()
     return query
+
+
+def ast_to_dict(node, include_loc=False):
+    if isinstance(node, FieldNode):
+        d = {"kind": node.__class__.__name__}
+        if hasattr(node, "keys"):
+            for field in node.keys:
+                d[field] = ast_to_dict(getattr(node, field), include_loc)
+
+        if include_loc and hasattr(node, "loc") and node.loc:
+            d["loc"] = {"start": node.loc.start, "end": node.loc.end}
+
+        return d
+
+    elif isinstance(node, list):
+        return [ast_to_dict(item, include_loc) for item in node]
+
+    return node
 
 
 def find_skip_and_limit(first, last, after, before, count):
