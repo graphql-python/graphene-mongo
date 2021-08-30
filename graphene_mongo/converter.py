@@ -108,6 +108,7 @@ def convert_file_to_field(field, registry=None):
 
 @convert_mongoengine_field.register(mongoengine.ListField)
 @convert_mongoengine_field.register(mongoengine.EmbeddedDocumentListField)
+@convert_mongoengine_field.register(mongoengine.GeoPointField)
 def convert_field_to_list(field, registry=None):
     base_type = convert_mongoengine_field(field.field, registry=registry)
     if isinstance(base_type, graphene.Field):

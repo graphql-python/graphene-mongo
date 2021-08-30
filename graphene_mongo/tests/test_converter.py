@@ -128,6 +128,12 @@ def test_should_field_convert_list():
     )
 
 
+def test_should_geo_convert_list():
+    assert_conversion(
+        mongoengine.GeoPointField, graphene.List, field=mongoengine.IntField()
+    )
+
+
 def test_should_reference_convert_dynamic():
     class E(MongoengineObjectType):
         class Meta:
