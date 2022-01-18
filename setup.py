@@ -22,7 +22,7 @@ setup(
     keywords="api graphql protocol rest relay graphene mongo mongoengine",
     packages=find_packages(exclude=["tests"]),
     install_requires=[
-        "graphene==3.0b7",
+        "graphene==3.0.0b7",
         "promise==2.3",
         "mongoengine>=0.23.0",
         "singledispatch>=3.4.0.3",
