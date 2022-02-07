@@ -17,7 +17,7 @@ from graphene.relay import ConnectionField
 from graphene.types.argument import to_arguments
 from graphene.types.dynamic import Dynamic
 from graphene.types.structures import Structure
-from graphql_relay.connection.arrayconnection import cursor_to_offset
+from graphql_relay.connection.array_connection import cursor_to_offset
 from mongoengine import QuerySet
 
 from .advanced_types import (

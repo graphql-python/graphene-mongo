@@ -8,7 +8,7 @@ from graphene import Node
 from graphene.utils.trim_docstring import trim_docstring
 # from graphql.utils.ast_to_dict import ast_to_dict
 from graphql import FieldNode
-from graphql_relay.connection.arrayconnection import offset_to_cursor
+from graphql_relay.connection.array_connection import offset_to_cursor
 
 
 def get_model_fields(model, excluding=None):
