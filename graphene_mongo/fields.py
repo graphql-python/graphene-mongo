@@ -347,7 +347,7 @@ class MongoengineConnectionField(ConnectionField):
                                                                              mongoengine.fields.CachedReferenceField):
                         if not isinstance(args_copy[key], ObjectId):
                             args_copy[key] = from_global_id(args_copy[key])[1]
-                count = mongoengine.get_db()[self.model._get_collection_name()].find(args_copy).count()
+                count = mongoengine.get_db()[self.model._get_collection_name()].count_documents(args_copy)
                 if count != 0:
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
                                                                count=count)
