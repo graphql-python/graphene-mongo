@@ -29,6 +29,11 @@ class Registry(object):
         assert type(cls) == EnumMeta, 'Only EnumMeta can be registered, received "{}"'.format(
             cls.__name__
         )
+        if not cls.__name__.endswith('Enum'):
+            name = cls.__name__ + 'Enum'
+        else:
+            name = cls.__name__
+        cls.__name__ = name
         self._registry_enum[cls] = Enum.from_enum(cls)
 
     def get_type_for_model(self, model):

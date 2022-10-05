@@ -9,6 +9,9 @@ class FileFieldType(graphene.ObjectType):
     length = graphene.Int()
     data = graphene.String()
 
+    # Support Graphene Federation v2
+    _shareable = True
+
     @classmethod
     def _resolve_fs_field(cls, field, name, default_value=None):
         v = getattr(field.instance, field.key)
@@ -36,6 +39,9 @@ class FileFieldType(graphene.ObjectType):
 
 class _CoordinatesTypeField(graphene.ObjectType):
     type = graphene.String()
+
+    # Support Graphene Federation v2
+    _shareable = True
 
     def resolve_type(self, info):
         return self["type"]
