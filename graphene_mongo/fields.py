@@ -364,6 +364,8 @@ class MongoengineConnectionField(ConnectionField):
 
             skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
                                                        count=count)
+            skip = info.context.queryset._skip or skip
+            limit = info.context.queryset._limit or limit
 
             if limit:
                 if reverse:
