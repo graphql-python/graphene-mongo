@@ -512,9 +512,11 @@ class MongoengineConnectionField(ConnectionField):
                     args.update(resolved._query)
                     args_copy = args.copy()
                     for arg_name, arg in args.copy().items():
-                        if "." in arg_name or arg_name not in self.model._fields_ordered + (
-                                'first', 'last', 'before', 'after') + tuple(
-                            self.filter_args.keys()):
+                        if "." in arg_name or arg_name not in (
+                            self.model._fields_ordered +
+                            ('first', 'last', 'before', 'after') +
+                            tuple(self.filter_args.keys())
+                        ):
                             args_copy.pop(arg_name)
                             if arg_name == '_id' and isinstance(arg, dict):
                                 operation = list(arg.keys())[0]
@@ -549,7 +551,7 @@ class MongoengineConnectionField(ConnectionField):
                 if value:
                     try:
                         setattr(root, key, from_global_id(value)[1])
-                    except Exception as error:
+                    except Exception:
                         pass
         iterable = resolver(root, info, **args)
 
