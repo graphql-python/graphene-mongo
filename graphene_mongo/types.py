@@ -1,15 +1,15 @@
+from collections import OrderedDict
+
 import graphene
 import mongoengine
-
-from collections import OrderedDict
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.inputobjecttype import InputObjectType, InputObjectTypeOptions
 from graphene.types.interface import Interface, InterfaceOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
-
 from graphene_mongo import MongoengineConnectionField
+
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry, get_inputs_registry
 from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields
@@ -43,9 +43,9 @@ def construct_fields(model, registry, only_fields, exclude_fields, non_required_
             # Take care of list of self-reference.
             document_type_obj = field.field.__dict__.get("document_type_obj", None)
             if (
-                document_type_obj == model._class_name
-                or isinstance(document_type_obj, model)
-                or document_type_obj == model
+                    document_type_obj == model._class_name
+                    or isinstance(document_type_obj, model)
+                    or document_type_obj == model
             ):
                 self_referenced[name] = field
                 continue
@@ -84,23 +84,24 @@ def create_graphene_generic_class(object_type, option_type):
     class GrapheneMongoengineGenericType(object_type):
         @classmethod
         def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            registry=None,
-            skip_registry=False,
-            only_fields=(),
-            required_fields=(),
-            exclude_fields=(),
-            non_required_fields=(),
-            filter_fields=None,
-            connection=None,
-            connection_class=None,
-            use_connection=None,
-            connection_field_class=None,
-            interfaces=(),
-            _meta=None,
-            order_by=None,
-            **options
+                cls,
+                model=None,
+                registry=None,
+                skip_registry=False,
+                only_fields=(),
+                required_fields=(),
+                exclude_fields=(),
+                non_required_fields=(),
+                filter_fields=None,
+                non_filter_fields=(),
+                connection=None,
+                connection_class=None,
+                use_connection=None,
+                connection_field_class=None,
+                interfaces=(),
+                _meta=None,
+                order_by=None,
+                **options
         ):
 
             assert is_valid_mongoengine_model(model), (
@@ -136,7 +137,7 @@ def create_graphene_generic_class(object_type, option_type):
                     connection_class = Connection
 
                 connection = connection_class.create_type(
-                    "{}Connection".format(cls.__name__), node=cls
+                    "{}Connection".format(options.get('name') or cls.__name__), node=cls
                 )
 
             if connection is not None:
@@ -165,6 +166,7 @@ def create_graphene_generic_class(object_type, option_type):
             _meta.registry = registry
             _meta.fields = mongoengine_fields
             _meta.filter_fields = filter_fields
+            _meta.non_filter_fields = non_filter_fields
             _meta.connection = connection
             _meta.connection_field_class = connection_field_class
             # Save them for later
@@ -244,6 +246,7 @@ def create_graphene_generic_class(object_type, option_type):
 
 MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(ObjectType, ObjectTypeOptions)
 MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(Interface, InterfaceOptions)
-MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(InputObjectType, InputObjectTypeOptions)
+MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(InputObjectType,
+                                                                                  InputObjectTypeOptions)
 
 GrapheneMongoengineObjectTypes = (MongoengineObjectType, MongoengineInputType, MongoengineInterfaceType)
