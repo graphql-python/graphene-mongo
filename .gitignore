@@ -1,0 +1,14 @@
+.coverage
+.cache/
+.eggs/
+.idea/
+_build/
+build/
+dist/
+graphene_mongo.egg-info/
+htmlcov/
+*.pyc
+*.swo
+*.swp
+venv/
+.vscode/

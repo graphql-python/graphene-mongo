@@ -1,0 +1,19 @@
+coveralls==1.11.1; python_version <= '3.5'
+coveralls==3.3.1; python_version > '3.5'
+flake8<3.7
+flake8-per-file-ignores==0.8.1
+future==0.18.2
+graphene==3.1.1
+promise==2.3
+mongoengine==0.19.1; python_version <= '3.5'
+mongoengine==0.24.2; python_version > '3.5'
+mongomock==4.1.2
+pytest==4.6.11; python_version <= '3.5'
+pytest==7.1.3; python_version > '3.5'
+pytest-cov==2.8.1; python_version == '3.5' or python_version == '3.4'
+pytest-cov==4.0.0; python_version < '3.4' or python_version > '3.5'
+singledispatch==3.7.0
+# https://stackoverflow.com/a/58189684/9041712
+attrs==22.1.0
+iso8601>=1.1.0
+futures; python_version < '3.0'
