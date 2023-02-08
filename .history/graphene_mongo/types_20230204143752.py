@@ -80,10 +80,6 @@ def create_graphene_generic_class(object_type, option_type):
         filter_fields = ()
         non_required_fields = ()
         order_by = None
-    class MyConnection(Connection):
-        class Meta:
-            abstract = True
-        total_count = graphene.Int()
 
     class GrapheneMongoengineGenericType(object_type):
         @classmethod
@@ -138,7 +134,7 @@ def create_graphene_generic_class(object_type, option_type):
             if use_connection and not connection:
                 # We create the connection automatically
                 if not connection_class:
-                    connection_class = MyConnection
+                    connection_class = Connection
 
                 connection = connection_class.create_type(
                     "{}Connection".format(options.get('name') or cls.__name__), node=cls

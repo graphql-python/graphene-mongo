@@ -229,7 +229,7 @@ def find_skip_and_limit(first, last, after, before, count):
 
 
 def connection_from_iterables(edges, start_offset, has_previous_page, has_next_page, connection_type,
-                              edge_type,count,
+                              edge_type,
                               pageinfo_type):
     edges_items = [
         edge_type(
@@ -249,6 +249,5 @@ def connection_from_iterables(edges, start_offset, has_previous_page, has_next_p
             end_cursor=last_edge_cursor,
             has_previous_page=has_previous_page,
             has_next_page=has_next_page
-        ),
-        total_count=count
+        )
     )

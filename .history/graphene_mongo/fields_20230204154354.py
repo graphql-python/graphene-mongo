@@ -460,7 +460,6 @@ class MongoengineConnectionField(ConnectionField):
                                                has_next_page=has_next_page,
                                                connection_type=self.type,
                                                edge_type=self.type.Edge,
-                                               count=count,
                                                pageinfo_type=graphene.PageInfo)
 
         connection.iterable = iterables
