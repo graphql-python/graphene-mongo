@@ -9,7 +9,7 @@ from graphene.utils.str_converters import to_snake_case, to_camel_case
 from mongoengine.base import get_document, LazyReference
 from . import advanced_types
 from .utils import import_single_dispatch, get_field_description, get_query_fields
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 singledispatch = import_single_dispatch()
 
@@ -167,7 +167,7 @@ def convert_field_to_list(field, registry=None):
                             futures.append(
                                 pool.submit(get_non_querying_object, (model, object_id_list, registry, args)))
                     result = list()
-                    for x in as_completed(futures):
+                    for x in futures:
                         result += x.result()
                     result_object_ids = list()
                     for each in result:
