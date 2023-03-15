@@ -67,6 +67,13 @@ def convert_field_to_float(field, registry=None):
     )
 
 
+@convert_mongoengine_field.register(mongoengine.Decimal128Field)
+def convert_field_to_decimal(field, registry=None):
+    return graphene.Decimal(
+        description=get_field_description(field, registry), required=field.required
+    )
+
+
 @convert_mongoengine_field.register(mongoengine.DateTimeField)
 def convert_field_to_datetime(field, registry=None):
     return graphene.DateTime(
