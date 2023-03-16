@@ -1,10 +1,11 @@
 import mongoengine
 from datetime import datetime
+import mongomock
 from mongomock import gridfs
 
 gridfs.enable_gridfs_integration()
 mongoengine.connect(
-    "graphene-mongo-test", host="mongomock://localhost", alias="default"
+    "graphene-mongo-test", mongo_client_class=mongomock.MongoClient, alias="default"
 )
 
 

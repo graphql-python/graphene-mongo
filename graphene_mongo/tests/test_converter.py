@@ -78,6 +78,10 @@ def test_should_float_convert_float():
     assert_conversion(mongoengine.FloatField, graphene.Float)
 
 
+def test_should_decimal128_convert_decimal():
+    assert_conversion(mongoengine.Decimal128Field, graphene.Decimal)
+
+
 def test_should_datetime_convert_datetime():
     assert_conversion(mongoengine.DateTimeField, graphene.DateTime)
 

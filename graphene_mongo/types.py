@@ -232,7 +232,10 @@ def create_graphene_generic_class(object_type, option_type):
             for field in cls._meta.required_fields:
                 if field in cls._meta.model._fields_ordered:
                     required_fields.append(field)
-            for field in get_query_fields(info):
+            queried_fields = get_query_fields(info)
+            if cls._meta.name in queried_fields:
+                queried_fields = queried_fields[cls._meta.name]
+            for field in queried_fields:
                 if to_snake_case(field) in cls._meta.model._fields_ordered:
                     required_fields.append(to_snake_case(field))
             required_fields = list(set(required_fields))

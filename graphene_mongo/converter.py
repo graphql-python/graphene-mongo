@@ -5,7 +5,7 @@ import mongoengine
 import uuid
 
 from graphene.types.json import JSONString
-from graphene.utils.str_converters import to_snake_case
+from graphene.utils.str_converters import to_snake_case, to_camel_case
 from mongoengine.base import get_document, LazyReference
 from . import advanced_types
 from .utils import import_single_dispatch, get_field_description, get_query_fields
@@ -63,6 +63,13 @@ def convert_field_to_boolean(field, registry=None):
 @convert_mongoengine_field.register(mongoengine.FloatField)
 def convert_field_to_float(field, registry=None):
     return graphene.Float(
+        description=get_field_description(field, registry), required=field.required
+    )
+
+
+@convert_mongoengine_field.register(mongoengine.Decimal128Field)
+def convert_field_to_decimal(field, registry=None):
+    return graphene.Decimal(
         description=get_field_description(field, registry), required=field.required
     )
 
@@ -233,12 +240,10 @@ def convert_field_to_union(field, registry=None):
     if len(_types) == 0:
         return None
 
-    # XXX: Use uuid to avoid duplicate name
-    name = "{}_{}_union_{}".format(
+    name = to_camel_case("{}_{}".format(
         field._owner_document.__name__,
-        field.db_field,
-        str(uuid.uuid1()).replace("-", ""),
-    )
+        field.db_field
+    )) + "UnionType"
     Meta = type("Meta", (object,), {"types": tuple(_types)})
     _union = type(name, (graphene.Union,), {"Meta": Meta})
 
