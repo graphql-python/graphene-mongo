@@ -2,7 +2,7 @@ coveralls==1.11.1; python_version <= '3.5'
 coveralls==3.3.1; python_version > '3.5'
 flake8<3.7
 flake8-per-file-ignores==0.8.1
-future==0.18.2
+future==0.18.3
 graphene==3.1.1
 promise==2.3
 mongoengine==0.19.1; python_version <= '3.5'
