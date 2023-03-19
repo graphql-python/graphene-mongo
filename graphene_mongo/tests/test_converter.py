@@ -1,6 +1,6 @@
 import graphene
 import mongoengine
-from py.test import raises
+from pytest import raises
 
 from .models import (
     Article,
