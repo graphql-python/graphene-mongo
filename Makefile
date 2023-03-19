@@ -17,14 +17,16 @@ test: clean lint
 	pytest graphene_mongo/tests --cov=graphene_mongo --cov-report=html --cov-report=term
 
 register-pypitest:
-	python setup.py register -r pypitest
+	#python setup.py register -r pypitest
 
 deploy-pypitest: clean
-	python setup.py sdist upload -r pypitest
+	poetry build
+	poetry publish --repository testpypi
 
 register:
-	python setup.py register -r pypi
+	#python setup.py register -r pypi
 
 deploy: clean
-	python setup.py sdist upload -r pypi
+	poetry build
+	poetry publish
 
