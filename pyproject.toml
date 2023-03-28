@@ -39,6 +39,7 @@ mock = ">=5.0.1"
 flake8 = "*"
 pytest-cov = "*"
 coveralls = "*"
+twine = "*"
 
 
 [build-system]
