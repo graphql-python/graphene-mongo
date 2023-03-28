@@ -21,12 +21,14 @@ register-pypitest:
 
 deploy-pypitest: clean
 	poetry build
-	poetry publish --repository testpypi
+	#poetry publish --repository testpypi
+	twine upload --repository testpypi dist/*
 
 register:
 	#python setup.py register -r pypi
 
 deploy: clean
 	poetry build
-	poetry publish
+	twine upload dist/*
+	#poetry publish
 
