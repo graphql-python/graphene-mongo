@@ -1,4 +1,4 @@
-from py.test import raises
+from pytest import raises
 
 from graphene import Field, Int, Interface, ObjectType
 from graphene.relay import Node, is_node

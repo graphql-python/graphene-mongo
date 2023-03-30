@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "graphene-mongo"
+packages = [{ include = "graphene_mongo" }]
+version = "0.3.0"
+description = "Graphene Mongoengine integration"
+authors = [
+    "Abaw Chen <abaw.chen@gmail.com>",
+]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/graphql-python/graphene-mongo"
+repository = "https://github.com/graphql-python/graphene-mongo"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "License :: OSI Approved :: MIT License",
+]
+keywords = [
+    "graphene-mongo", "graphql", "api", "graphql", "protocol", "relay", "graphene", "mongo", "mongoengine"
+]
+
+[tool.poetry.dependencies]
+python = ">=3.7,<4"
+graphene = ">=3.1.1"
+promise = ">=2.3"
+mongoengine = ">=0.27"
+singledispatch = ">=3.7.0"
+iso8601 = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+mongomock = ">=4.1.2"
+mock = ">=5.0.1"
+flake8 = "*"
+pytest-cov = "*"
+coveralls = "*"
+twine = "*"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

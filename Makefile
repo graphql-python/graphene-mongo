@@ -14,17 +14,21 @@ lint:
 	@flake8 graphene_mongo
 
 test: clean lint
-	py.test graphene_mongo/tests --cov=graphene_mongo --cov-report=html --cov-report=term
+	pytest graphene_mongo/tests --cov=graphene_mongo --cov-report=html --cov-report=term
 
 register-pypitest:
-	python setup.py register -r pypitest
+	#python setup.py register -r pypitest
 
 deploy-pypitest: clean
-	python setup.py sdist upload -r pypitest
+	poetry build
+	#poetry publish --repository testpypi
+	twine upload --repository testpypi dist/*
 
 register:
-	python setup.py register -r pypi
+	#python setup.py register -r pypi
 
 deploy: clean
-	python setup.py sdist upload -r pypi
+	poetry build
+	twine upload dist/*
+	#poetry publish
 

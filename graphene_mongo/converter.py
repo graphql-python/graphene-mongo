@@ -2,7 +2,6 @@ import sys
 
 import graphene
 import mongoengine
-import uuid
 
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_snake_case, to_camel_case
