@@ -400,7 +400,7 @@ class MongoengineConnectionField(ConnectionField):
                             args_copy[key] = args_copy[key].value
 
                 if PYMONGO_VERSION >= (3, 7):
-                    if hasattr(self.model,'_meta') and 'db_alias' in self.model._meta:
+                    if hasattr(self.model, '_meta') and 'db_alias' in self.model._meta:
                         count = (mongoengine.get_db(self.model._meta['db_alias'])[self.model._get_collection_name()]).count_documents(args_copy)
                     else:
                         count = (mongoengine.get_db()[self.model._get_collection_name()]).count_documents(args_copy)
