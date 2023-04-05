@@ -26,9 +26,9 @@ class Registry(object):
 
     def register_enum(self, cls):
         from enum import EnumMeta
-        assert type(cls) == EnumMeta, 'Only EnumMeta can be registered, received "{}"'.format(
-            cls.__name__
-        )
+        assert isinstance(
+            cls, EnumMeta
+        ), f'Only EnumMeta can be registered, received "{cls.__name__}"'
         if not cls.__name__.endswith('Enum'):
             name = cls.__name__ + 'Enum'
         else:
