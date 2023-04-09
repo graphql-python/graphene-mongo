@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/graphql-python/graphene-mongo.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-mongo) [![Coverage Status](https://coveralls.io/repos/github/graphql-python/graphene-mongo/badge.svg?branch=master)](https://coveralls.io/github/graphql-python/graphene-mongo?branch=master) [![Documentation Status](https://readthedocs.org/projects/graphene-mongo/badge/?version=latest)](http://graphene-mongo.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/graphene-mongo.svg)](https://badge.fury.io/py/graphene-mongo) [![PyPI pyversions](https://img.shields.io/pypi/pyversions/graphene-mongo.svg)](https://pypi.python.org/pypi/graphene-mongo/) [![Downloads](https://pepy.tech/badge/graphene-mongo)](https://pepy.tech/project/graphene-mongo)
 
+[![Lint](https://github.com/graphql-python/graphene-mongo/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/graphql-python/graphene-mongo/actions/workflows/lint.yml) [![Test Package](https://github.com/graphql-python/graphene-mongo/actions/workflows/ci.yml/badge.svg)](https://github.com/graphql-python/graphene-mongo/actions/workflows/ci.yml)
+
 # Graphene-Mongo
 
 A [Mongoengine](https://mongoengine-odm.readthedocs.io/) integration for [Graphene](http://graphene-python.org/).
