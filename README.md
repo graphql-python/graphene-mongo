@@ -62,7 +62,7 @@ query = '''
         }
     }
 '''
-result = schema.execute(query)
+result = await schema.execute_async(query)
 ```
 
 To learn more check out the following [examples](examples/):

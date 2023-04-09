@@ -44,16 +44,16 @@ def test_field_args_with_unconverted_field():
     assert set(field.field_args.keys()) == set(field_args)
 
 
-def test_default_resolver_with_colliding_objects_field():
+async def test_default_resolver_with_colliding_objects_field():
     field = MongoengineConnectionField(nodes.ErroneousModelNode)
 
-    connection = field.default_resolver(None, {})
+    connection = await field.default_resolver(None, {})
     assert 0 == len(connection.iterable)
 
 
-def test_default_resolver_connection_list_length(fixtures):
+async def test_default_resolver_connection_list_length(fixtures):
     field = MongoengineConnectionField(nodes.ArticleNode)
 
-    connection = field.default_resolver(None, {}, **{"first": 1})
+    connection = await field.default_resolver(None, {}, **{"first": 1})
     assert hasattr(connection, "list_length")
     assert connection.list_length == 1
