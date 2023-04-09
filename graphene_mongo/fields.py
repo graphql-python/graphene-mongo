@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import logging
 from collections import OrderedDict
 from functools import partial, reduce
 
@@ -22,6 +21,8 @@ from mongoengine import QuerySet
 from mongoengine.base import get_document
 from promise import Promise
 from pymongo.errors import OperationFailure
+from asgiref.sync import sync_to_async
+from concurrent.futures import ThreadPoolExecutor
 
 from .advanced_types import (
     FileFieldType,
@@ -314,7 +315,7 @@ class MongoengineConnectionField(ConnectionField):
                     skip)
         return model.objects(**args).no_dereference().only(*required_fields).order_by(self.order_by)
 
-    def default_resolver(self, _root, info, required_fields=None, resolved=None, **args):
+    async def default_resolver(self, _root, info, required_fields=None, resolved=None, **args):
         if required_fields is None:
             required_fields = list()
         args = args or {}
@@ -357,7 +358,8 @@ class MongoengineConnectionField(ConnectionField):
 
             if isinstance(items, QuerySet):
                 try:
-                    count = items.count(with_limit_and_skip=True)
+                    count = await sync_to_async(items.count, thread_sensitive=False,
+                                                executor=ThreadPoolExecutor())(with_limit_and_skip=True)
                 except OperationFailure:
                     count = len(items)
             else:
@@ -400,12 +402,13 @@ class MongoengineConnectionField(ConnectionField):
                             args_copy[key] = args_copy[key].value
 
                 if PYMONGO_VERSION >= (3, 7):
-                    if hasattr(self.model, '_meta') and 'db_alias' in self.model._meta:
-                        count = (mongoengine.get_db(self.model._meta['db_alias'])[self.model._get_collection_name()]).count_documents(args_copy)
-                    else:
-                        count = (mongoengine.get_db()[self.model._get_collection_name()]).count_documents(args_copy)
+                    count = await sync_to_async(
+                        (mongoengine.get_db()[self.model._get_collection_name()]).count_documents,
+                        thread_sensitive=False,
+                        executor=ThreadPoolExecutor())(args_copy)
                 else:
-                    count = self.model.objects(args_copy).count()
+                    count = await sync_to_async(self.model.objects(args_copy).count, thread_sensitive=False,
+                                                executor=ThreadPoolExecutor())()
                 if count != 0:
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
                                                                count=count)
@@ -467,7 +470,7 @@ class MongoengineConnectionField(ConnectionField):
         connection.list_length = list_length
         return connection
 
-    def chained_resolver(self, resolver, is_partial, root, info, **args):
+    async def chained_resolver(self, resolver, is_partial, root, info, **args):
 
         for key, value in dict(args).items():
             if value is None:
@@ -511,13 +514,13 @@ class MongoengineConnectionField(ConnectionField):
                     elif not isinstance(resolved[0], DBRef):
                         return resolved
                     else:
-                        return self.default_resolver(root, info, required_fields, **args_copy)
+                        return await self.default_resolver(root, info, required_fields, **args_copy)
                 elif isinstance(resolved, QuerySet):
                     args.update(resolved._query)
                     args_copy = args.copy()
                     for arg_name, arg in args.copy().items():
-                        if "." in arg_name or arg_name not in self.model._fields_ordered \
-                                + ('first', 'last', 'before', 'after') + tuple(self.filter_args.keys()):
+                        if "." in arg_name or arg_name not in self.model._fields_ordered + (
+                                'first', 'last', 'before', 'after') + tuple(self.filter_args.keys()):
                             args_copy.pop(arg_name)
                             if arg_name == '_id' and isinstance(arg, dict):
                                 operation = list(arg.keys())[0]
@@ -537,38 +540,35 @@ class MongoengineConnectionField(ConnectionField):
                                 operation = list(arg.keys())[0]
                                 args_copy[arg_name + operation.replace('$', '__')] = arg[operation]
                                 del args_copy[arg_name]
-                    return self.default_resolver(root, info, required_fields, resolved=resolved, **args_copy)
+
+                    return await self.default_resolver(root, info, required_fields, resolved=resolved, **args_copy)
                 elif isinstance(resolved, Promise):
                     return resolved.value
                 else:
-                    return resolved
+                    return await resolved
 
-        return self.default_resolver(root, info, required_fields, **args)
+        return await self.default_resolver(root, info, required_fields, **args)
 
     @classmethod
-    def connection_resolver(cls, resolver, connection_type, root, info, **args):
+    async def connection_resolver(cls, resolver, connection_type, root, info, **args):
         if root:
             for key, value in root.__dict__.items():
                 if value:
                     try:
                         setattr(root, key, from_global_id(value)[1])
-                    except Exception as error:
-                        logging.error("Exception Occurred: ", exc_info=error)
-        iterable = resolver(root, info, **args)
-
+                    except Exception:
+                        pass
+        iterable = await resolver(root, info, **args)
         if isinstance(connection_type, graphene.NonNull):
             connection_type = connection_type.of_type
 
-        on_resolve = partial(cls.resolve_connection, connection_type, args)
-
-        if Promise.is_thenable(iterable):
-            return Promise.resolve(iterable).then(on_resolve)
-
-        return on_resolve(iterable)
+        return await sync_to_async(cls.resolve_connection, thread_sensitive=False,
+                                   executor=ThreadPoolExecutor())(connection_type, args, iterable)
 
     def get_resolver(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
         resolver = partial(
             self.chained_resolver, super_resolver, isinstance(super_resolver, partial)
         )
+
         return partial(self.connection_resolver, resolver, self.type)

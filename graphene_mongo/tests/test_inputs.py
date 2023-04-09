@@ -7,14 +7,14 @@ from .nodes import ArticleNode, EditorNode
 from .types import ArticleInput, EditorInput
 
 
-def test_should_create(fixtures):
+async def test_should_create(fixtures):
     class CreateArticle(graphene.Mutation):
         class Arguments:
             article = ArticleInput(required=True)
 
         article = graphene.Field(ArticleNode)
 
-        def mutate(self, info, article):
+        async def mutate(self, info, article):
             article = Article(**article)
             article.save()
 
@@ -39,12 +39,12 @@ def test_should_create(fixtures):
     """
     expected = {"createArticle": {"article": {"headline": "My Article"}}}
     schema = graphene.Schema(query=Query, mutation=Mutation)
-    result = schema.execute(query)
+    result = await schema.execute_async(query)
     assert not result.errors
     assert result.data == expected
 
 
-def test_should_update(fixtures):
+async def test_should_update(fixtures):
     class UpdateEditor(graphene.Mutation):
         class Arguments:
             id = graphene.ID(required=True)
@@ -52,7 +52,7 @@ def test_should_update(fixtures):
 
         editor = graphene.Field(EditorNode)
 
-        def mutate(self, info, id, editor):
+        async def mutate(self, info, id, editor):
             editor_to_update = Editor.objects.get(id=id)
             for key, value in editor.items():
                 if value:
@@ -85,7 +85,7 @@ def test_should_update(fixtures):
     """
     expected = {"updateEditor": {"editor": {"firstName": "Penny", "lastName": "Lane"}}}
     schema = graphene.Schema(query=Query, mutation=Mutation)
-    result = schema.execute(query)
+    result = await schema.execute_async(query)
     # print(result.data)
     assert not result.errors
     assert result.data == expected
