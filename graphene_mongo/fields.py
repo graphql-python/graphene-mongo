@@ -32,7 +32,7 @@ from .advanced_types import (
 from .converter import convert_mongoengine_field, MongoEngineConversionError
 from .registry import get_global_registry
 from .utils import get_model_reference_fields, get_query_fields, find_skip_and_limit, \
-    connection_from_iterables
+    connection_from_iterables, ExecutorEnum
 import pymongo
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
@@ -47,6 +47,10 @@ class MongoengineConnectionField(ConnectionField):
             ), "Attribute `get_queryset` on {} must be callable.".format(self)
         self._get_queryset = get_queryset
         super(MongoengineConnectionField, self).__init__(type, *args, **kwargs)
+
+    @property
+    def executor(self):
+        return ExecutorEnum.SYNC
 
     @property
     def type(self):
@@ -136,7 +140,7 @@ class MongoengineConnectionField(ConnectionField):
                 return False
             try:
                 converted = convert_mongoengine_field(
-                    getattr(self.model, k), self.registry
+                    getattr(self.model, k), self.registry, self.executor
                 )
             except MongoEngineConversionError:
                 return False
@@ -401,7 +405,8 @@ class MongoengineConnectionField(ConnectionField):
 
                 if PYMONGO_VERSION >= (3, 7):
                     if hasattr(self.model, '_meta') and 'db_alias' in self.model._meta:
-                        count = (mongoengine.get_db(self.model._meta['db_alias'])[self.model._get_collection_name()]).count_documents(args_copy)
+                        count = (mongoengine.get_db(self.model._meta['db_alias'])[
+                            self.model._get_collection_name()]).count_documents(args_copy)
                     else:
                         count = (mongoengine.get_db()[self.model._get_collection_name()]).count_documents(args_copy)
                 else:

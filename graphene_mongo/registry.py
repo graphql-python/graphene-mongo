@@ -9,11 +9,15 @@ class Registry(object):
 
     def register(self, cls):
         from .types import GrapheneMongoengineObjectTypes
+        from .types_async import AsyncGrapheneMongoengineObjectTypes
 
-        assert issubclass(
+        assert (issubclass(
             cls,
             GrapheneMongoengineObjectTypes
-        ), 'Only Mongoengine object types can be registered, received "{}"'.format(
+        ) or issubclass(
+            cls,
+            AsyncGrapheneMongoengineObjectTypes
+        )), 'Only Mongoengine/Async Mongoengine object types can be registered, received "{}"'.format(
             cls.__name__
         )
         assert cls._meta.registry == self, "Registry for a Model have to match."
@@ -47,7 +51,9 @@ class Registry(object):
 
 
 registry = None
+async_registry = None
 inputs_registry = None
+async_inputs_registry = None
 
 
 def get_inputs_registry():
