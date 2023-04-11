@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "graphene-mongo"
 packages = [{ include = "graphene_mongo" }]
-version = "0.3.0"
+version = "0.4.0"
 description = "Graphene Mongoengine integration"
 authors = [
     "Abaw Chen <abaw.chen@gmail.com>",
