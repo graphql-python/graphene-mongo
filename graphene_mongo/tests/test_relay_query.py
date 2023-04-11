@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+
 import graphene
 import pytest
 
@@ -268,12 +269,9 @@ async def test_should_query_editors_with_dataloader(fixtures):
         }
     }
     schema = graphene.Schema(query=Query)
-    try:
-        result = await schema.execute_async(query)
-        assert not result.errors
-        assert result.data == expected
-    except Exception as error:
-        a = error
+    result = await schema.execute_async(query)
+    assert not result.errors
+    assert result.data == expected
 
 
 @pytest.mark.asyncio
