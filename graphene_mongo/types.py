@@ -1,7 +1,9 @@
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 
 import graphene
 import mongoengine
+from asgiref.sync import sync_to_async
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.inputobjecttype import InputObjectType, InputObjectTypeOptions
@@ -227,7 +229,7 @@ def create_graphene_generic_class(object_type, option_type):
             return isinstance(root, cls._meta.model)
 
         @classmethod
-        def get_node(cls, info, id):
+        async def get_node(cls, info, id):
             required_fields = list()
             for field in cls._meta.required_fields:
                 if field in cls._meta.model._fields_ordered:
@@ -239,7 +241,8 @@ def create_graphene_generic_class(object_type, option_type):
                 if to_snake_case(field) in cls._meta.model._fields_ordered:
                     required_fields.append(to_snake_case(field))
             required_fields = list(set(required_fields))
-            return cls._meta.model.objects.no_dereference().only(*required_fields).get(pk=id)
+            return await sync_to_async(cls._meta.model.objects.no_dereference().only(*required_fields).get,
+                                       thread_sensitive=False, executor=ThreadPoolExecutor())(pk=id)
 
         def resolve_id(self, info):
             return str(self.id)

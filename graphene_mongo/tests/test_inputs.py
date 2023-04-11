@@ -1,4 +1,5 @@
 import graphene
+import pytest
 
 from graphene.relay import Node
 
@@ -7,6 +8,7 @@ from .nodes import ArticleNode, EditorNode
 from .types import ArticleInput, EditorInput
 
 
+@pytest.mark.asyncio
 async def test_should_create(fixtures):
     class CreateArticle(graphene.Mutation):
         class Arguments:
@@ -44,6 +46,7 @@ async def test_should_create(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_update(fixtures):
     class UpdateEditor(graphene.Mutation):
         class Arguments:

@@ -1,4 +1,5 @@
 import graphene
+import pytest
 
 from graphene.relay import Node
 
@@ -6,10 +7,10 @@ from .models import Article, Editor
 from .nodes import ArticleNode, EditorNode
 
 
+@pytest.mark.asyncio
 async def test_should_create(fixtures):
     class CreateArticle(graphene.Mutation):
         class Arguments:
-
             headline = graphene.String()
 
         article = graphene.Field(ArticleNode)
@@ -21,11 +22,9 @@ async def test_should_create(fixtures):
             return CreateArticle(article=article)
 
     class Query(graphene.ObjectType):
-
         node = Node.Field()
 
     class Mutation(graphene.ObjectType):
-
         create_article = CreateArticle.Field()
 
     query = """
@@ -46,6 +45,7 @@ async def test_should_create(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_update(fixtures):
     class UpdateEditor(graphene.Mutation):
         class Arguments:
@@ -61,11 +61,9 @@ async def test_should_update(fixtures):
             return UpdateEditor(editor=editor)
 
     class Query(graphene.ObjectType):
-
         node = Node.Field()
 
     class Mutation(graphene.ObjectType):
-
         update_editor = UpdateEditor.Field()
 
     query = """

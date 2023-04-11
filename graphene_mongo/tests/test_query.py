@@ -2,11 +2,13 @@ import base64
 import os
 import json
 import graphene
+import pytest
 
 from . import models
 from . import types
 
 
+@pytest.mark.asyncio
 async def test_should_query_editor(fixtures, fixtures_dirname):
     class Query(graphene.ObjectType):
         editor = graphene.Field(types.EditorType)
@@ -71,6 +73,7 @@ async def test_should_query_editor(fixtures, fixtures_dirname):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_reporter(fixtures):
     class Query(graphene.ObjectType):
         reporter = graphene.Field(types.ReporterType)

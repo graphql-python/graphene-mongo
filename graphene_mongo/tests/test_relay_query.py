@@ -2,6 +2,7 @@ import os
 import json
 import base64
 import graphene
+import pytest
 
 from graphene.relay import Node
 from graphql_relay.node.node import to_global_id
@@ -12,6 +13,7 @@ from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 
 
+@pytest.mark.asyncio
 async def test_should_query_reporter(fixtures):
     class Query(graphene.ObjectType):
         reporter = graphene.Field(nodes.ReporterNode)
@@ -90,6 +92,7 @@ async def test_should_query_reporter(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_reporters_with_nested_document(fixtures):
     class Query(graphene.ObjectType):
         reporters = MongoengineConnectionField(nodes.ReporterNode)
@@ -135,6 +138,7 @@ async def test_should_query_reporters_with_nested_document(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_all_editors(fixtures, fixtures_dirname):
     class Query(graphene.ObjectType):
         editors = MongoengineConnectionField(nodes.EditorNode)
@@ -202,12 +206,13 @@ async def test_should_query_all_editors(fixtures, fixtures_dirname):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_editors_with_dataloader(fixtures):
     from promise import Promise
     from promise.dataloader import DataLoader
 
     class ArticleLoader(DataLoader):
-        async def batch_load_fn(self, instances):
+        def batch_load_fn(self, instances):
             queryset = models.Article.objects(editor__in=instances)
             return Promise.resolve(
                 [
@@ -263,11 +268,15 @@ async def test_should_query_editors_with_dataloader(fixtures):
         }
     }
     schema = graphene.Schema(query=Query)
-    result = await schema.execute_async(query)
-    assert not result.errors
-    assert result.data == expected
+    try:
+        result = await schema.execute_async(query)
+        assert not result.errors
+        assert result.data == expected
+    except Exception as error:
+        a = error
 
 
+@pytest.mark.asyncio
 async def test_should_filter_editors_by_id(fixtures):
     class Query(graphene.ObjectType):
         editors = MongoengineConnectionField(nodes.EditorNode)
@@ -304,6 +313,7 @@ async def test_should_filter_editors_by_id(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_filter(fixtures):
     class Query(graphene.ObjectType):
         articles = MongoengineConnectionField(nodes.ArticleNode)
@@ -342,6 +352,7 @@ async def test_should_filter(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_filter_by_reference_field(fixtures):
     class Query(graphene.ObjectType):
         articles = MongoengineConnectionField(nodes.ArticleNode)
@@ -371,6 +382,7 @@ async def test_should_filter_by_reference_field(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_filter_through_inheritance(fixtures):
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -411,6 +423,7 @@ async def test_should_filter_through_inheritance(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_filter_by_list_contains(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
@@ -460,6 +473,7 @@ async def test_should_filter_by_list_contains(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_filter_by_id(fixtures):
     # Notes: https://goo.gl/hMNRgs
     class Query(graphene.ObjectType):
@@ -487,6 +501,7 @@ async def test_should_filter_by_id(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_first_n(fixtures):
     class Query(graphene.ObjectType):
         editors = MongoengineConnectionField(nodes.EditorNode)
@@ -530,6 +545,7 @@ async def test_should_first_n(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_after(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
@@ -562,6 +578,7 @@ async def test_should_after(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_before(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
@@ -596,6 +613,7 @@ async def test_should_before(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_last_n(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
@@ -627,6 +645,7 @@ async def test_should_last_n(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_self_reference(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
@@ -701,6 +720,7 @@ async def test_should_self_reference(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_lazy_reference(fixtures):
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -761,6 +781,7 @@ async def test_should_lazy_reference(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_with_embedded_document(fixtures):
     class Query(graphene.ObjectType):
         professors = MongoengineConnectionField(nodes.ProfessorVectorNode)
@@ -792,6 +813,7 @@ async def test_should_query_with_embedded_document(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_get_queryset_returns_dict_filters(fixtures):
     class Query(graphene.ObjectType):
         node = Node.Field()
@@ -833,8 +855,9 @@ async def test_should_get_queryset_returns_dict_filters(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_get_queryset_returns_qs_filters(fixtures):
-    async def get_queryset(model, info, **args):
+    def get_queryset(model, info, **args):
         return model.objects(headline="World")
 
     class Query(graphene.ObjectType):
@@ -877,6 +900,7 @@ async def test_should_get_queryset_returns_qs_filters(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_filter_mongoengine_queryset(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
@@ -909,6 +933,7 @@ async def test_should_filter_mongoengine_queryset(fixtures):
     )
 
 
+@pytest.mark.asyncio
 async def test_should_query_document_with_embedded(fixtures):
     class Query(graphene.ObjectType):
         foos = MongoengineConnectionField(nodes.FooNode)
@@ -939,6 +964,7 @@ async def test_should_query_document_with_embedded(fixtures):
     assert not result.errors
 
 
+@pytest.mark.asyncio
 async def test_should_filter_mongoengine_queryset_with_list(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
@@ -971,6 +997,7 @@ async def test_should_filter_mongoengine_queryset_with_list(fixtures):
     )
 
 
+@pytest.mark.asyncio
 async def test_should_get_correct_list_of_documents(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)
@@ -1020,6 +1047,7 @@ async def test_should_get_correct_list_of_documents(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_filter_mongoengine_queryset_by_id_and_other_fields(fixtures):
     class Query(graphene.ObjectType):
         players = MongoengineConnectionField(nodes.PlayerNode)

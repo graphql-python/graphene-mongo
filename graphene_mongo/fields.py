@@ -561,6 +561,9 @@ class MongoengineConnectionField(ConnectionField):
         iterable = await resolver(root, info, **args)
         if isinstance(connection_type, graphene.NonNull):
             connection_type = connection_type.of_type
+        if Promise.is_thenable(iterable):
+            on_resolve = partial(cls.resolve_connection, connection_type, args)
+            return Promise.resolve(iterable).then(on_resolve)
 
         return await sync_to_async(cls.resolve_connection, thread_sensitive=False,
                                    executor=ThreadPoolExecutor())(connection_type, args, iterable)
