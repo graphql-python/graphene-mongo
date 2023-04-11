@@ -118,6 +118,7 @@ async def test_should_query_reporter(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_custom_kwargs(fixtures):
     class Query(graphene.ObjectType):
         editors = graphene.List(types.EditorType, first=graphene.Int())
@@ -148,6 +149,7 @@ async def test_should_custom_kwargs(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_self_reference(fixtures):
     class Query(graphene.ObjectType):
         all_players = graphene.List(types.PlayerType)
@@ -194,6 +196,7 @@ async def test_should_self_reference(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_with_embedded_document(fixtures):
     class Query(graphene.ObjectType):
         professor_vector = graphene.Field(
@@ -223,6 +226,7 @@ async def test_should_query_with_embedded_document(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_child(fixtures):
     class Query(graphene.ObjectType):
         children = graphene.List(types.ChildType)
@@ -259,6 +263,7 @@ async def test_should_query_child(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_other_childs(fixtures):
     class Query(graphene.ObjectType):
         children = graphene.List(types.AnotherChildType)
@@ -295,6 +300,7 @@ async def test_should_query_other_childs(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_all_childs(fixtures):
     class Query(graphene.ObjectType):
         children = graphene.List(types.ChildUnionType)
@@ -348,6 +354,7 @@ async def test_should_query_all_childs(fixtures):
     assert result.data == expected
 
 
+@pytest.mark.asyncio
 async def test_should_query_cell_tower(fixtures):
     class Query(graphene.ObjectType):
         cell_towers = graphene.List(types.CellTowerType)
