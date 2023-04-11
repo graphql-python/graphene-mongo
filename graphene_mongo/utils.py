@@ -1,14 +1,19 @@
 from __future__ import unicode_literals
 
+import enum
 import inspect
 from collections import OrderedDict
 
 import mongoengine
 from graphene import Node
 from graphene.utils.trim_docstring import trim_docstring
-# from graphql.utils.ast_to_dict import ast_to_dict
 from graphql import FieldNode
 from graphql_relay.connection.array_connection import offset_to_cursor
+
+
+class ExecutorEnum(enum.Enum):
+    ASYNC = enum.auto()
+    SYNC = enum.auto()
 
 
 def get_model_fields(model, excluding=None):

@@ -1,82 +1,21 @@
-from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
-
 import graphene
 import mongoengine
 from asgiref.sync import sync_to_async
+from graphene import InputObjectType
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
-from graphene.types.inputobjecttype import InputObjectType, InputObjectTypeOptions
-from graphene.types.interface import Interface, InterfaceOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
-from graphene_mongo import MongoengineConnectionField
+from graphene_mongo import AsyncMongoengineConnectionField
 
-from .converter import convert_mongoengine_field
-from .registry import Registry, get_global_registry, get_inputs_registry
-from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields, ExecutorEnum
-
-
-def construct_fields(model, registry, only_fields, exclude_fields, non_required_fields,
-                     executor: ExecutorEnum = ExecutorEnum.SYNC):
-    """
-    Args:
-        model (mongoengine.Document):
-        registry (.registry.Registry):
-        only_fields ([str]):
-        exclude_fields ([str]):
-        executor : ExecutorEnum
-
-    Returns:
-        (OrderedDict, OrderedDict): converted fields and self reference fields.
-
-    """
-    _model_fields = get_model_fields(model)
-    fields = OrderedDict()
-    self_referenced = OrderedDict()
-    for name, field in _model_fields.items():
-        is_not_in_only = only_fields and name not in only_fields
-        is_excluded = name in exclude_fields
-        if is_not_in_only or is_excluded:
-            # We skip this field if we specify required_fields and is not
-            # in there. Or when we exclude this field in exclude_fields
-            continue
-        if isinstance(field, mongoengine.ListField):
-            if not field.field:
-                continue
-            # Take care of list of self-reference.
-            document_type_obj = field.field.__dict__.get("document_type_obj", None)
-            if (
-                    document_type_obj == model._class_name
-                    or isinstance(document_type_obj, model)
-                    or document_type_obj == model
-            ):
-                self_referenced[name] = field
-                continue
-        converted = convert_mongoengine_field(field, registry, executor)
-        if not converted:
-            continue
-        else:
-            if name in non_required_fields and 'required' in converted.kwargs:
-                converted.kwargs['required'] = False
-        fields[name] = converted
-
-    return fields, self_referenced
+from .registry import Registry, get_global_registry, \
+    get_inputs_registry
+from .types import construct_fields, construct_self_referenced_fields
+from .utils import is_valid_mongoengine_model, get_query_fields, ExecutorEnum
 
 
-def construct_self_referenced_fields(self_referenced, registry, executor=ExecutorEnum.SYNC):
-    fields = OrderedDict()
-    for name, field in self_referenced.items():
-        converted = convert_mongoengine_field(field, registry, executor)
-        if not converted:
-            continue
-        fields[name] = converted
-
-    return fields
-
-
-def create_graphene_generic_class(object_type, option_type):
-    class MongoengineGenericObjectTypeOptions(option_type):
+def create_graphene_generic_class_async(object_type, option_type):
+    class AsyncMongoengineGenericObjectTypeOptions(option_type):
 
         model = None
         registry = None  # type: Registry
@@ -85,7 +24,7 @@ def create_graphene_generic_class(object_type, option_type):
         non_required_fields = ()
         order_by = None
 
-    class GrapheneMongoengineGenericType(object_type):
+    class AsyncGrapheneMongoengineGenericType(object_type):
         @classmethod
         def __init_subclass_with_meta__(
                 cls,
@@ -125,7 +64,7 @@ def create_graphene_generic_class(object_type, option_type):
                 'Registry({}), received "{}".'
             ).format(object_type, cls.__name__, registry)
             converted_fields, self_referenced = construct_fields(
-                model, registry, only_fields, exclude_fields, non_required_fields
+                model, registry, only_fields, exclude_fields, non_required_fields, ExecutorEnum.ASYNC
             )
             mongoengine_fields = yank_fields_from_attrs(
                 converted_fields, _as=graphene.Field
@@ -156,15 +95,15 @@ def create_graphene_generic_class(object_type, option_type):
                     'Received "{}" instead.'
                 ).format(cls.__name__, type(connection_field_class))
             else:
-                connection_field_class = MongoengineConnectionField
+                connection_field_class = AsyncMongoengineConnectionField
 
             if _meta:
-                assert isinstance(_meta, MongoengineGenericObjectTypeOptions), (
-                    "_meta must be an instance of MongoengineGenericObjectTypeOptions, "
+                assert isinstance(_meta, AsyncMongoengineGenericObjectTypeOptions), (
+                    "_meta must be an instance of AsyncMongoengineGenericObjectTypeOptions, "
                     "received {}"
                 ).format(_meta.__class__)
             else:
-                _meta = MongoengineGenericObjectTypeOptions(option_type)
+                _meta = AsyncMongoengineGenericObjectTypeOptions(option_type)
 
             _meta.model = model
             _meta.registry = registry
@@ -180,7 +119,7 @@ def create_graphene_generic_class(object_type, option_type):
             _meta.non_required_fields = non_required_fields
             _meta.order_by = order_by
 
-            super(GrapheneMongoengineGenericType, cls).__init_subclass_with_meta__(
+            super(AsyncGrapheneMongoengineGenericType, cls).__init_subclass_with_meta__(
                 _meta=_meta, interfaces=interfaces, **options
             )
 
@@ -188,7 +127,7 @@ def create_graphene_generic_class(object_type, option_type):
                 registry.register(cls)
                 # Notes: Take care list of self-reference fields.
                 converted_fields = construct_self_referenced_fields(
-                    self_referenced, registry
+                    self_referenced, registry, ExecutorEnum.ASYNC
                 )
                 if converted_fields:
                     mongoengine_fields = yank_fields_from_attrs(
@@ -206,7 +145,7 @@ def create_graphene_generic_class(object_type, option_type):
                 cls._meta.registry,
                 cls._meta.only_fields,
                 cls._meta.exclude_fields,
-                cls._meta.non_required_fields
+                cls._meta.non_required_fields, ExecutorEnum.ASYNC
             )
 
             mongoengine_fields = yank_fields_from_attrs(
@@ -243,18 +182,15 @@ def create_graphene_generic_class(object_type, option_type):
                 if to_snake_case(field) in cls._meta.model._fields_ordered:
                     required_fields.append(to_snake_case(field))
             required_fields = list(set(required_fields))
-            return await sync_to_async(cls._meta.model.objects.no_dereference().only(*required_fields).get,
-                                       thread_sensitive=False, executor=ThreadPoolExecutor())(pk=id)
+            return await sync_to_async(cls._meta.model.objects.no_dereference().only(*required_fields).get)(pk=id)
 
         def resolve_id(self, info):
             return str(self.id)
 
-    return GrapheneMongoengineGenericType, MongoengineGenericObjectTypeOptions
+    return AsyncGrapheneMongoengineGenericType, AsyncMongoengineGenericObjectTypeOptions
 
 
-MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(ObjectType, ObjectTypeOptions)
-MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(Interface, InterfaceOptions)
-MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(InputObjectType,
-                                                                                  InputObjectTypeOptions)
+AsyncMongoengineObjectType, AsyncMongoengineObjectTypeOptions = create_graphene_generic_class_async(ObjectType,
+                                                                                                    ObjectTypeOptions)
 
-GrapheneMongoengineObjectTypes = (MongoengineObjectType, MongoengineInputType, MongoengineInterfaceType)
+AsyncGrapheneMongoengineObjectTypes = (AsyncMongoengineObjectType,)

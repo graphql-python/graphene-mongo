@@ -1,24 +1,36 @@
 from graphene import Enum
 
+from graphene_mongo.utils import ExecutorEnum
+
 
 class Registry(object):
     def __init__(self):
         self._registry = {}
+        self._registry_async = {}
         self._registry_string_map = {}
+        self._registry_async_string_map = {}
         self._registry_enum = {}
 
     def register(self, cls):
         from .types import GrapheneMongoengineObjectTypes
+        from .types_async import AsyncGrapheneMongoengineObjectTypes
 
-        assert issubclass(
+        assert (issubclass(
             cls,
             GrapheneMongoengineObjectTypes
-        ), 'Only Mongoengine object types can be registered, received "{}"'.format(
+        ) or issubclass(
+            cls,
+            AsyncGrapheneMongoengineObjectTypes
+        )), 'Only Mongoengine/Async Mongoengine object types can be registered, received "{}"'.format(
             cls.__name__
         )
         assert cls._meta.registry == self, "Registry for a Model have to match."
-        self._registry[cls._meta.model] = cls
-        self._registry_string_map[cls.__name__] = cls._meta.model.__name__
+        if issubclass(cls, GrapheneMongoengineObjectTypes):
+            self._registry[cls._meta.model] = cls
+            self._registry_string_map[cls.__name__] = cls._meta.model.__name__
+        else:
+            self._registry_async[cls._meta.model] = cls
+            self._registry_async_string_map[cls.__name__] = cls._meta.model.__name__
 
         # Rescan all fields
         for model, cls in self._registry.items():
@@ -36,8 +48,11 @@ class Registry(object):
         cls.__name__ = name
         self._registry_enum[cls] = Enum.from_enum(cls)
 
-    def get_type_for_model(self, model):
-        return self._registry.get(model)
+    def get_type_for_model(self, model, executor: ExecutorEnum = ExecutorEnum.SYNC):
+        if executor == ExecutorEnum.SYNC:
+            return self._registry.get(model)
+        else:
+            return self._registry_async.get(model)
 
     def check_enum_already_exist(self, cls):
         return cls in self._registry_enum
@@ -47,7 +62,9 @@ class Registry(object):
 
 
 registry = None
+async_registry = None
 inputs_registry = None
+async_inputs_registry = None
 
 
 def get_inputs_registry():
