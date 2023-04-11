@@ -34,12 +34,6 @@ PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
 
 class AsyncMongoengineConnectionField(MongoengineConnectionField):
     def __init__(self, type, *args, **kwargs):
-        get_queryset = kwargs.pop("get_queryset", None)
-        if get_queryset:
-            assert callable(
-                get_queryset
-            ), "Attribute `get_queryset` on {} must be callable.".format(self)
-        self._get_queryset = get_queryset
         super(AsyncMongoengineConnectionField, self).__init__(type, *args, **kwargs)
 
     @property

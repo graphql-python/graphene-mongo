@@ -152,7 +152,10 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
                         querying_union_types.remove('__typename')
                     to_resolve_models = list()
                     for each in querying_union_types:
-                        to_resolve_models.append(registry._registry_string_map[each])
+                        if executor == ExecutorEnum.SYNC:
+                            to_resolve_models.append(registry._registry_string_map[each])
+                        else:
+                            to_resolve_models.append(registry._registry_async_string_map[each])
                     to_resolve_object_ids = list()
                     for each in to_resolve:
                         if isinstance(each, LazyReference):
@@ -219,7 +222,10 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
                         querying_union_types.remove('__typename')
                     to_resolve_models = list()
                     for each in querying_union_types:
-                        to_resolve_models.append(registry._registry_string_map[each])
+                        if executor == ExecutorEnum.SYNC:
+                            to_resolve_models.append(registry._registry_string_map[each])
+                        else:
+                            to_resolve_models.append(registry._registry_async_string_map[each])
                     to_resolve_object_ids = list()
                     for each in to_resolve:
                         if isinstance(each, LazyReference):
@@ -297,7 +303,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         elif isinstance(field, mongoengine.GenericEmbeddedDocumentField):
             _field = mongoengine.EmbeddedDocumentField(choice)
 
-        _field = convert_mongoengine_field(_field, registry)
+        _field = convert_mongoengine_field(_field, registry, executor=executor)
         _type = _field.get_type()
         if _type:
             _types.append(_type.type)
@@ -311,7 +317,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
     name = to_camel_case("{}_{}".format(
         field._owner_document.__name__,
         field.db_field
-    )) + "UnionType"
+    )) + "UnionType" if ExecutorEnum.SYNC else "AsyncUnionType"
     Meta = type("Meta", (object,), {"types": tuple(_types)})
     _union = type(name, (graphene.Union,), {"Meta": Meta})
 
@@ -320,7 +326,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         if de_referenced:
             document = get_document(de_referenced["_cls"])
             document_field = mongoengine.ReferenceField(document)
-            document_field = convert_mongoengine_field(document_field, registry)
+            document_field = convert_mongoengine_field(document_field, registry, executor=executor)
             _type = document_field.get_type().type
             filter_args = list()
             if _type._meta.filter_fields:
@@ -344,7 +350,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
-            document_field_type = registry.get_type_for_model(document.document_type)
+            document_field_type = registry.get_type_for_model(document.document_type, executor=executor)
             querying_types = list(get_query_fields(args[0]).keys())
             filter_args = list()
             if document_field_type._meta.filter_fields:
@@ -356,7 +362,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                     item = to_snake_case(each)
                     if item in document.document_type._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
-                _type = registry.get_type_for_model(document.document_type)
+                _type = registry.get_type_for_model(document.document_type, executor=executor)
                 return document.document_type.objects().no_dereference().only(
                     *(set((list(_type._meta.required_fields) + queried_fields)))).get(
                     pk=document.pk)
@@ -393,7 +399,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
-            document_field_type = registry.get_type_for_model(document.document_type)
+            document_field_type = registry.get_type_for_model(document.document_type, executor=executor)
             querying_types = list(get_query_fields(args[0]).keys())
             filter_args = list()
             if document_field_type._meta.filter_fields:
@@ -405,7 +411,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                     item = to_snake_case(each)
                     if item in document.document_type._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
-                _type = registry.get_type_for_model(document.document_type)
+                _type = registry.get_type_for_model(document.document_type, executor=executor)
                 return await sync_to_async(document.document_type.objects().no_dereference().only(
                     *(set((list(_type._meta.required_fields) + queried_fields)))).get, thread_sensitive=False,
                                            executor=ThreadPoolExecutor())(pk=document.pk)
@@ -418,7 +424,8 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         required = False
         if field.db_field is not None:
             required = field.required
-            resolver_function = getattr(registry.get_type_for_model(field.owner_document), "resolve_" + field.db_field,
+            resolver_function = getattr(registry.get_type_for_model(field.owner_document, executor=executor),
+                                        "resolve_" + field.db_field,
                                         None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
@@ -431,7 +438,8 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         required = False
         if field.db_field is not None:
             required = field.required
-            resolver_function = getattr(registry.get_type_for_model(field.owner_document), "resolve_" + field.db_field,
+            resolver_function = getattr(registry.get_type_for_model(field.owner_document, executor=executor),
+                                        "resolve_" + field.db_field,
                                         None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
@@ -452,7 +460,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type)
+            _type = registry.get_type_for_model(field.document_type, executor=executor)
             filter_args = list()
             if _type._meta.filter_fields:
                 for key, values in _type._meta.filter_fields.items():
@@ -470,7 +478,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
     def cached_reference_resolver(root, *args, **kwargs):
         if field:
             queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type)
+            _type = registry.get_type_for_model(field.document_type, executor=executor)
             filter_args = list()
             if _type._meta.filter_fields:
                 for key, values in _type._meta.filter_fields.items():
@@ -490,7 +498,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type)
+            _type = registry.get_type_for_model(field.document_type, executor=executor)
             filter_args = list()
             if _type._meta.filter_fields:
                 for key, values in _type._meta.filter_fields.items():
@@ -508,7 +516,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
     async def cached_reference_resolver_async(root, *args, **kwargs):
         if field:
             queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type)
+            _type = registry.get_type_for_model(field.document_type, executor=executor)
             filter_args = list()
             if _type._meta.filter_fields:
                 for key, values in _type._meta.filter_fields.items():
@@ -526,7 +534,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
         return None
 
     def dynamic_type():
-        _type = registry.get_type_for_model(model)
+        _type = registry.get_type_for_model(model, executor=executor)
         if not _type:
             return None
         if isinstance(field, mongoengine.EmbeddedDocumentField):
@@ -536,7 +544,8 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
         required = False
         if field.db_field is not None:
             required = field.required
-            resolver_function = getattr(registry.get_type_for_model(field.owner_document), "resolve_" + field.db_field,
+            resolver_function = getattr(registry.get_type_for_model(field.owner_document, executor=executor),
+                                        "resolve_" + field.db_field,
                                         None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
@@ -560,7 +569,7 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
-            _type = registry.get_type_for_model(document.document_type)
+            _type = registry.get_type_for_model(document.document_type, executor=executor)
             filter_args = list()
             if _type._meta.filter_fields:
                 for key, values in _type._meta.filter_fields.items():
@@ -579,7 +588,7 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
-            _type = registry.get_type_for_model(document.document_type)
+            _type = registry.get_type_for_model(document.document_type, executor=executor)
             filter_args = list()
             if _type._meta.filter_fields:
                 for key, values in _type._meta.filter_fields.items():
@@ -595,14 +604,15 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
         return None
 
     def dynamic_type():
-        _type = registry.get_type_for_model(model)
+        _type = registry.get_type_for_model(model, executor=executor)
         if not _type:
             return None
         field_resolver = None
         required = False
         if field.db_field is not None:
             required = field.required
-            resolver_function = getattr(registry.get_type_for_model(field.owner_document), "resolve_" + field.db_field,
+            resolver_function = getattr(registry.get_type_for_model(field.owner_document, executor=executor),
+                                        "resolve_" + field.db_field,
                                         None)
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function

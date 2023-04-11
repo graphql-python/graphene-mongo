@@ -9,7 +9,6 @@ from graphql_relay.node.node import to_global_id
 
 from . import models
 from . import nodes
-from .. import AsyncMongoengineConnectionField
 from ..fields import MongoengineConnectionField
 from ..types import MongoengineObjectType
 

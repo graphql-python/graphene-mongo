@@ -3,6 +3,7 @@ from graphene.relay import Node
 
 from . import models
 from . import types  # noqa: F401
+from .models import ProfessorMetadata
 from ..types_async import AsyncMongoengineObjectType
 from ..types import MongoengineObjectType
 
@@ -48,12 +49,6 @@ class ReporterNode(MongoengineObjectType):
         interfaces = (Node,)
 
 
-class ReporterNodeAsync(AsyncMongoengineObjectType):
-    class Meta:
-        model = models.Reporter
-        interfaces = (Node,)
-
-
 class ParentNode(MongoengineObjectType):
     class Meta:
         model = models.Parent
@@ -72,16 +67,22 @@ class ChildRegisteredBeforeNode(MongoengineObjectType):
         interfaces = (Node,)
 
 
+class ChildRegisteredAfterNode(MongoengineObjectType):
+    class Meta:
+        model = models.ChildRegisteredAfter
+        interfaces = (Node,)
+
+
 class ParentWithRelationshipNode(MongoengineObjectType):
     class Meta:
         model = models.ParentWithRelationship
         interfaces = (Node,)
 
 
-class ChildRegisteredAfterNode(MongoengineObjectType):
+class ProfessorMetadataNode(MongoengineObjectType):
     class Meta:
-        model = models.ChildRegisteredAfter
-        interfaces = (Node,)
+        model = ProfessorMetadata
+        interfaces = (graphene.Node,)
 
 
 class ProfessorVectorNode(MongoengineObjectType):
