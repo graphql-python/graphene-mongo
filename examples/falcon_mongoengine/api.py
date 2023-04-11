@@ -23,7 +23,7 @@ class HelloWorldResource:
 class GraphQLResource:
     def on_get(self, req, resp):
         query = req.params["query"]
-        result = schema.execute(query)
+        result = await schema.execute_async(query)
 
         if result.data:
             data_ret = {"data": result.data}
@@ -32,7 +32,7 @@ class GraphQLResource:
 
     def on_post(self, req, resp):
         query = req.params["query"]
-        result = schema.execute(query)
+        result = await schema.execute_async(query)
         if result.data:
             data_ret = {"data": result.data}
             resp.status = falcon.HTTP_200

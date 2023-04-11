@@ -70,8 +70,8 @@ def test_should_boolean_convert_boolean():
     assert_conversion(mongoengine.BooleanField, graphene.Boolean)
 
 
-def test_should_decimal_convert_float():
-    assert_conversion(mongoengine.DecimalField, graphene.Float)
+def test_should_decimal_convert_decimal():
+    assert_conversion(mongoengine.DecimalField, graphene.Decimal)
 
 
 def test_should_float_convert_float():

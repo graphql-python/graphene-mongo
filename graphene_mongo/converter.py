@@ -9,6 +9,7 @@ from mongoengine.base import get_document, LazyReference
 from . import advanced_types
 from .utils import import_single_dispatch, get_field_description, get_query_fields
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from asgiref.sync import sync_to_async
 
 singledispatch = import_single_dispatch()
 
@@ -42,6 +43,14 @@ def convert_field_to_id(field, registry=None):
     )
 
 
+@convert_mongoengine_field.register(mongoengine.Decimal128Field)
+@convert_mongoengine_field.register(mongoengine.DecimalField)
+def convert_field_to_decimal(field, registry=None):
+    return graphene.Decimal(
+        description=get_field_description(field, registry), required=field.required
+    )
+
+
 @convert_mongoengine_field.register(mongoengine.IntField)
 @convert_mongoengine_field.register(mongoengine.LongField)
 @convert_mongoengine_field.register(mongoengine.SequenceField)
@@ -58,17 +67,9 @@ def convert_field_to_boolean(field, registry=None):
     )
 
 
-@convert_mongoengine_field.register(mongoengine.DecimalField)
 @convert_mongoengine_field.register(mongoengine.FloatField)
 def convert_field_to_float(field, registry=None):
     return graphene.Float(
-        description=get_field_description(field, registry), required=field.required
-    )
-
-
-@convert_mongoengine_field.register(mongoengine.Decimal128Field)
-def convert_field_to_decimal(field, registry=None):
-    return graphene.Decimal(
         description=get_field_description(field, registry), required=field.required
     )
 
@@ -246,7 +247,7 @@ def convert_field_to_union(field, registry=None):
     Meta = type("Meta", (object,), {"types": tuple(_types)})
     _union = type(name, (graphene.Union,), {"Meta": Meta})
 
-    def reference_resolver(root, *args, **kwargs):
+    async def reference_resolver(root, *args, **kwargs):
         de_referenced = getattr(root, field.name or field.db_name)
         if de_referenced:
             document = get_document(de_referenced["_cls"])
@@ -265,13 +266,14 @@ def convert_field_to_union(field, registry=None):
                     item = to_snake_case(each)
                     if item in document._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
-                return document.objects().no_dereference().only(*list(
-                    set(list(_type._meta.required_fields) + queried_fields))).get(
-                    pk=de_referenced["_ref"].id)
-            return document()
+                return await sync_to_async(document.objects().no_dereference().only(*list(
+                    set(list(_type._meta.required_fields) + queried_fields))).get, thread_sensitive=False,
+                                           executor=ThreadPoolExecutor())(pk=de_referenced["_ref"].id)
+            return await sync_to_async(document, thread_sensitive=False,
+                                       executor=ThreadPoolExecutor())()
         return None
 
-    def lazy_reference_resolver(root, *args, **kwargs):
+    async def lazy_reference_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
@@ -288,10 +290,11 @@ def convert_field_to_union(field, registry=None):
                     if item in document.document_type._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
                 _type = registry.get_type_for_model(document.document_type)
-                return document.document_type.objects().no_dereference().only(
-                    *(set((list(_type._meta.required_fields) + queried_fields)))).get(
-                    pk=document.pk)
-            return document.document_type()
+                return await sync_to_async(document.document_type.objects().no_dereference().only(
+                    *(set((list(_type._meta.required_fields) + queried_fields)))).get, thread_sensitive=False,
+                                           executor=ThreadPoolExecutor())(pk=document.pk)
+            return await sync_to_async(document.document_type, thread_sensitive=False,
+                                       executor=ThreadPoolExecutor())()
         return None
 
     if isinstance(field, mongoengine.GenericLazyReferenceField):
@@ -327,7 +330,7 @@ def convert_field_to_union(field, registry=None):
 def convert_field_to_dynamic(field, registry=None):
     model = field.document_type
 
-    def reference_resolver(root, *args, **kwargs):
+    async def reference_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
@@ -341,12 +344,12 @@ def convert_field_to_dynamic(field, registry=None):
                 item = to_snake_case(each)
                 if item in field.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
-            return field.document_type.objects().no_dereference().only(
-                *(set(list(_type._meta.required_fields) + queried_fields))).get(
-                pk=document.id)
+            return await sync_to_async(field.document_type.objects().no_dereference().only(
+                *(set(list(_type._meta.required_fields) + queried_fields))).get, thread_sensitive=False,
+                                       executor=ThreadPoolExecutor())(pk=document.id)
         return None
 
-    def cached_reference_resolver(root, *args, **kwargs):
+    async def cached_reference_resolver(root, *args, **kwargs):
         if field:
             queried_fields = list()
             _type = registry.get_type_for_model(field.document_type)
@@ -359,9 +362,10 @@ def convert_field_to_dynamic(field, registry=None):
                 item = to_snake_case(each)
                 if item in field.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
-            return field.document_type.objects().no_dereference().only(
+            return await sync_to_async(field.document_type.objects().no_dereference().only(
                 *(set(
-                    list(_type._meta.required_fields) + queried_fields))).get(
+                    list(_type._meta.required_fields) + queried_fields))).get, thread_sensitive=False,
+                                       executor=ThreadPoolExecutor())(
                 pk=getattr(root, field.name or field.db_name))
         return None
 
@@ -394,7 +398,7 @@ def convert_field_to_dynamic(field, registry=None):
 def convert_lazy_field_to_dynamic(field, registry=None):
     model = field.document_type
 
-    def lazy_resolver(root, *args, **kwargs):
+    async def lazy_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
             queried_fields = list()
@@ -408,9 +412,9 @@ def convert_lazy_field_to_dynamic(field, registry=None):
                 item = to_snake_case(each)
                 if item in document.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
-            return document.document_type.objects().no_dereference().only(
-                *(set((list(_type._meta.required_fields) + queried_fields)))).get(
-                pk=document.pk)
+            return await sync_to_async(document.document_type.objects().no_dereference().only(
+                *(set((list(_type._meta.required_fields) + queried_fields)))).get, thread_sensitive=False,
+                                       executor=ThreadPoolExecutor())(pk=document.pk)
         return None
 
     def dynamic_type():
