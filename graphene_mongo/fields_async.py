@@ -296,6 +296,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
 
         return await self.default_resolver(root, info, required_fields, **args)
 
+    @classmethod
     async def connection_resolver(cls, resolver, connection_type, root, info, **args):
         if root:
             for key, value in root.__dict__.items():
@@ -308,8 +309,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
         if isinstance(connection_type, graphene.NonNull):
             connection_type = connection_type.of_type
         if Promise.is_thenable(iterable):
-            # on_resolve = partial(cls.resolve_connection, connection_type, args)
-            iterable = Promise.resolve(iterable).value
-
+            on_resolve = partial(cls.resolve_connection, connection_type, args)
+            iterable = Promise.resolve(iterable).then(on_resolve).value
         return await sync_to_async(cls.resolve_connection, thread_sensitive=False,
                                    executor=ThreadPoolExecutor())(connection_type, args, iterable)
