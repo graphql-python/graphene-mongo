@@ -60,7 +60,6 @@ def convert_field_to_boolean(field, registry=None, executor: ExecutorEnum = Exec
     )
 
 
-@convert_mongoengine_field.register(mongoengine.DecimalField)
 @convert_mongoengine_field.register(mongoengine.FloatField)
 def convert_field_to_float(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.Float(
@@ -69,6 +68,7 @@ def convert_field_to_float(field, registry=None, executor: ExecutorEnum = Execut
 
 
 @convert_mongoengine_field.register(mongoengine.Decimal128Field)
+@convert_mongoengine_field.register(mongoengine.DecimalField)
 def convert_field_to_decimal(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.Decimal(
         description=get_field_description(field, registry), required=field.required
