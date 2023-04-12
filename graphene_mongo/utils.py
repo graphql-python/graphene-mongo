@@ -194,7 +194,7 @@ def ast_to_dict(node, include_loc=False):
     return node
 
 
-def find_skip_and_limit(first, last, after, before, count):
+def find_skip_and_limit(first, last, after, before, count=None):
     reverse = False
     skip = 0
     limit = None
@@ -217,6 +217,8 @@ def find_skip_and_limit(first, last, after, before, count):
             limit = last
             skip = before - last
     elif last is not None and after is not None:
+        if not count:
+            raise ValueError("Count Missing")
         reverse = True
         if last + after < count:
             limit = last

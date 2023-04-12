@@ -16,7 +16,8 @@ from graphene.types.structures import Structure
 from graphene.types.utils import get_type
 from graphene.utils.str_converters import to_snake_case
 from graphql import GraphQLResolveInfo
-from graphql_relay import from_global_id, cursor_to_offset
+from graphql_relay import from_global_id
+from graphql_relay.connection.arrayconnection import cursor_to_offset
 from mongoengine import QuerySet
 from mongoengine.base import get_document
 from promise import Promise
@@ -355,28 +356,44 @@ class MongoengineConnectionField(ConnectionField):
         if before:
             before = cursor_to_offset(before)
 
+        queryset = None
+
         if resolved is not None:
             items = resolved
 
             if isinstance(items, QuerySet):
+                queryset = items.clone()
                 try:
-                    count = items.count(with_limit_and_skip=True)
+                    if last is not None and after is not None:
+                        count = items.count(with_limit_and_skip=False)
+                    else:
+                        count = None
                 except OperationFailure:
                     count = len(items)
             else:
+                queryset = None
                 count = len(items)
 
             skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
                                                        count=count)
 
-            if limit:
-                if reverse:
-                    items = items[::-1][skip:skip + limit]
-                else:
-                    items = items[skip:skip + limit]
-            elif skip:
-                items = items[skip:]
-            iterables = items
+            if isinstance(items, QuerySet):
+                if limit:
+                    if reverse:
+                        items = items.order_by("-pk").skip(skip).limit(limit)
+                    else:
+                        items = items.skip(skip).limit(limit)
+                elif skip:
+                    items = items.skip(skip)
+            else:
+                if limit:
+                    if reverse:
+                        items = items[::-1][skip:skip + limit]
+                    else:
+                        items = items[skip:skip + limit]
+                elif skip:
+                    items = items[skip:]
+            iterables = list(items)
             list_length = len(iterables)
 
         elif callable(getattr(self.model, "objects", None)):
@@ -454,7 +471,13 @@ class MongoengineConnectionField(ConnectionField):
             iterables = items
             list_length = len(iterables)
 
-        has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
+        if count:
+            has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
+        else:
+            if queryset:
+                has_next_page = bool(queryset(pk__gt=iterables[-1].pk).limit(1).first())
+            else:
+                has_next_page = False
         has_previous_page = True if skip else False
         if reverse:
             iterables = list(iterables)
@@ -570,7 +593,7 @@ class MongoengineConnectionField(ConnectionField):
 
         return on_resolve(iterable)
 
-    def wrap_resolve(self, parent_resolver):
+    def get_resolver(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
         resolver = partial(
             self.chained_resolver, super_resolver, isinstance(super_resolver, partial)

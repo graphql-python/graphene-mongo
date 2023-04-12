@@ -48,7 +48,7 @@ def test_field_args_with_unconverted_field():
 
 
 @pytest.mark.asyncio
-async def test_default_resolver_with_colliding_objects_field():
+async def test_default_resolver_with_colliding_objects_field_async():
     field = AsyncMongoengineConnectionField(nodes_async.ErroneousModelAsyncNode)
 
     connection = await field.default_resolver(None, {})
@@ -56,7 +56,7 @@ async def test_default_resolver_with_colliding_objects_field():
 
 
 @pytest.mark.asyncio
-async def test_default_resolver_connection_list_length(fixtures):
+async def test_default_resolver_connection_list_length_async(fixtures):
     field = AsyncMongoengineConnectionField(nodes_async.ArticleAsyncNode)
 
     connection = await field.default_resolver(None, {}, **{"first": 1})
