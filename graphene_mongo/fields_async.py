@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-
 from functools import partial
 from typing import Coroutine
 
@@ -107,7 +106,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     items = items[skip:skip + limit]
             elif skip:
                 items = items[skip:]
-            iterables = items
+            iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(items)
             list_length = len(iterables)
 
         elif callable(getattr(self.model, "objects", None)):
@@ -145,6 +144,8 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
                                                                count=count)
                     iterables = self.get_queryset(self.model, info, required_fields, skip, limit, reverse, **args)
+                    iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
+                        iterables)
                     list_length = len(iterables)
                     if isinstance(info, GraphQLResolveInfo):
                         if not info.context:
@@ -163,6 +164,8 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 elif skip:
                     args["pk__in"] = args["pk__in"][skip:]
                 iterables = self.get_queryset(self.model, info, required_fields, **args)
+                iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
+                    iterables)
                 list_length = len(iterables)
                 if isinstance(info, GraphQLResolveInfo):
                     if not info.context:
@@ -183,12 +186,15 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             elif skip:
                 items = items[skip:]
             iterables = items
+            iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
+                iterables)
             list_length = len(iterables)
 
         has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
         has_previous_page = True if skip else False
         if reverse:
-            iterables = list(iterables)
+            iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
+                iterables)
             iterables.reverse()
             skip = limit
         connection = connection_from_iterables(edges=iterables, start_offset=skip,
@@ -296,8 +302,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
         iterable = await resolver(root, info, **args)
         if isinstance(connection_type, graphene.NonNull):
             connection_type = connection_type.of_type
+        on_resolve = partial(cls.resolve_connection, connection_type, args)
         if Promise.is_thenable(iterable):
-            on_resolve = partial(cls.resolve_connection, connection_type, args)
             iterable = Promise.resolve(iterable).then(on_resolve).value
-        return await sync_to_async(cls.resolve_connection, thread_sensitive=False,
-                                   executor=ThreadPoolExecutor())(connection_type, args, iterable)
+        return on_resolve(iterable)
