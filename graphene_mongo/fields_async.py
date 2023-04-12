@@ -16,10 +16,10 @@ from promise import Promise
 from pymongo.errors import OperationFailure
 from asgiref.sync import sync_to_async
 from concurrent.futures import ThreadPoolExecutor
-
+from .registry import get_global_async_registry
 from . import MongoengineConnectionField
 from .utils import get_query_fields, find_skip_and_limit, \
-    connection_from_iterables
+    connection_from_iterables, ExecutorEnum
 import pymongo
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
@@ -28,6 +28,10 @@ PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
 class AsyncMongoengineConnectionField(MongoengineConnectionField):
     def __init__(self, type, *args, **kwargs):
         super(AsyncMongoengineConnectionField, self).__init__(type, *args, **kwargs)
+
+    @property
+    def executor(self):
+        return ExecutorEnum.ASYNC
 
     @property
     def type(self):
@@ -44,7 +48,11 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
 
     @property
     def fields(self):
-        return super().fields
+        return super(AsyncMongoengineConnectionField, self).fields
+
+    @property
+    def registry(self):
+        return getattr(self.node_type._meta, "registry", get_global_async_registry())
 
     async def default_resolver(self, _root, info, required_fields=None, resolved=None, **args):
         if required_fields is None:

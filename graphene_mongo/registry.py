@@ -74,6 +74,13 @@ def get_inputs_registry():
     return inputs_registry
 
 
+def get_inputs_async_registry():
+    global async_inputs_registry
+    if not async_inputs_registry:
+        async_inputs_registry = Registry()
+    return async_inputs_registry
+
+
 def get_global_registry():
     global registry
     if not registry:
@@ -81,8 +88,22 @@ def get_global_registry():
     return registry
 
 
+def get_global_async_registry():
+    global async_registry
+    if not async_registry:
+        async_registry = Registry()
+    return async_registry
+
+
 def reset_global_registry():
     global registry
     global inputs_registry
     registry = None
     inputs_registry = None
+
+
+def reset_global_async_registry():
+    global async_registry
+    global async_inputs_registry
+    async_registry = None
+    async_inputs_registry = None

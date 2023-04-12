@@ -4,12 +4,13 @@ from asgiref.sync import sync_to_async
 from graphene import InputObjectType
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
+from graphene.types.interface import Interface, InterfaceOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
 from graphene_mongo import AsyncMongoengineConnectionField
 
-from .registry import Registry, get_global_registry, \
-    get_inputs_registry
+from .registry import Registry, get_global_async_registry, \
+    get_inputs_async_registry
 from .types import construct_fields, construct_self_referenced_fields
 from .utils import is_valid_mongoengine_model, get_query_fields, ExecutorEnum
 
@@ -55,9 +56,9 @@ def create_graphene_generic_class_async(object_type, option_type):
             if not registry:
                 # input objects shall be registred in a separated registry
                 if issubclass(cls, InputObjectType):
-                    registry = get_inputs_registry()
+                    registry = get_inputs_async_registry()
                 else:
-                    registry = get_global_registry()
+                    registry = get_global_async_registry()
 
             assert isinstance(registry, Registry), (
                 "The attribute registry in {}.Meta needs to be an instance of "
@@ -192,5 +193,7 @@ def create_graphene_generic_class_async(object_type, option_type):
 
 AsyncMongoengineObjectType, AsyncMongoengineObjectTypeOptions = create_graphene_generic_class_async(ObjectType,
                                                                                                     ObjectTypeOptions)
+AsyncMongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class_async(Interface,
+                                                                                                     InterfaceOptions)
 
-AsyncGrapheneMongoengineObjectTypes = (AsyncMongoengineObjectType,)
+AsyncGrapheneMongoengineObjectTypes = (AsyncMongoengineObjectType, AsyncMongoengineInterfaceType)
