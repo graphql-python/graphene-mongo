@@ -217,7 +217,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
         if count:
             has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
         else:
-            if queryset:
+            if isinstance(queryset, QuerySet):
                 has_next_page = bool(await sync_to_async(queryset(pk__gt=iterables[-1].pk).limit(1).first,
                                                          thread_sensitive=False,
                                                          executor=ThreadPoolExecutor())())
