@@ -289,7 +289,7 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
     return graphene.List(
         base_type,
         description=get_field_description(field, registry),
-        required=field.required,
+        required=field.required
     )
 
 
@@ -349,6 +349,8 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
     def lazy_reference_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
+            if document._cached_doc:
+                return document._cached_doc
             queried_fields = list()
             document_field_type = registry.get_type_for_model(document.document_type, executor=executor)
             querying_types = list(get_query_fields(args[0]).keys())
@@ -398,6 +400,8 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
     async def lazy_reference_resolver_async(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
+            if document._cached_doc:
+                return document._cached_doc
             queried_fields = list()
             document_field_type = registry.get_type_for_model(document.document_type, executor=executor)
             querying_types = list(get_query_fields(args[0]).keys())
@@ -568,6 +572,8 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
     def lazy_resolver(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
+            if document._cached_doc:
+                return document._cached_doc
             queried_fields = list()
             _type = registry.get_type_for_model(document.document_type, executor=executor)
             filter_args = list()
@@ -587,6 +593,8 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
     async def lazy_resolver_async(root, *args, **kwargs):
         document = getattr(root, field.name or field.db_name)
         if document:
+            if document._cached_doc:
+                return document._cached_doc
             queried_fields = list()
             _type = registry.get_type_for_model(document.document_type, executor=executor)
             filter_args = list()
@@ -628,7 +636,7 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
 
 if sys.version_info >= (3, 6):
     @convert_mongoengine_field.register(mongoengine.EnumField)
-    def convert_field_to_enum(field, registry=None, _: ExecutorEnum = ExecutorEnum.SYNC):
+    def convert_field_to_enum(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
         if not registry.check_enum_already_exist(field._enum_cls):
             registry.register_enum(field._enum_cls)
         _type = registry.get_type_for_enum(field._enum_cls)
