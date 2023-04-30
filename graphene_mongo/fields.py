@@ -16,8 +16,7 @@ from graphene.types.structures import Structure
 from graphene.types.utils import get_type
 from graphene.utils.str_converters import to_snake_case
 from graphql import GraphQLResolveInfo
-from graphql_relay import from_global_id
-from graphql_relay.connection.arrayconnection import cursor_to_offset
+from graphql_relay import from_global_id, cursor_to_offset
 from mongoengine import QuerySet
 from mongoengine.base import get_document
 from promise import Promise
@@ -593,7 +592,7 @@ class MongoengineConnectionField(ConnectionField):
 
         return on_resolve(iterable)
 
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         super_resolver = self.resolver or parent_resolver
         resolver = partial(
             self.chained_resolver, super_resolver, isinstance(super_resolver, partial)
