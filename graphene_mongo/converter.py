@@ -82,6 +82,13 @@ def convert_field_to_datetime(field, registry=None, executor: ExecutorEnum = Exe
     )
 
 
+@convert_mongoengine_field.register(mongoengine.DateField)
+def convert_field_to_date(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
+    return graphene.Date(
+        description=get_field_description(field, registry), required=field.required
+    )
+
+
 @convert_mongoengine_field.register(mongoengine.DictField)
 @convert_mongoengine_field.register(mongoengine.MapField)
 def convert_field_to_jsonstring(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
