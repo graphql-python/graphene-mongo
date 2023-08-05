@@ -494,7 +494,7 @@ class MongoengineConnectionField(ConnectionField):
 
                 from itertools import filterfalse
                 connection_fields = [field for field in self.fields if
-                                     type(self.fields[field]) == MongoengineConnectionField]
+                                     isinstance(self.fields[field], MongoengineConnectionField)]
                 filterable_args = tuple(filterfalse(connection_fields.__contains__, list(self.model._fields_ordered)))
                 for arg_name, arg in args.copy().items():
                     if arg_name not in filterable_args + tuple(self.filter_args.keys()):
@@ -526,7 +526,7 @@ class MongoengineConnectionField(ConnectionField):
                                 operation = list(arg.keys())[0]
                                 args_copy['pk' + operation.replace('$', '__')] = arg[operation]
                             if not isinstance(arg, ObjectId) and '.' in arg_name:
-                                if type(arg) == dict:
+                                if isinstance(arg, dict):
                                     operation = list(arg.keys())[0]
                                     args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[
                                         operation]
