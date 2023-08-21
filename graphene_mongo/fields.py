@@ -579,7 +579,7 @@ class MongoengineConnectionField(ConnectionField):
                     try:
                         setattr(root, key, from_global_id(value)[1])
                     except Exception as error:
-                        logging.error("Exception Occurred: ", exc_info=error)
+                        logging.debug("Exception Occurred: ", exc_info=error)
         iterable = resolver(root, info, **args)
 
         if isinstance(connection_type, graphene.NonNull):
