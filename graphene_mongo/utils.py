@@ -133,7 +133,7 @@ def collect_query_fields(node, fragments):
 
     field = {}
     selection_set = None
-    if type(node) == dict:
+    if isinstance(node, dict):
         selection_set = node.get("selection_set")
     else:
         selection_set = node.selection_set

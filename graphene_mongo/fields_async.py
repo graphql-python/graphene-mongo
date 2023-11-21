@@ -435,7 +435,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                                 operation = list(arg.keys())[0]
                                 args_copy["pk" + operation.replace("$", "__")] = arg[operation]
                             if not isinstance(arg, ObjectId) and "." in arg_name:
-                                if type(arg) == dict:
+                                if isinstance(arg, dict):
                                     operation = list(arg.keys())[0]
                                     args_copy[
                                         arg_name.replace(".", "__") + operation.replace("$", "__")
