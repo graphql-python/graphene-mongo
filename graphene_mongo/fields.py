@@ -433,7 +433,7 @@ class MongoengineConnectionField(ConnectionField):
                         items.order_by("-pk").skip(skip) if reverse else items.skip(skip)
                     )
                     items = _base_query.limit(limit)
-                    has_next_page = len(_base_query.skip(limit).only("id").limit(1)) != 0
+                    has_next_page = _base_query.skip(limit).only("id").limit(1).count() != 0
                 elif skip:
                     items = items.skip(skip)
             else:
