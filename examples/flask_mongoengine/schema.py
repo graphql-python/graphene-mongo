@@ -1,6 +1,5 @@
 import graphene
 from graphene.relay import Node
-from graphene_mongo.tests.nodes import PlayerNode, ReporterNode
 
 from graphene_mongo import MongoengineConnectionField, MongoengineObjectType
 from .models import Department as DepartmentModel
@@ -20,7 +19,11 @@ class Role(MongoengineObjectType):
         model = RoleModel
         interfaces = (Node,)
         filter_fields = {
-            'name': ['exact', 'icontains', 'istartswith']
+            "name": [
+                "exact",
+                "icontains",
+                "istartswith",
+            ]
         }
 
 
@@ -35,7 +38,11 @@ class Employee(MongoengineObjectType):
         model = EmployeeModel
         interfaces = (Node,)
         filter_fields = {
-            'name': ['exact', 'icontains', 'istartswith']
+            "name": [
+                "exact",
+                "icontains",
+                "istartswith",
+            ]
         }
 
 

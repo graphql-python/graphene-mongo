@@ -1,5 +1,6 @@
-import mongoengine
 from datetime import datetime
+
+import mongoengine
 import mongomock
 from mongomock import gridfs
 
@@ -80,7 +81,7 @@ class Reporter(mongoengine.Document):
     awards = mongoengine.ListField(mongoengine.StringField())
     articles = mongoengine.ListField(mongoengine.ReferenceField(Article))
     embedded_articles = mongoengine.ListField(
-        mongoengine.EmbeddedDocumentField(EmbeddedArticle)
+        mongoengine.EmbeddedDocumentField(EmbeddedArticle),
     )
     embedded_list_articles = mongoengine.EmbeddedDocumentListField(EmbeddedArticle)
     generic_reference = mongoengine.GenericReferenceField(choices=[Article, Editor], required=True)
@@ -116,14 +117,12 @@ class CellTower(mongoengine.Document):
 
 
 class Child(Parent):
-
     meta = {"collection": "test_parent"}
     baz = mongoengine.StringField()
     loc = mongoengine.PointField()
 
 
 class AnotherChild(Parent):
-
     meta = {"collection": "test_parent"}
     qux = mongoengine.StringField()
     loc = mongoengine.PointField()
@@ -146,10 +145,10 @@ class ProfessorVector(mongoengine.Document):
 class ParentWithRelationship(mongoengine.Document):
     meta = {"collection": "test_parent_reference"}
     before_child = mongoengine.ListField(
-        mongoengine.ReferenceField("ChildRegisteredBefore")
+        mongoengine.ReferenceField("ChildRegisteredBefore"),
     )
     after_child = mongoengine.ListField(
-        mongoengine.ReferenceField("ChildRegisteredAfter")
+        mongoengine.ReferenceField("ChildRegisteredAfter"),
     )
     name = mongoengine.StringField()
 

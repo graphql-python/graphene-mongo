@@ -34,8 +34,8 @@ def get_model_reference_fields(model, excluding=None):
     attributes = dict()
     for attr_name, attr in model._fields.items():
         if attr_name in excluding or not isinstance(
-                attr,
-                (mongoengine.fields.ReferenceField, mongoengine.fields.LazyReferenceField),
+            attr,
+            (mongoengine.fields.ReferenceField, mongoengine.fields.LazyReferenceField),
         ):
             continue
         attributes[attr_name] = attr
@@ -44,8 +44,7 @@ def get_model_reference_fields(model, excluding=None):
 
 def is_valid_mongoengine_model(model):
     return inspect.isclass(model) and (
-            issubclass(model, mongoengine.Document)
-            or issubclass(model, mongoengine.EmbeddedDocument)
+        issubclass(model, mongoengine.Document) or issubclass(model, mongoengine.EmbeddedDocument)
     )
 
 
@@ -76,9 +75,7 @@ def import_single_dispatch():
 def get_type_for_document(schema, document):
     types = schema.types.values()
     for _type in types:
-        type_document = hasattr(_type, "_meta") and getattr(
-            _type._meta, "document", None
-        )
+        type_document = hasattr(_type, "_meta") and getattr(_type._meta, "document", None)
         if document == type_document:
             return _type
 
@@ -137,22 +134,19 @@ def collect_query_fields(node, fragments):
     field = {}
     selection_set = None
     if type(node) == dict:
-        selection_set = node.get('selection_set')
+        selection_set = node.get("selection_set")
     else:
         selection_set = node.selection_set
     if selection_set:
         for leaf in selection_set.selections:
-            if leaf.kind == 'field':
-                field.update({
-                    leaf.name.value: collect_query_fields(leaf, fragments)
-                })
-            elif leaf.kind == 'fragment_spread':
-                field.update(collect_query_fields(fragments[leaf.name.value],
-                                                  fragments))
-            elif leaf.kind == 'inline_fragment':
-                field.update({
-                    leaf.type_condition.name.value: collect_query_fields(leaf, fragments)
-                })
+            if leaf.kind == "field":
+                field.update({leaf.name.value: collect_query_fields(leaf, fragments)})
+            elif leaf.kind == "fragment_spread":
+                field.update(collect_query_fields(fragments[leaf.name.value], fragments))
+            elif leaf.kind == "inline_fragment":
+                field.update(
+                    {leaf.type_condition.name.value: collect_query_fields(leaf, fragments)}
+                )
 
     return field
 
@@ -238,13 +232,12 @@ def find_skip_and_limit(first, last, after, before, count=None):
     return skip, limit, reverse
 
 
-def connection_from_iterables(edges, start_offset, has_previous_page, has_next_page, connection_type,
-                              edge_type,
-                              pageinfo_type):
+def connection_from_iterables(
+    edges, start_offset, has_previous_page, has_next_page, connection_type, edge_type, pageinfo_type
+):
     edges_items = [
         edge_type(
-            node=node,
-            cursor=offset_to_cursor((0 if start_offset is None else start_offset) + i)
+            node=node, cursor=offset_to_cursor((0 if start_offset is None else start_offset) + i)
         )
         for i, node in enumerate(edges)
     ]
@@ -284,6 +277,4 @@ def sync_to_async(
     """
     if executor is None:
         executor = ThreadPoolExecutor()
-    return asgiref_sync_to_async(
-        func=func, thread_sensitive=thread_sensitive, executor=executor
-    )
+    return asgiref_sync_to_async(func=func, thread_sensitive=thread_sensitive, executor=executor)

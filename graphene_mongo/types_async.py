@@ -3,21 +3,19 @@ import mongoengine
 from asgiref.sync import sync_to_async
 from graphene import InputObjectType
 from graphene.relay import Connection, Node
-from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.interface import Interface, InterfaceOptions
+from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
-from graphene_mongo import AsyncMongoengineConnectionField
 
-from .registry import Registry, get_global_async_registry, \
-    get_inputs_async_registry
+from graphene_mongo import AsyncMongoengineConnectionField
+from .registry import Registry, get_global_async_registry, get_inputs_async_registry
 from .types import construct_fields, construct_self_referenced_fields
-from .utils import is_valid_mongoengine_model, get_query_fields, ExecutorEnum
+from .utils import ExecutorEnum, get_query_fields, is_valid_mongoengine_model
 
 
 def create_graphene_generic_class_async(object_type, option_type):
     class AsyncMongoengineGenericObjectTypeOptions(option_type):
-
         model = None
         registry = None  # type: Registry
         connection = None
@@ -28,26 +26,25 @@ def create_graphene_generic_class_async(object_type, option_type):
     class AsyncGrapheneMongoengineGenericType(object_type):
         @classmethod
         def __init_subclass_with_meta__(
-                cls,
-                model=None,
-                registry=None,
-                skip_registry=False,
-                only_fields=(),
-                required_fields=(),
-                exclude_fields=(),
-                non_required_fields=(),
-                filter_fields=None,
-                non_filter_fields=(),
-                connection=None,
-                connection_class=None,
-                use_connection=None,
-                connection_field_class=None,
-                interfaces=(),
-                _meta=None,
-                order_by=None,
-                **options
+            cls,
+            model=None,
+            registry=None,
+            skip_registry=False,
+            only_fields=(),
+            required_fields=(),
+            exclude_fields=(),
+            non_required_fields=(),
+            filter_fields=None,
+            non_filter_fields=(),
+            connection=None,
+            connection_class=None,
+            use_connection=None,
+            connection_field_class=None,
+            interfaces=(),
+            _meta=None,
+            order_by=None,
+            **options,
         ):
-
             assert is_valid_mongoengine_model(model), (
                 "The attribute model in {}.Meta must be a valid Mongoengine Model. "
                 'Received "{}" instead.'
@@ -65,15 +62,16 @@ def create_graphene_generic_class_async(object_type, option_type):
                 'Registry({}), received "{}".'
             ).format(object_type, cls.__name__, registry)
             converted_fields, self_referenced = construct_fields(
-                model, registry, only_fields, exclude_fields, non_required_fields, ExecutorEnum.ASYNC
+                model,
+                registry,
+                only_fields,
+                exclude_fields,
+                non_required_fields,
+                ExecutorEnum.ASYNC,
             )
-            mongoengine_fields = yank_fields_from_attrs(
-                converted_fields, _as=graphene.Field
-            )
+            mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
             if use_connection is None and interfaces:
-                use_connection = any(
-                    (issubclass(interface, Node) for interface in interfaces)
-                )
+                use_connection = any((issubclass(interface, Node) for interface in interfaces))
 
             if use_connection and not connection:
                 # We create the connection automatically
@@ -81,7 +79,7 @@ def create_graphene_generic_class_async(object_type, option_type):
                     connection_class = Connection
 
                 connection = connection_class.create_type(
-                    "{}Connection".format(options.get('name') or cls.__name__), node=cls
+                    "{}Connection".format(options.get("name") or cls.__name__), node=cls
                 )
 
             if connection is not None:
@@ -146,12 +144,11 @@ def create_graphene_generic_class_async(object_type, option_type):
                 cls._meta.registry,
                 cls._meta.only_fields,
                 cls._meta.exclude_fields,
-                cls._meta.non_required_fields, ExecutorEnum.ASYNC
+                cls._meta.non_required_fields,
+                ExecutorEnum.ASYNC,
             )
 
-            mongoengine_fields = yank_fields_from_attrs(
-                converted_fields, _as=graphene.Field
-            )
+            mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
 
             # The initial scan should take precedence
             for field in mongoengine_fields:
@@ -183,7 +180,9 @@ def create_graphene_generic_class_async(object_type, option_type):
                 if to_snake_case(field) in cls._meta.model._fields_ordered:
                     required_fields.append(to_snake_case(field))
             required_fields = list(set(required_fields))
-            return await sync_to_async(cls._meta.model.objects.no_dereference().only(*required_fields).get)(pk=id)
+            return await sync_to_async(
+                cls._meta.model.objects.no_dereference().only(*required_fields).get
+            )(pk=id)
 
         def resolve_id(self, info):
             return str(self.id)
@@ -191,9 +190,13 @@ def create_graphene_generic_class_async(object_type, option_type):
     return AsyncGrapheneMongoengineGenericType, AsyncMongoengineGenericObjectTypeOptions
 
 
-AsyncMongoengineObjectType, AsyncMongoengineObjectTypeOptions = create_graphene_generic_class_async(ObjectType,
-                                                                                                    ObjectTypeOptions)
-AsyncMongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class_async(Interface,
-                                                                                                     InterfaceOptions)
+AsyncMongoengineObjectType, AsyncMongoengineObjectTypeOptions = create_graphene_generic_class_async(
+    ObjectType, ObjectTypeOptions
+)
+
+(
+    AsyncMongoengineInterfaceType,
+    MongoengineInterfaceTypeOptions,
+) = create_graphene_generic_class_async(Interface, InterfaceOptions)
 
 AsyncGrapheneMongoengineObjectTypes = (AsyncMongoengineObjectType, AsyncMongoengineInterfaceType)

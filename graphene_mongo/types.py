@@ -17,8 +17,14 @@ from .registry import Registry, get_global_registry, get_inputs_registry
 from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields, ExecutorEnum
 
 
-def construct_fields(model, registry, only_fields, exclude_fields, non_required_fields,
-                     executor: ExecutorEnum = ExecutorEnum.SYNC):
+def construct_fields(
+    model,
+    registry,
+    only_fields,
+    exclude_fields,
+    non_required_fields,
+    executor: ExecutorEnum = ExecutorEnum.SYNC,
+):
     """
     Args:
         model (mongoengine.Document):
@@ -47,9 +53,9 @@ def construct_fields(model, registry, only_fields, exclude_fields, non_required_
             # Take care of list of self-reference.
             document_type_obj = field.field.__dict__.get("document_type_obj", None)
             if (
-                    document_type_obj == model._class_name
-                    or isinstance(document_type_obj, model)
-                    or document_type_obj == model
+                document_type_obj == model._class_name
+                or isinstance(document_type_obj, model)
+                or document_type_obj == model
             ):
                 self_referenced[name] = field
                 continue
@@ -57,8 +63,8 @@ def construct_fields(model, registry, only_fields, exclude_fields, non_required_
         if not converted:
             continue
         else:
-            if name in non_required_fields and 'required' in converted.kwargs:
-                converted.kwargs['required'] = False
+            if name in non_required_fields and "required" in converted.kwargs:
+                converted.kwargs["required"] = False
         fields[name] = converted
 
     return fields, self_referenced
@@ -77,7 +83,6 @@ def construct_self_referenced_fields(self_referenced, registry, executor=Executo
 
 def create_graphene_generic_class(object_type, option_type):
     class MongoengineGenericObjectTypeOptions(option_type):
-
         model = None
         registry = None  # type: Registry
         connection = None
@@ -88,26 +93,25 @@ def create_graphene_generic_class(object_type, option_type):
     class GrapheneMongoengineGenericType(object_type):
         @classmethod
         def __init_subclass_with_meta__(
-                cls,
-                model=None,
-                registry=None,
-                skip_registry=False,
-                only_fields=(),
-                required_fields=(),
-                exclude_fields=(),
-                non_required_fields=(),
-                filter_fields=None,
-                non_filter_fields=(),
-                connection=None,
-                connection_class=None,
-                use_connection=None,
-                connection_field_class=None,
-                interfaces=(),
-                _meta=None,
-                order_by=None,
-                **options
+            cls,
+            model=None,
+            registry=None,
+            skip_registry=False,
+            only_fields=(),
+            required_fields=(),
+            exclude_fields=(),
+            non_required_fields=(),
+            filter_fields=None,
+            non_filter_fields=(),
+            connection=None,
+            connection_class=None,
+            use_connection=None,
+            connection_field_class=None,
+            interfaces=(),
+            _meta=None,
+            order_by=None,
+            **options,
         ):
-
             assert is_valid_mongoengine_model(model), (
                 "The attribute model in {}.Meta must be a valid Mongoengine Model. "
                 'Received "{}" instead.'
@@ -127,13 +131,9 @@ def create_graphene_generic_class(object_type, option_type):
             converted_fields, self_referenced = construct_fields(
                 model, registry, only_fields, exclude_fields, non_required_fields
             )
-            mongoengine_fields = yank_fields_from_attrs(
-                converted_fields, _as=graphene.Field
-            )
+            mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
             if use_connection is None and interfaces:
-                use_connection = any(
-                    (issubclass(interface, Node) for interface in interfaces)
-                )
+                use_connection = any((issubclass(interface, Node) for interface in interfaces))
 
             if use_connection and not connection:
                 # We create the connection automatically
@@ -141,7 +141,7 @@ def create_graphene_generic_class(object_type, option_type):
                     connection_class = Connection
 
                 connection = connection_class.create_type(
-                    "{}Connection".format(options.get('name') or cls.__name__), node=cls
+                    "{}Connection".format(options.get("name") or cls.__name__), node=cls
                 )
 
             if connection is not None:
@@ -187,9 +187,7 @@ def create_graphene_generic_class(object_type, option_type):
             if not skip_registry:
                 registry.register(cls)
                 # Notes: Take care list of self-reference fields.
-                converted_fields = construct_self_referenced_fields(
-                    self_referenced, registry
-                )
+                converted_fields = construct_self_referenced_fields(self_referenced, registry)
                 if converted_fields:
                     mongoengine_fields = yank_fields_from_attrs(
                         converted_fields, _as=graphene.Field
@@ -206,12 +204,10 @@ def create_graphene_generic_class(object_type, option_type):
                 cls._meta.registry,
                 cls._meta.only_fields,
                 cls._meta.exclude_fields,
-                cls._meta.non_required_fields
+                cls._meta.non_required_fields,
             )
 
-            mongoengine_fields = yank_fields_from_attrs(
-                converted_fields, _as=graphene.Field
-            )
+            mongoengine_fields = yank_fields_from_attrs(converted_fields, _as=graphene.Field)
 
             # The initial scan should take precedence
             for field in mongoengine_fields:
@@ -243,8 +239,11 @@ def create_graphene_generic_class(object_type, option_type):
                 if to_snake_case(field) in cls._meta.model._fields_ordered:
                     required_fields.append(to_snake_case(field))
             required_fields = list(set(required_fields))
-            return await sync_to_async(cls._meta.model.objects.no_dereference().only(*required_fields).get,
-                                       thread_sensitive=False, executor=ThreadPoolExecutor())(pk=id)
+            return await sync_to_async(
+                cls._meta.model.objects.no_dereference().only(*required_fields).get,
+                thread_sensitive=False,
+                executor=ThreadPoolExecutor(),
+            )(pk=id)
 
         def resolve_id(self, info):
             return str(self.id)
@@ -252,9 +251,18 @@ def create_graphene_generic_class(object_type, option_type):
     return GrapheneMongoengineGenericType, MongoengineGenericObjectTypeOptions
 
 
-MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(ObjectType, ObjectTypeOptions)
-MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(Interface, InterfaceOptions)
-MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(InputObjectType,
-                                                                                  InputObjectTypeOptions)
+MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(
+    ObjectType, ObjectTypeOptions
+)
+MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(
+    Interface, InterfaceOptions
+)
+MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(
+    InputObjectType, InputObjectTypeOptions
+)
 
-GrapheneMongoengineObjectTypes = (MongoengineObjectType, MongoengineInputType, MongoengineInterfaceType)
+GrapheneMongoengineObjectTypes = (
+    MongoengineObjectType,
+    MongoengineInputType,
+    MongoengineInterfaceType,
+)

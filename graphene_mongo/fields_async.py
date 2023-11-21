@@ -17,8 +17,13 @@ from pymongo.errors import OperationFailure
 from concurrent.futures import ThreadPoolExecutor
 from .registry import get_global_async_registry
 from . import MongoengineConnectionField
-from .utils import get_query_fields, find_skip_and_limit, \
-    connection_from_iterables, ExecutorEnum, sync_to_async
+from .utils import (
+    get_query_fields,
+    find_skip_and_limit,
+    connection_from_iterables,
+    ExecutorEnum,
+    sync_to_async,
+)
 import pymongo
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
@@ -65,17 +70,19 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             if not hasattr(_root, "_fields_ordered"):
                 if isinstance(getattr(_root, field_name, []), list):
                     args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
-            elif field_name in _root._fields_ordered and not (isinstance(_root._fields[field_name].field,
-                                                                         mongoengine.EmbeddedDocumentField) or
-                                                              isinstance(_root._fields[field_name].field,
-                                                                         mongoengine.GenericEmbeddedDocumentField)):
+            elif field_name in _root._fields_ordered and not (
+                isinstance(_root._fields[field_name].field, mongoengine.EmbeddedDocumentField)
+                or isinstance(
+                    _root._fields[field_name].field, mongoengine.GenericEmbeddedDocumentField
+                )
+            ):
                 if getattr(_root, field_name, []) is not None:
                     args["pk__in"] = [r.id for r in getattr(_root, field_name, [])]
 
-        _id = args.pop('id', None)
+        _id = args.pop("id", None)
 
         if _id is not None:
-            args['pk'] = from_global_id(_id)[-1]
+            args["pk"] = from_global_id(_id)[-1]
         iterables = []
         list_length = 0
         skip = 0
@@ -107,8 +114,9 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             else:
                 count = len(items)
 
-            skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
-                                                       count=count)
+            skip, limit, reverse = find_skip_and_limit(
+                first=first, last=last, after=after, before=before, count=count
+            )
 
             if isinstance(items, QuerySet):
                 queryset = items.clone()
@@ -123,62 +131,82 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 queryset = None
                 if limit:
                     if reverse:
-                        items = items[::-1][skip:skip + limit]
+                        items = items[::-1][skip : skip + limit]
                     else:
-                        items = items[skip:skip + limit]
+                        items = items[skip : skip + limit]
                 elif skip:
                     items = items[skip:]
             iterables = await sync_to_async(list)(items)
             list_length = len(iterables)
 
         elif callable(getattr(self.model, "objects", None)):
-            if _root is None or args or isinstance(getattr(_root, field_name, []), AsyncMongoengineConnectionField):
+            if (
+                _root is None
+                or args
+                or isinstance(getattr(_root, field_name, []), AsyncMongoengineConnectionField)
+            ):
                 args_copy = args.copy()
                 for key in args.copy():
                     if key not in self.model._fields_ordered:
                         args_copy.pop(key)
-                    elif isinstance(getattr(self.model, key),
-                                    mongoengine.fields.ReferenceField) or isinstance(getattr(self.model, key),
-                                                                                     mongoengine.fields.GenericReferenceField) or isinstance(
-                        getattr(self.model, key),
-                        mongoengine.fields.LazyReferenceField) or isinstance(getattr(self.model, key),
-                                                                             mongoengine.fields.CachedReferenceField):
+                    elif (
+                        isinstance(getattr(self.model, key), mongoengine.fields.ReferenceField)
+                        or isinstance(
+                            getattr(self.model, key), mongoengine.fields.GenericReferenceField
+                        )
+                        or isinstance(
+                            getattr(self.model, key), mongoengine.fields.LazyReferenceField
+                        )
+                        or isinstance(
+                            getattr(self.model, key), mongoengine.fields.CachedReferenceField
+                        )
+                    ):
                         if not isinstance(args_copy[key], ObjectId):
                             _from_global_id = from_global_id(args_copy[key])[1]
                             if bson.objectid.ObjectId.is_valid(_from_global_id):
                                 args_copy[key] = ObjectId(_from_global_id)
                             else:
                                 args_copy[key] = _from_global_id
-                    elif isinstance(getattr(self.model, key),
-                                    mongoengine.fields.EnumField):
+                    elif isinstance(getattr(self.model, key), mongoengine.fields.EnumField):
                         if getattr(args_copy[key], "value", None):
                             args_copy[key] = args_copy[key].value
 
                 if PYMONGO_VERSION >= (3, 7):
-                    count = await sync_to_async((mongoengine.get_db()[self.model._get_collection_name()]).count_documents)(args_copy)
+                    count = await sync_to_async(
+                        (mongoengine.get_db()[self.model._get_collection_name()]).count_documents
+                    )(args_copy)
                 else:
-                    count = await sync_to_async(self.model.objects(args_copy).count, thread_sensitive=False,
-                                                executor=ThreadPoolExecutor())()
+                    count = await sync_to_async(
+                        self.model.objects(args_copy).count,
+                        thread_sensitive=False,
+                        executor=ThreadPoolExecutor(),
+                    )()
                 if count != 0:
-                    skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
-                                                               count=count)
-                    iterables = self.get_queryset(self.model, info, required_fields, skip, limit, reverse, **args)
+                    skip, limit, reverse = find_skip_and_limit(
+                        first=first, after=after, last=last, before=before, count=count
+                    )
+                    iterables = self.get_queryset(
+                        self.model, info, required_fields, skip, limit, reverse, **args
+                    )
                     iterables = await sync_to_async(list)(iterables)
                     list_length = len(iterables)
                     if isinstance(info, GraphQLResolveInfo):
                         if not info.context:
                             info = info._replace(context=Context())
-                        info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
+                        info.context.queryset = self.get_queryset(
+                            self.model, info, required_fields, **args
+                        )
 
             elif "pk__in" in args and args["pk__in"]:
                 count = len(args["pk__in"])
-                skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
-                                                           count=count)
+                skip, limit, reverse = find_skip_and_limit(
+                    first=first, last=last, after=after, before=before, count=count
+                )
                 if limit:
                     if reverse:
-                        args["pk__in"] = args["pk__in"][::-1][skip:skip + limit]
+                        args["pk__in"] = args["pk__in"][::-1][skip : skip + limit]
                     else:
-                        args["pk__in"] = args["pk__in"][skip:skip + limit]
+                        args["pk__in"] = args["pk__in"][skip : skip + limit]
                 elif skip:
                     args["pk__in"] = args["pk__in"][skip:]
                 iterables = self.get_queryset(self.model, info, required_fields, **args)
@@ -187,30 +215,39 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 if isinstance(info, GraphQLResolveInfo):
                     if not info.context:
                         info = info._replace(context=Context())
-                    info.context.queryset = self.get_queryset(self.model, info, required_fields, **args)
+                    info.context.queryset = self.get_queryset(
+                        self.model, info, required_fields, **args
+                    )
 
         elif _root is not None:
             field_name = to_snake_case(info.field_name)
             items = getattr(_root, field_name, [])
             count = len(items)
-            skip, limit, reverse = find_skip_and_limit(first=first, last=last, after=after, before=before,
-                                                       count=count)
+            skip, limit, reverse = find_skip_and_limit(
+                first=first, last=last, after=after, before=before, count=count
+            )
             if limit:
                 if reverse:
-                    items = items[::-1][skip:skip + limit]
+                    items = items[::-1][skip : skip + limit]
                 else:
-                    items = items[skip:skip + limit]
+                    items = items[skip : skip + limit]
             elif skip:
                 items = items[skip:]
             iterables = items
-            iterables = await sync_to_async(list)( iterables)
+            iterables = await sync_to_async(list)(iterables)
             list_length = len(iterables)
 
         if count:
-            has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
+            has_next_page = (
+                True
+                if (0 if limit is None else limit) + (0 if skip is None else skip) < count
+                else False
+            )
         else:
             if isinstance(queryset, QuerySet) and iterables:
-                has_next_page = bool(await sync_to_async(queryset(pk__gt=iterables[-1].pk).limit(1).first)())
+                has_next_page = bool(
+                    await sync_to_async(queryset(pk__gt=iterables[-1].pk).limit(1).first)()
+                )
             else:
                 has_next_page = False
         has_previous_page = True if skip else False
@@ -218,19 +255,21 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             iterables = await sync_to_async(list)(iterables)
             iterables.reverse()
             skip = limit
-        connection = connection_from_iterables(edges=iterables, start_offset=skip,
-                                               has_previous_page=has_previous_page,
-                                               has_next_page=has_next_page,
-                                               connection_type=self.type,
-                                               edge_type=self.type.Edge,
-                                               pageinfo_type=graphene.PageInfo)
+        connection = connection_from_iterables(
+            edges=iterables,
+            start_offset=skip,
+            has_previous_page=has_previous_page,
+            has_next_page=has_next_page,
+            connection_type=self.type,
+            edge_type=self.type.Edge,
+            pageinfo_type=graphene.PageInfo,
+        )
 
         connection.iterable = iterables
         connection.list_length = list_length
         return connection
 
     async def chained_resolver(self, resolver, is_partial, root, info, **args):
-
         for key, value in dict(args).items():
             if value is None:
                 del args[key]
@@ -248,20 +287,28 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
         args_copy = args.copy()
 
         if not bool(args) or not is_partial:
-            if isinstance(self.model, mongoengine.Document) or isinstance(self.model,
-                                                                          mongoengine.base.metaclasses.TopLevelDocumentMetaclass):
-
+            if isinstance(self.model, mongoengine.Document) or isinstance(
+                self.model, mongoengine.base.metaclasses.TopLevelDocumentMetaclass
+            ):
                 from itertools import filterfalse
-                connection_fields = [field for field in self.fields if
-                                     type(self.fields[field]) == AsyncMongoengineConnectionField]
-                filterable_args = tuple(filterfalse(connection_fields.__contains__, list(self.model._fields_ordered)))
+
+                connection_fields = [
+                    field
+                    for field in self.fields
+                    if type(self.fields[field]) == AsyncMongoengineConnectionField
+                ]
+                filterable_args = tuple(
+                    filterfalse(connection_fields.__contains__, list(self.model._fields_ordered))
+                )
                 for arg_name, arg in args.copy().items():
                     if arg_name not in filterable_args + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
                 if isinstance(info, GraphQLResolveInfo):
                     if not info.context:
                         info = info._replace(context=Context())
-                    info.context.queryset = self.get_queryset(self.model, info, required_fields, **args_copy)
+                    info.context.queryset = self.get_queryset(
+                        self.model, info, required_fields, **args_copy
+                    )
 
             # XXX: Filter nested args
             resolved = resolver(root, info, **args)
@@ -282,28 +329,35 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     args_copy = args.copy()
                     for arg_name, arg in args.copy().items():
                         if "." in arg_name or arg_name not in self.model._fields_ordered + (
-                                'first', 'last', 'before', 'after') + tuple(self.filter_args.keys()):
+                            "first",
+                            "last",
+                            "before",
+                            "after",
+                        ) + tuple(self.filter_args.keys()):
                             args_copy.pop(arg_name)
-                            if arg_name == '_id' and isinstance(arg, dict):
+                            if arg_name == "_id" and isinstance(arg, dict):
                                 operation = list(arg.keys())[0]
-                                args_copy['pk' + operation.replace('$', '__')] = arg[operation]
-                            if not isinstance(arg, ObjectId) and '.' in arg_name:
+                                args_copy["pk" + operation.replace("$", "__")] = arg[operation]
+                            if not isinstance(arg, ObjectId) and "." in arg_name:
                                 if type(arg) == dict:
                                     operation = list(arg.keys())[0]
-                                    args_copy[arg_name.replace('.', '__') + operation.replace('$', '__')] = arg[
-                                        operation]
+                                    args_copy[
+                                        arg_name.replace(".", "__") + operation.replace("$", "__")
+                                    ] = arg[operation]
                                 else:
-                                    args_copy[arg_name.replace('.', '__')] = arg
-                            elif '.' in arg_name and isinstance(arg, ObjectId):
-                                args_copy[arg_name.replace('.', '__')] = arg
+                                    args_copy[arg_name.replace(".", "__")] = arg
+                            elif "." in arg_name and isinstance(arg, ObjectId):
+                                args_copy[arg_name.replace(".", "__")] = arg
                         else:
                             operations = ["$lte", "$gte", "$ne", "$in"]
                             if isinstance(arg, dict) and any(op in arg for op in operations):
                                 operation = list(arg.keys())[0]
-                                args_copy[arg_name + operation.replace('$', '__')] = arg[operation]
+                                args_copy[arg_name + operation.replace("$", "__")] = arg[operation]
                                 del args_copy[arg_name]
 
-                    return await self.default_resolver(root, info, required_fields, resolved=resolved, **args_copy)
+                    return await self.default_resolver(
+                        root, info, required_fields, resolved=resolved, **args_copy
+                    )
                 elif isinstance(resolved, Promise):
                     return resolved.value
                 else:

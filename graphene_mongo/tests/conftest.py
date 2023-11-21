@@ -1,22 +1,23 @@
 import os
+from datetime import datetime
+
 import pytest
 
-from datetime import datetime
 from .models import (
+    AnotherChild,
     Article,
+    CellTower,
+    Child,
+    ChildRegisteredAfter,
+    ChildRegisteredBefore,
     Editor,
     EmbeddedArticle,
+    ParentWithRelationship,
     Player,
-    Reporter,
-    Child,
-    AnotherChild,
     ProfessorMetadata,
     ProfessorVector,
-    ChildRegisteredBefore,
-    ChildRegisteredAfter,
-    ParentWithRelationship,
-    CellTower,
     Publisher,
+    Reporter,
 )
 
 current_dirname = os.path.dirname(os.path.abspath(__file__))
@@ -68,7 +69,7 @@ def fixtures():
         last_name="Iverson",
         email="ai@gmail.com",
         awards=["2010-mvp"],
-        generic_references=[article1]
+        generic_references=[article1],
     )
     reporter1.articles = [article1, article2]
     embedded_article1 = EmbeddedArticle(headline="Real", editor=editor1)
@@ -82,13 +83,15 @@ def fixtures():
     player1 = Player(
         first_name="Michael",
         last_name="Jordan",
-        articles=[article1, article2])
+        articles=[article1, article2],
+    )
     player1.save()
     player2 = Player(
         first_name="Magic",
         last_name="Johnson",
         opponent=player1,
-        articles=[article3])
+        articles=[article3],
+    )
     player2.save()
     player3 = Player(first_name="Larry", last_name="Bird", players=[player1, player2])
     player3.save()
@@ -165,7 +168,9 @@ def fixtures():
     child4.save()
 
     parent = ParentWithRelationship(
-        name="Yui", before_child=[child3], after_child=[child4]
+        name="Yui",
+        before_child=[child3],
+        after_child=[child4],
     )
 
     parent.save()

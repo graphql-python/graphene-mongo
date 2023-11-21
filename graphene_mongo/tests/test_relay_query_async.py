@@ -1,9 +1,9 @@
-import os
-import json
 import base64
+import json
+import os
+
 import graphene
 import pytest
-
 from graphene.relay import Node
 from graphql_relay.node.node import to_global_id
 
@@ -214,10 +214,7 @@ async def test_should_query_editors_with_dataloader_async(fixtures):
         def batch_load_fn(self, instances):
             queryset = models.Article.objects(editor__in=instances)
             return Promise.resolve(
-                [
-                    [a for a in queryset if a.editor.id == instance.id]
-                    for instance in instances
-                ]
+                [[a for a in queryset if a.editor.id == instance.id] for instance in instances]
             )
 
     article_loader = ArticleLoader()
@@ -368,9 +365,7 @@ async def test_should_filter_by_reference_field_async(fixtures):
         }
     """
     expected = {
-        "articles": {
-            "edges": [{"node": {"headline": "Hello", "editor": {"firstName": "Penny"}}}]
-        }
+        "articles": {"edges": [{"node": {"headline": "Hello", "editor": {"firstName": "Penny"}}}]}
     }
     schema = graphene.Schema(query=Query)
     result = await schema.execute_async(query)
@@ -453,11 +448,8 @@ async def test_should_filter_by_list_contains_async(fixtures):
                         "firstName": "Allen",
                         "awards": ["2010-mvp"],
                         "genericReferences": [
-                            {
-                                "__typename": "ArticleAsyncNode",
-                                "headline": "Hello"
-                            }
-                        ]
+                            {"__typename": "ArticleAsyncNode", "headline": "Hello"}
+                        ],
                     }
                 }
             ]
@@ -758,14 +750,10 @@ async def test_should_lazy_reference_async(fixtures):
                 {
                     "node": {
                         "beforeChild": {
-                            "edges": [
-                                {"node": {"name": "Akari", "parent": {"name": "Yui"}}}
-                            ]
+                            "edges": [{"node": {"name": "Akari", "parent": {"name": "Yui"}}}]
                         },
                         "afterChild": {
-                            "edges": [
-                                {"node": {"name": "Kyouko", "parent": {"name": "Yui"}}}
-                            ]
+                            "edges": [{"node": {"name": "Kyouko", "parent": {"name": "Yui"}}}]
                         },
                     }
                 }
@@ -799,9 +787,7 @@ async def test_should_query_with_embedded_document_async(fixtures):
     """
     expected = {
         "professors": {
-            "edges": [
-                {"node": {"vec": [1.0, 2.3], "metadata": {"firstName": "Steven"}}}
-            ]
+            "edges": [{"node": {"vec": [1.0, 2.3], "metadata": {"firstName": "Steven"}}}]
         }
     }
     schema = graphene.Schema(query=Query)
@@ -925,9 +911,7 @@ async def test_should_filter_mongoengine_queryset_async(fixtures):
     result = await schema.execute_async(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True
-    )
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
 
 @pytest.mark.asyncio
@@ -989,9 +973,7 @@ async def test_should_filter_mongoengine_queryset_with_list_async(fixtures):
     result = await schema.execute_async(query)
 
     assert not result.errors
-    assert json.dumps(result.data, sort_keys=True) == json.dumps(
-        expected, sort_keys=True
-    )
+    assert json.dumps(result.data, sort_keys=True) == json.dumps(expected, sort_keys=True)
 
 
 @pytest.mark.asyncio
@@ -1019,22 +1001,27 @@ async def test_should_get_correct_list_of_documents_async(fixtures):
     """
     expected = {
         "players": {
-            "edges": [{
-                "node": {
-                    "firstName": "Michael",
-                    "articles": {
-                        "edges": [{
-                            "node": {
-                                "headline": "Hello"
-                            }
-                        }, {
-                            "node": {
-                                "headline": "World"
-                            }
-                        }]
+            "edges": [
+                {
+                    "node": {
+                        "firstName": "Michael",
+                        "articles": {
+                            "edges": [
+                                {
+                                    "node": {
+                                        "headline": "Hello",
+                                    }
+                                },
+                                {
+                                    "node": {
+                                        "headline": "World",
+                                    }
+                                },
+                            ]
+                        },
                     }
                 }
-            }]
+            ]
         }
     }
     schema = graphene.Schema(query=Query)
@@ -1069,11 +1056,7 @@ async def test_should_filter_mongoengine_queryset_by_id_and_other_fields_async(f
         }}
     """.format(larry_relay_id=larry_relay_id)
 
-    expected = {
-        'players': {
-            'edges': []
-        }
-    }
+    expected = {"players": {"edges": []}}
     schema = graphene.Schema(query=Query)
     result = await schema.execute_async(query)
 
