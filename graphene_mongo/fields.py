@@ -579,6 +579,7 @@ class MongoengineConnectionField(ConnectionField):
         return connection
 
     def chained_resolver(self, resolver, is_partial, root, info, **args):
+
         for key, value in dict(args).items():
             if value is None:
                 del args[key]
@@ -606,9 +607,11 @@ class MongoengineConnectionField(ConnectionField):
                     for field in self.fields
                     if type(self.fields[field]) == MongoengineConnectionField
                 ]
-                filterable_args = tuple(
-                    filterfalse(connection_fields.__contains__, list(self.model._fields_ordered))
+                filter_connection = lambda x: (
+                        connection_fields.__contains__(x)
+                        or self._type._meta.non_filter_fields.__contains__(x)
                 )
+                filterable_args = tuple(filterfalse(filter_connection, list(self.model._fields_ordered)))
                 for arg_name, arg in args.copy().items():
                     if arg_name not in filterable_args + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
@@ -678,7 +681,7 @@ class MongoengineConnectionField(ConnectionField):
                     try:
                         setattr(root, key, from_global_id(value)[1])
                     except Exception as error:
-                        logging.error("Exception Occurred: ", exc_info=error)
+                        logging.debug("Exception Occurred: ", exc_info=error)
         iterable = resolver(root, info, **args)
 
         if isinstance(connection_type, graphene.NonNull):
