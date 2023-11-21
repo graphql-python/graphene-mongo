@@ -71,7 +71,7 @@ def construct_self_referenced_fields(self_referenced, registry):
     return fields
 
 
-def create_graphene_generic_class(object_type, option_type):
+def create_graphene_generic_class(object_type, option_type, field_type):
     class MongoengineGenericObjectTypeOptions(option_type):
 
         model = None
@@ -124,7 +124,7 @@ def create_graphene_generic_class(object_type, option_type):
                 model, registry, only_fields, exclude_fields, non_required_fields
             )
             mongoengine_fields = yank_fields_from_attrs(
-                converted_fields, _as=graphene.Field
+                converted_fields, _as=field_type
             )
             if use_connection is None and interfaces:
                 use_connection = any(
@@ -188,7 +188,7 @@ def create_graphene_generic_class(object_type, option_type):
                 )
                 if converted_fields:
                     mongoengine_fields = yank_fields_from_attrs(
-                        converted_fields, _as=graphene.Field
+                        converted_fields, _as=field_type
                     )
                     cls._meta.fields.update(mongoengine_fields)
                     registry.register(cls)
@@ -206,7 +206,7 @@ def create_graphene_generic_class(object_type, option_type):
             )
 
             mongoengine_fields = yank_fields_from_attrs(
-                converted_fields, _as=graphene.Field
+                converted_fields, _as=field_type
             )
 
             # The initial scan should take precedence
@@ -247,9 +247,14 @@ def create_graphene_generic_class(object_type, option_type):
     return GrapheneMongoengineGenericType, MongoengineGenericObjectTypeOptions
 
 
-MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(ObjectType, ObjectTypeOptions)
-MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(Interface, InterfaceOptions)
+MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(ObjectType,
+                                                                                    ObjectTypeOptions,
+                                                                                    graphene.Field)
+MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(  Interface,
+                                                                                            InterfaceOptions,
+                                                                                            graphene.Field)
 MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(InputObjectType,
-                                                                                  InputObjectTypeOptions)
+                                                                                  InputObjectTypeOptions,
+                                                                                  graphene.InputField)
 
 GrapheneMongoengineObjectTypes = (MongoengineObjectType, MongoengineInputType, MongoengineInterfaceType)
