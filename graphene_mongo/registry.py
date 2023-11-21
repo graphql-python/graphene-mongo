@@ -15,13 +15,10 @@ class Registry(object):
         from .types import GrapheneMongoengineObjectTypes
         from .types_async import AsyncGrapheneMongoengineObjectTypes
 
-        assert (issubclass(
-            cls,
-            GrapheneMongoengineObjectTypes
-        ) or issubclass(
-            cls,
-            AsyncGrapheneMongoengineObjectTypes
-        )), 'Only Mongoengine/Async Mongoengine object types can be registered, received "{}"'.format(
+        assert (
+            issubclass(cls, GrapheneMongoengineObjectTypes)
+            or issubclass(cls, AsyncGrapheneMongoengineObjectTypes)
+        ), 'Only Mongoengine/Async Mongoengine object types can be registered, received "{}"'.format(
             cls.__name__
         )
         assert cls._meta.registry == self, "Registry for a Model have to match."
@@ -38,11 +35,12 @@ class Registry(object):
 
     def register_enum(self, cls):
         from enum import EnumMeta
+
         assert isinstance(
             cls, EnumMeta
         ), f'Only EnumMeta can be registered, received "{cls.__name__}"'
-        if not cls.__name__.endswith('Enum'):
-            name = cls.__name__ + 'Enum'
+        if not cls.__name__.endswith("Enum"):
+            name = cls.__name__ + "Enum"
         else:
             name = cls.__name__
         cls.__name__ = name

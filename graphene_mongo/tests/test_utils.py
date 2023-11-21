@@ -1,7 +1,8 @@
-from ..utils import get_model_fields, is_valid_mongoengine_model, get_query_fields
-from .models import Article, Reporter, Child
-from . import types
 import graphene
+
+from . import types
+from .models import Article, Child, Reporter
+from ..utils import get_model_fields, get_query_fields, is_valid_mongoengine_model
 
 
 def test_get_model_fields_no_duplication():
@@ -82,22 +83,22 @@ def test_get_query_fields():
     schema.execute(query)
 
     assert get_query_fields(test_get_query_fields.child_info) == {
-        'bar': {},
-        'loc': {
-            'type': {},
-            'coordinates': {}
-        }
+        "bar": {},
+        "loc": {
+            "type": {},
+            "coordinates": {},
+        },
     }
 
     assert get_query_fields(test_get_query_fields.children_info) == {
-        'ChildType': {
-            'baz': {},
-            'loc': {
-                'type': {},
-                'coordinates': {}
-            }
+        "ChildType": {
+            "baz": {},
+            "loc": {
+                "type": {},
+                "coordinates": {},
+            },
         },
-        'AnotherChildType': {
-            'qux': {}
-        }
+        "AnotherChildType": {
+            "qux": {},
+        },
     }

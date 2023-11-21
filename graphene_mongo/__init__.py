@@ -13,5 +13,5 @@ __all__ = [
     "MongoengineInputType",
     "MongoengineInterfaceType",
     "MongoengineConnectionField",
-    "AsyncMongoengineConnectionField"
+    "AsyncMongoengineConnectionField",
 ]

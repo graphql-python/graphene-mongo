@@ -3,9 +3,7 @@ import falcon
 from .schema import schema
 
 
-def set_graphql_allow_header(
-    req: falcon.Request, resp: falcon.Response, resource: object
-):
+def set_graphql_allow_header(req: falcon.Request, resp: falcon.Response, resource: object):
     resp.set_header("Allow", "GET, POST, OPTIONS")
 
 

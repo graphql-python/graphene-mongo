@@ -64,11 +64,9 @@ async def test_should_update(fixtures):
             return UpdateEditor(editor=editor_to_update)
 
     class Query(graphene.ObjectType):
-
         node = Node.Field()
 
     class Mutation(graphene.ObjectType):
-
         update_editor = UpdateEditor.Field()
 
     query = """

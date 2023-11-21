@@ -199,9 +199,7 @@ async def test_should_self_reference(fixtures):
 @pytest.mark.asyncio
 async def test_should_query_with_embedded_document(fixtures):
     class Query(graphene.ObjectType):
-        professor_vector = graphene.Field(
-            types.ProfessorVectorType, id=graphene.String()
-        )
+        professor_vector = graphene.Field(types.ProfessorVectorType, id=graphene.String())
 
         async def resolve_professor_vector(self, info, id):
             return models.ProfessorVector.objects(metadata__id=id).first()
@@ -217,9 +215,7 @@ async def test_should_query_with_embedded_document(fixtures):
         }
     """
 
-    expected = {
-        "professorVector": {"vec": [1.0, 2.3], "metadata": {"firstName": "Steven"}}
-    }
+    expected = {"professorVector": {"vec": [1.0, 2.3], "metadata": {"firstName": "Steven"}}}
     schema = graphene.Schema(query=Query, types=[types.ProfessorVectorType])
     result = await schema.execute_async(query)
     assert not result.errors
