@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import logging
 from collections import OrderedDict
 from functools import partial, reduce
+from itertools import filterfalse
 
 import bson
 import graphene
@@ -579,7 +580,6 @@ class MongoengineConnectionField(ConnectionField):
         return connection
 
     def chained_resolver(self, resolver, is_partial, root, info, **args):
-
         for key, value in dict(args).items():
             if value is None:
                 del args[key]
@@ -600,18 +600,23 @@ class MongoengineConnectionField(ConnectionField):
             if isinstance(self.model, mongoengine.Document) or isinstance(
                 self.model, mongoengine.base.metaclasses.TopLevelDocumentMetaclass
             ):
-                from itertools import filterfalse
-
                 connection_fields = [
                     field
                     for field in self.fields
                     if type(self.fields[field]) == MongoengineConnectionField
                 ]
-                filter_connection = lambda x: (
-                        connection_fields.__contains__(x)
-                        or self._type._meta.non_filter_fields.__contains__(x)
+
+                def filter_connection(x):
+                    return any(
+                        [
+                            connection_fields.__contains__(x),
+                            self._type._meta.non_filter_fields.__contains__(x),
+                        ]
+                    )
+
+                filterable_args = tuple(
+                    filterfalse(filter_connection, list(self.model._fields_ordered))
                 )
-                filterable_args = tuple(filterfalse(filter_connection, list(self.model._fields_ordered)))
                 for arg_name, arg in args.copy().items():
                     if arg_name not in filterable_args + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
