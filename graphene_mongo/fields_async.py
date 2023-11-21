@@ -223,8 +223,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     )
                     items = await sync_to_async(_base_query.limit)(limit)
                     has_next_page = (
-                        await sync_to_async(_base_query.skip(limit).only("id").limit(1).count)()
-                        != 0
+                        len(await sync_to_async(_base_query.skip(limit).only("id").limit)(1)) != 0
                     )
                 elif skip:
                     items = await sync_to_async(items.skip)(skip)
