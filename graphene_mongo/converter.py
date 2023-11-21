@@ -3,13 +3,12 @@ import sys
 
 import graphene
 import mongoengine
-from asgiref.sync import sync_to_async
 
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_snake_case, to_camel_case
 from mongoengine.base import get_document, LazyReference
 from . import advanced_types
-from .utils import import_single_dispatch, get_field_description, get_query_fields, ExecutorEnum
+from .utils import import_single_dispatch, get_field_description, get_query_fields, ExecutorEnum, sync_to_async
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 singledispatch = import_single_dispatch()
@@ -211,8 +210,7 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
                     item = to_snake_case(each)
                     if item in document._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
-                return await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
-                    document.objects().no_dereference().only(
+                return await sync_to_async(list)(document.objects().no_dereference().only(
                         *set(list(document_field_type._meta.required_fields) + queried_fields)).filter(
                         pk__in=args[1]))
 
@@ -398,10 +396,8 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                     if item in document._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
                 return await sync_to_async(document.objects().no_dereference().only(*list(
-                    set(list(_type._meta.required_fields) + queried_fields))).get, thread_sensitive=False,
-                                           executor=ThreadPoolExecutor())(pk=de_referenced["_ref"].id)
-            return await sync_to_async(document, thread_sensitive=False,
-                                       executor=ThreadPoolExecutor())()
+                    set(list(_type._meta.required_fields) + queried_fields))).get)(pk=de_referenced["_ref"].id)
+            return await sync_to_async(document)()
         return None
 
     async def lazy_reference_resolver_async(root, *args, **kwargs):
@@ -424,10 +420,8 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                         queried_fields.append(item)
                 _type = registry.get_type_for_model(document.document_type, executor=executor)
                 return await sync_to_async(document.document_type.objects().no_dereference().only(
-                    *(set((list(_type._meta.required_fields) + queried_fields)))).get, thread_sensitive=False,
-                                           executor=ThreadPoolExecutor())(pk=document.pk)
-            return await sync_to_async(document.document_type, thread_sensitive=False,
-                                       executor=ThreadPoolExecutor())()
+                    *(set((list(_type._meta.required_fields) + queried_fields)))).get)(pk=document.pk)
+            return await sync_to_async(document.document_type)()
         return None
 
     if isinstance(field, mongoengine.GenericLazyReferenceField):
@@ -520,8 +514,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
                 if item in field.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
             return await sync_to_async(field.document_type.objects().no_dereference().only(
-                *(set(list(_type._meta.required_fields) + queried_fields))).get, thread_sensitive=False,
-                                       executor=ThreadPoolExecutor())(pk=document.id)
+                *(set(list(_type._meta.required_fields) + queried_fields))).get)(pk=document.id)
         return None
 
     async def cached_reference_resolver_async(root, *args, **kwargs):
@@ -539,8 +532,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
                     queried_fields.append(item)
             return await sync_to_async(field.document_type.objects().no_dereference().only(
                 *(set(
-                    list(_type._meta.required_fields) + queried_fields))).get, thread_sensitive=False,
-                                       executor=ThreadPoolExecutor())(
+                    list(_type._meta.required_fields) + queried_fields))).get)(
                 pk=getattr(root, field.name or field.db_name))
         return None
 
@@ -614,8 +606,7 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
                 if item in document.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
             return await sync_to_async(document.document_type.objects().no_dereference().only(
-                *(set((list(_type._meta.required_fields) + queried_fields)))).get, thread_sensitive=False,
-                                       executor=ThreadPoolExecutor())(pk=document.pk)
+                *(set((list(_type._meta.required_fields) + queried_fields)))).get)(pk=document.pk)
         return None
 
     def dynamic_type():

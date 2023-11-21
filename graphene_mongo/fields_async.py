@@ -14,12 +14,11 @@ from graphql_relay import from_global_id, cursor_to_offset
 from mongoengine import QuerySet
 from promise import Promise
 from pymongo.errors import OperationFailure
-from asgiref.sync import sync_to_async
 from concurrent.futures import ThreadPoolExecutor
 from .registry import get_global_async_registry
 from . import MongoengineConnectionField
 from .utils import get_query_fields, find_skip_and_limit, \
-    connection_from_iterables, ExecutorEnum
+    connection_from_iterables, ExecutorEnum, sync_to_async
 import pymongo
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
@@ -100,8 +99,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             if isinstance(items, QuerySet):
                 try:
                     if last is not None and after is not None:
-                        count = await sync_to_async(items.count, thread_sensitive=False,
-                                                    executor=ThreadPoolExecutor())(with_limit_and_skip=False)
+                        count = await sync_to_async(items.count)(with_limit_and_skip=False)
                     else:
                         count = None
                 except OperationFailure:
@@ -130,7 +128,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                         items = items[skip:skip + limit]
                 elif skip:
                     items = items[skip:]
-            iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(items)
+            iterables = await sync_to_async(list)(items)
             list_length = len(iterables)
 
         elif callable(getattr(self.model, "objects", None)):
@@ -157,10 +155,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                             args_copy[key] = args_copy[key].value
 
                 if PYMONGO_VERSION >= (3, 7):
-                    count = await sync_to_async(
-                        (mongoengine.get_db()[self.model._get_collection_name()]).count_documents,
-                        thread_sensitive=False,
-                        executor=ThreadPoolExecutor())(args_copy)
+                    count = await sync_to_async((mongoengine.get_db()[self.model._get_collection_name()]).count_documents)(args_copy)
                 else:
                     count = await sync_to_async(self.model.objects(args_copy).count, thread_sensitive=False,
                                                 executor=ThreadPoolExecutor())()
@@ -168,8 +163,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     skip, limit, reverse = find_skip_and_limit(first=first, after=after, last=last, before=before,
                                                                count=count)
                     iterables = self.get_queryset(self.model, info, required_fields, skip, limit, reverse, **args)
-                    iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
-                        iterables)
+                    iterables = await sync_to_async(list)(iterables)
                     list_length = len(iterables)
                     if isinstance(info, GraphQLResolveInfo):
                         if not info.context:
@@ -188,8 +182,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 elif skip:
                     args["pk__in"] = args["pk__in"][skip:]
                 iterables = self.get_queryset(self.model, info, required_fields, **args)
-                iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
-                    iterables)
+                iterables = await sync_to_async(list)(iterables)
                 list_length = len(iterables)
                 if isinstance(info, GraphQLResolveInfo):
                     if not info.context:
@@ -210,23 +203,19 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             elif skip:
                 items = items[skip:]
             iterables = items
-            iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
-                iterables)
+            iterables = await sync_to_async(list)( iterables)
             list_length = len(iterables)
 
         if count:
             has_next_page = True if (0 if limit is None else limit) + (0 if skip is None else skip) < count else False
         else:
             if isinstance(queryset, QuerySet) and iterables:
-                has_next_page = bool(await sync_to_async(queryset(pk__gt=iterables[-1].pk).limit(1).first,
-                                                         thread_sensitive=False,
-                                                         executor=ThreadPoolExecutor())())
+                has_next_page = bool(await sync_to_async(queryset(pk__gt=iterables[-1].pk).limit(1).first)())
             else:
                 has_next_page = False
         has_previous_page = True if skip else False
         if reverse:
-            iterables = await sync_to_async(list, thread_sensitive=False, executor=ThreadPoolExecutor())(
-                iterables)
+            iterables = await sync_to_async(list)(iterables)
             iterables.reverse()
             skip = limit
         connection = connection_from_iterables(edges=iterables, start_offset=skip,
