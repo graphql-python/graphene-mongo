@@ -265,7 +265,11 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 from itertools import filterfalse
                 connection_fields = [field for field in self.fields if
                                      type(self.fields[field]) == AsyncMongoengineConnectionField]
-                filterable_args = tuple(filterfalse(connection_fields.__contains__, list(self.model._fields_ordered)))
+                filter_connection = lambda x: (
+                        connection_fields.__contains__(x)
+                        or self._type._meta.non_filter_fields.__contains__(x)
+                )
+                filterable_args = tuple(filterfalse(filter_connection, list(self.model._fields_ordered)))
                 for arg_name, arg in args.copy().items():
                     if arg_name not in filterable_args + tuple(self.filter_args.keys()):
                         args_copy.pop(arg_name)
