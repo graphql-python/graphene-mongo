@@ -14,7 +14,6 @@ from graphql_relay import from_global_id, cursor_to_offset
 from mongoengine import QuerySet
 from promise import Promise
 from pymongo.errors import OperationFailure
-from concurrent.futures import ThreadPoolExecutor
 from .registry import get_global_async_registry
 from . import MongoengineConnectionField
 from .utils import (
@@ -97,8 +96,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
         before = args.pop("before", None)
         if before:
             before = cursor_to_offset(before)
-
-        queryset = None
+        has_next_page = False
 
         if resolved is not None:
             items = resolved
@@ -119,21 +117,28 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             )
 
             if isinstance(items, QuerySet):
-                queryset = items.clone()
                 if limit:
-                    if reverse:
-                        items = items.order_by("-pk").skip(skip).limit(limit)
-                    else:
-                        items = items.skip(skip).limit(limit)
+                    _base_query: QuerySet = (
+                        await sync_to_async(items.order_by("-pk").skip)(skip)
+                        if reverse
+                        else await sync_to_async(items.skip)(skip)
+                    )
+                    items = await sync_to_async(_base_query.limit)(limit)
+                    has_next_page = (
+                        len(await sync_to_async(_base_query.skip(limit).only("id").limit)(1)) != 0
+                    )
                 elif skip:
-                    items = items.skip(skip)
+                    items = await sync_to_async(items.skip)(skip)
             else:
-                queryset = None
                 if limit:
                     if reverse:
-                        items = items[::-1][skip : skip + limit]
+                        _base_query = items[::-1]
+                        items = _base_query[skip : skip + limit]
+                        has_next_page = (skip + limit) < len(_base_query)
                     else:
+                        _base_query = items
                         items = items[skip : skip + limit]
+                        has_next_page = (skip + limit) < len(_base_query)
                 elif skip:
                     items = items[skip:]
             iterables = await sync_to_async(list)(items)
@@ -176,11 +181,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                         (mongoengine.get_db()[self.model._get_collection_name()]).count_documents
                     )(args_copy)
                 else:
-                    count = await sync_to_async(
-                        self.model.objects(args_copy).count,
-                        thread_sensitive=False,
-                        executor=ThreadPoolExecutor(),
-                    )()
+                    count = await sync_to_async(self.model.objects(args_copy).count)()
                 if count != 0:
                     skip, limit, reverse = find_skip_and_limit(
                         first=first, after=after, last=last, before=before, count=count
@@ -228,9 +229,13 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             )
             if limit:
                 if reverse:
-                    items = items[::-1][skip : skip + limit]
+                    _base_query = items[::-1]
+                    items = _base_query[skip : skip + limit]
+                    has_next_page = (skip + limit) < len(_base_query)
                 else:
+                    _base_query = items
                     items = items[skip : skip + limit]
+                    has_next_page = (skip + limit) < len(_base_query)
             elif skip:
                 items = items[skip:]
             iterables = items
@@ -243,18 +248,13 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 if (0 if limit is None else limit) + (0 if skip is None else skip) < count
                 else False
             )
-        else:
-            if isinstance(queryset, QuerySet) and iterables:
-                has_next_page = bool(
-                    await sync_to_async(queryset(pk__gt=iterables[-1].pk).limit(1).first)()
-                )
-            else:
-                has_next_page = False
         has_previous_page = True if skip else False
+
         if reverse:
             iterables = await sync_to_async(list)(iterables)
             iterables.reverse()
             skip = limit
+
         connection = connection_from_iterables(
             edges=iterables,
             start_offset=skip,
@@ -264,7 +264,6 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             edge_type=self.type.Edge,
             pageinfo_type=graphene.PageInfo,
         )
-
         connection.iterable = iterables
         connection.list_length = list_length
         return connection

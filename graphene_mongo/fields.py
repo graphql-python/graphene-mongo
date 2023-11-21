@@ -406,14 +406,12 @@ class MongoengineConnectionField(ConnectionField):
         before = args.pop("before", None)
         if before:
             before = cursor_to_offset(before)
-
-        queryset = None
+        has_next_page = False
 
         if resolved is not None:
             items = resolved
 
             if isinstance(items, QuerySet):
-                queryset = items.clone()
                 try:
                     if last is not None and after is not None:
                         count = items.count(with_limit_and_skip=False)
@@ -422,7 +420,6 @@ class MongoengineConnectionField(ConnectionField):
                 except OperationFailure:
                     count = len(items)
             else:
-                queryset = None
                 count = len(items)
 
             skip, limit, reverse = find_skip_and_limit(
@@ -431,18 +428,23 @@ class MongoengineConnectionField(ConnectionField):
 
             if isinstance(items, QuerySet):
                 if limit:
-                    if reverse:
-                        items = items.order_by("-pk").skip(skip).limit(limit)
-                    else:
-                        items = items.skip(skip).limit(limit)
+                    _base_query: QuerySet = (
+                        items.order_by("-pk").skip(skip) if reverse else items.skip(skip)
+                    )
+                    items = _base_query.limit(limit)
+                    has_next_page = len(_base_query.skip(limit).only("id").limit(1)) != 0
                 elif skip:
                     items = items.skip(skip)
             else:
                 if limit:
                     if reverse:
-                        items = items[::-1][skip : skip + limit]
+                        _base_query = items[::-1]
+                        items = _base_query[skip : skip + limit]
+                        has_next_page = (skip + limit) < len(_base_query)
                     else:
+                        _base_query = items
                         items = items[skip : skip + limit]
+                        has_next_page = (skip + limit) < len(_base_query)
                 elif skip:
                     items = items[skip:]
             iterables = list(items)
@@ -538,9 +540,13 @@ class MongoengineConnectionField(ConnectionField):
             )
             if limit:
                 if reverse:
-                    items = items[::-1][skip : skip + limit]
+                    _base_query = items[::-1]
+                    items = _base_query[skip : skip + limit]
+                    has_next_page = (skip + limit) < len(_base_query)
                 else:
+                    _base_query = items
                     items = items[skip : skip + limit]
+                    has_next_page = (skip + limit) < len(_base_query)
             elif skip:
                 items = items[skip:]
             iterables = items
@@ -552,16 +558,13 @@ class MongoengineConnectionField(ConnectionField):
                 if (0 if limit is None else limit) + (0 if skip is None else skip) < count
                 else False
             )
-        else:
-            if isinstance(queryset, QuerySet) and iterables:
-                has_next_page = bool(queryset(pk__gt=iterables[-1].pk).limit(1).first())
-            else:
-                has_next_page = False
         has_previous_page = True if skip else False
+
         if reverse:
             iterables = list(iterables)
             iterables.reverse()
             skip = limit
+
         connection = connection_from_iterables(
             edges=iterables,
             start_offset=skip,
@@ -571,7 +574,6 @@ class MongoengineConnectionField(ConnectionField):
             edge_type=self.type.Edge,
             pageinfo_type=graphene.PageInfo,
         )
-
         connection.iterable = iterables
         connection.list_length = list_length
         return connection
