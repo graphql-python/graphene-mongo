@@ -4,7 +4,7 @@ import enum
 import inspect
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 import mongoengine
 from asgiref.sync import SyncToAsync, sync_to_async as asgiref_sync_to_async
@@ -260,7 +260,7 @@ def sync_to_async(
     func: Callable = None,
     thread_sensitive: bool = False,
     executor: Any = None,  # noqa
-) -> SyncToAsync | Callable[[Callable[..., Any]], SyncToAsync]:
+) -> Union[SyncToAsync, Callable[[Callable[..., Any]], SyncToAsync]]:
     """
     Wrapper over sync_to_async from asgiref.sync
     Defaults to thread insensitive with ThreadPoolExecutor of n workers
