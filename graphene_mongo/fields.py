@@ -8,6 +8,7 @@ from itertools import filterfalse
 import bson
 import graphene
 import mongoengine
+import pymongo
 from bson import DBRef, ObjectId
 from graphene import Context
 from graphene.relay import ConnectionField
@@ -17,7 +18,7 @@ from graphene.types.structures import Structure
 from graphene.types.utils import get_type
 from graphene.utils.str_converters import to_snake_case
 from graphql import GraphQLResolveInfo
-from graphql_relay import from_global_id, cursor_to_offset
+from graphql_relay import cursor_to_offset, from_global_id
 from mongoengine import QuerySet
 from mongoengine.base import get_document
 from promise import Promise
@@ -25,21 +26,20 @@ from pymongo.errors import OperationFailure
 
 from .advanced_types import (
     FileFieldType,
-    PointFieldType,
     MultiPolygonFieldType,
-    PolygonFieldType,
     PointFieldInputType,
+    PointFieldType,
+    PolygonFieldType,
 )
-from .converter import convert_mongoengine_field, MongoEngineConversionError
+from .converter import MongoEngineConversionError, convert_mongoengine_field
 from .registry import get_global_registry
 from .utils import (
+    ExecutorEnum,
+    connection_from_iterables,
+    find_skip_and_limit,
     get_model_reference_fields,
     get_query_fields,
-    find_skip_and_limit,
-    connection_from_iterables,
-    ExecutorEnum,
 )
-import pymongo
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
 
@@ -55,7 +55,7 @@ class MongoengineConnectionField(ConnectionField):
         super(MongoengineConnectionField, self).__init__(type, *args, **kwargs)
 
     @property
-    def executor(self):
+    def executor(self) -> ExecutorEnum:
         return ExecutorEnum.SYNC
 
     @property
@@ -277,7 +277,7 @@ class MongoengineConnectionField(ConnectionField):
 
     def get_queryset(
         self, model, info, required_fields=None, skip=None, limit=None, reversed=False, **args
-    ):
+    ) -> QuerySet:
         if required_fields is None:
             required_fields = list()
 
