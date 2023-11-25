@@ -6,7 +6,6 @@
 
 A [Mongoengine](https://mongoengine-odm.readthedocs.io/) integration for [Graphene](http://graphene-python.org/).
 
-
 ## Installation
 
 For installing graphene-mongo, just run this command in your shell
@@ -23,13 +22,14 @@ Here is a simple Mongoengine model as `models.py`:
 from mongoengine import Document
 from mongoengine.fields import StringField
 
+
 class User(Document):
     meta = {'collection': 'user'}
     first_name = StringField(required=True)
     last_name = StringField(required=True)
 ```
 
-To create a GraphQL schema for it you simply have to write the following:
+To create a GraphQL schema and sync executor; for it you simply have to write the following:
 
 ```python
 import graphene
@@ -38,15 +38,60 @@ from graphene_mongo import MongoengineObjectType
 
 from .models import User as UserModel
 
+
 class User(MongoengineObjectType):
     class Meta:
         model = UserModel
 
+
 class Query(graphene.ObjectType):
     users = graphene.List(User)
-    
+
     def resolve_users(self, info):
-    	return list(UserModel.objects.all())
+        return list(UserModel.objects.all())
+
+
+schema = graphene.Schema(query=Query)
+```
+
+Then you can simply query the schema:
+
+```python
+query = '''
+    query {
+        users {
+            firstName,
+            lastName
+        }
+    }
+'''
+result = await schema.execute(query)
+```
+
+To create a GraphQL schema and async executor; for it you simply have to write the following:
+
+```python
+import graphene
+
+from graphene_mongo import AsyncMongoengineObjectType
+from asgiref.sync import sync_to_async
+from concurrent.futures import ThreadPoolExecutor
+
+from .models import User as UserModel
+
+
+class User(AsyncMongoengineObjectType):
+    class Meta:
+        model = UserModel
+
+
+class Query(graphene.ObjectType):
+    users = graphene.List(User)
+
+    async def resolve_users(self, info):
+        return await sync_to_async(list, thread_sensitive=False,
+                             executor=ThreadPoolExecutor())(UserModel.objects.all())
+
 
 schema = graphene.Schema(query=Query)
 ```
@@ -70,7 +115,6 @@ To learn more check out the following [examples](examples/):
 * [Flask MongoEngine example](examples/flask_mongoengine)
 * [Django MongoEngine example](examples/django_mongoengine)
 * [Falcon MongoEngine example](examples/falcon_mongoengine)
-
 
 ## Contributing
 

@@ -1,4 +1,7 @@
-from . import nodes
+import pytest
+
+from . import nodes, nodes_async
+from .. import AsyncMongoengineConnectionField
 from ..fields import MongoengineConnectionField
 
 
@@ -44,15 +47,17 @@ def test_field_args_with_unconverted_field():
     assert set(field.field_args.keys()) == set(field_args)
 
 
-async def test_default_resolver_with_colliding_objects_field():
-    field = MongoengineConnectionField(nodes.ErroneousModelNode)
+@pytest.mark.asyncio
+async def test_default_resolver_with_colliding_objects_field_async():
+    field = AsyncMongoengineConnectionField(nodes_async.ErroneousModelAsyncNode)
 
     connection = await field.default_resolver(None, {})
     assert 0 == len(connection.iterable)
 
 
-async def test_default_resolver_connection_list_length(fixtures):
-    field = MongoengineConnectionField(nodes.ArticleNode)
+@pytest.mark.asyncio
+async def test_default_resolver_connection_list_length_async(fixtures):
+    field = AsyncMongoengineConnectionField(nodes_async.ArticleAsyncNode)
 
     connection = await field.default_resolver(None, {}, **{"first": 1})
     assert hasattr(connection, "list_length")

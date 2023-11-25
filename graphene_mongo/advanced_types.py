@@ -1,4 +1,5 @@
 import base64
+
 import graphene
 
 
@@ -65,5 +66,9 @@ class PolygonFieldType(_CoordinatesTypeField):
 
 class MultiPolygonFieldType(_CoordinatesTypeField):
     coordinates = graphene.List(
-        graphene.List(graphene.List(graphene.List(graphene.Float)))
+        graphene.List(
+            graphene.List(
+                graphene.List(graphene.Float),
+            )
+        )
     )

@@ -1,11 +1,10 @@
 import mongoengine
 from graphene.test import Client
+
 from examples.falcon_mongoengine.schema import schema
 from .fixtures import fixtures_data
 
-mongoengine.connect(
-    "graphene-mongo-test", host="mongomock://localhost", alias="default"
-)
+mongoengine.connect("graphene-mongo-test", host="mongomock://localhost", alias="default")
 
 
 def test_category_last_1_item_query(fixtures_data):
@@ -23,7 +22,16 @@ def test_category_last_1_item_query(fixtures_data):
 
     expected = {
         "data": {
-            "categories": {"edges": [{"node": {"name": "Work", "color": "#1769ff"}}]}
+            "categories": {
+                "edges": [
+                    {
+                        "node": {
+                            "name": "Work",
+                            "color": "#1769ff",
+                        }
+                    }
+                ]
+            }
         }
     }
 
@@ -45,11 +53,7 @@ def test_category_filter_item_query(fixtures_data):
                }
            }"""
 
-    expected = {
-        "data": {
-            "categories": {"edges": [{"node": {"name": "Work", "color": "#1769ff"}}]}
-        }
-    }
+    expected = {"data": {"categories": {"edges": [{"node": {"name": "Work", "color": "#1769ff"}}]}}}
 
     client = Client(schema)
     result = client.execute(query)

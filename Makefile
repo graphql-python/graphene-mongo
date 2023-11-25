@@ -11,7 +11,8 @@ clean:
 	@find . -name "__pycache__" -delete
 
 lint:
-	@flake8 graphene_mongo --count --show-source --statistics
+	@ruff check graphene_mongo
+	@ruff format . --check
 
 test: clean
 	pytest graphene_mongo/tests --cov=graphene_mongo --cov-report=html --cov-report=term
