@@ -1,8 +1,7 @@
-import graphene
 from graphene import relay
-from graphene_mongo import MongoengineObjectType
 
-from .models import Category, Bookmark
+from graphene_mongo import MongoengineObjectType
+from .models import Bookmark, Category
 
 
 class CategoryType(MongoengineObjectType):

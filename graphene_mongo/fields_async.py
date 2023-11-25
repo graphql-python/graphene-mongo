@@ -15,7 +15,6 @@ from graphene.utils.str_converters import to_snake_case
 from graphql import GraphQLResolveInfo
 from graphql_relay import cursor_to_offset, from_global_id
 from mongoengine import QuerySet
-from mongoengine.base import get_document
 from promise import Promise
 from pymongo.errors import OperationFailure
 
