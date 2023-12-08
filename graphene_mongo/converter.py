@@ -359,10 +359,9 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                 break
 
     name = to_camel_case(
-        "{}_{}_{}".format(
+        "{}_{}_union_type".format(
             field._owner_document.__name__,
             field_name,
-            "union_type" if executor == ExecutorEnum.SYNC else "async_union_type",
         )
     )
     Meta = type("Meta", (object,), {"types": tuple(_types)})
