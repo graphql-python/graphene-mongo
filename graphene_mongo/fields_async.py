@@ -111,7 +111,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     else:
                         count = None
                 except OperationFailure:
-                    count = len(items)
+                    count = await sync_to_async(len)(items)
             else:
                 count = len(items)
 
@@ -128,7 +128,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     )
                     items = await sync_to_async(_base_query.limit)(limit)
                     has_next_page = (
-                        len(await sync_to_async(_base_query.skip(limit).only("id").limit)(1)) != 0
+                        await sync_to_async(len)(_base_query.skip(limit).only("id").limit(1)) != 0
                     )
                 elif skip:
                     items = await sync_to_async(items.skip)(skip)
