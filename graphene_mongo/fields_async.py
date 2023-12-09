@@ -26,7 +26,7 @@ from .utils import (
     find_skip_and_limit,
     get_query_fields,
     sync_to_async,
-    has_page_info
+    has_page_info,
 )
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
@@ -130,8 +130,15 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     )
                     items = await sync_to_async(_base_query.limit)(limit)
                     has_next_page = (
-                        await sync_to_async(len)(await sync_to_async(_base_query.skip(limit).only("id").limit)(1)) != 0
-                    ) if requires_page_info else False
+                        (
+                            await sync_to_async(len)(
+                                await sync_to_async(_base_query.skip(limit).only("id").limit)(1)
+                            )
+                            != 0
+                        )
+                        if requires_page_info
+                        else False
+                    )
                 elif skip:
                     items = await sync_to_async(items.skip)(skip)
             else:
@@ -142,7 +149,9 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     else:
                         _base_query = items
                         items = items[skip : skip + limit]
-                    has_next_page = (skip + limit) < len(_base_query) if requires_page_info else False
+                    has_next_page = (
+                        (skip + limit) < len(_base_query) if requires_page_info else False
+                    )
                 elif skip:
                     items = items[skip:]
             iterables = await sync_to_async(list)(items)
