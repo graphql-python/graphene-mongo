@@ -173,6 +173,29 @@ def get_query_fields(info):
     return query
 
 
+def has_page_info(info):
+    """A convenience function to call collect_query_fields with info
+    for retrieving if page_info details are required
+
+    Args:
+        info (ResolveInfo)
+
+    Returns:
+        dict: Returned from collect_query_fields
+    """
+
+    fragments = {}
+    node = ast_to_dict(info.field_nodes[0])
+
+    for name, value in info.fragments.items():
+        fragments[name] = ast_to_dict(value)
+
+    query = collect_query_fields(node, fragments)
+    # if "PageInfo" in query:
+    #     return query["edges"]["node"].keys()
+    return bool("PageInfo" in query)
+
+
 def ast_to_dict(node, include_loc=False):
     if isinstance(node, FieldNode):
         d = {"kind": node.__class__.__name__}

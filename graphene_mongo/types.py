@@ -3,7 +3,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 import graphene
 import mongoengine
-from asgiref.sync import sync_to_async
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.inputobjecttype import InputObjectType, InputObjectTypeOptions
@@ -14,7 +13,7 @@ from graphene_mongo import MongoengineConnectionField
 
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry, get_inputs_registry
-from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields, ExecutorEnum
+from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields, ExecutorEnum, sync_to_async
 
 
 def construct_fields(
