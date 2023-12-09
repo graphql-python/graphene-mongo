@@ -74,7 +74,7 @@ To create a GraphQL schema and async executor; for it you simply have to write t
 import graphene
 
 from graphene_mongo import AsyncMongoengineObjectType
-from asgiref.sync import sync_to_async
+from graphene_mongo.utils import sync_to_async
 from concurrent.futures import ThreadPoolExecutor
 
 from .models import User as UserModel

@@ -26,6 +26,7 @@ from .utils import (
     find_skip_and_limit,
     get_query_fields,
     sync_to_async,
+    has_page_info,
 )
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
@@ -100,6 +101,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
         before = args.pop("before", None)
         if before:
             before = cursor_to_offset(before)
+        requires_page_info = has_page_info(info)
         has_next_page = False
 
         if resolved is not None:
@@ -112,7 +114,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     else:
                         count = None
                 except OperationFailure:
-                    count = len(items)
+                    count = await sync_to_async(len)(items)
             else:
                 count = len(items)
 
@@ -129,7 +131,14 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     )
                     items = await sync_to_async(_base_query.limit)(limit)
                     has_next_page = (
-                        len(await sync_to_async(_base_query.skip(limit).only("id").limit)(1)) != 0
+                        (
+                            await sync_to_async(len)(
+                                await sync_to_async(_base_query.skip(limit).only("id").limit)(1)
+                            )
+                            != 0
+                        )
+                        if requires_page_info
+                        else False
                     )
                 elif skip:
                     items = await sync_to_async(items.skip)(skip)
@@ -138,11 +147,12 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     if reverse:
                         _base_query = items[::-1]
                         items = _base_query[skip : skip + limit]
-                        has_next_page = (skip + limit) < len(_base_query)
                     else:
                         _base_query = items
                         items = items[skip : skip + limit]
-                        has_next_page = (skip + limit) < len(_base_query)
+                    has_next_page = (
+                        (skip + limit) < len(_base_query) if requires_page_info else False
+                    )
                 elif skip:
                     items = items[skip:]
             iterables = await sync_to_async(list)(items)
@@ -238,24 +248,23 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 if reverse:
                     _base_query = items[::-1]
                     items = _base_query[skip : skip + limit]
-                    has_next_page = (skip + limit) < len(_base_query)
                 else:
                     _base_query = items
                     items = items[skip : skip + limit]
-                    has_next_page = (skip + limit) < len(_base_query)
+                has_next_page = (skip + limit) < len(_base_query) if requires_page_info else False
             elif skip:
                 items = items[skip:]
             iterables = items
             iterables = await sync_to_async(list)(iterables)
             list_length = len(iterables)
 
-        if count:
+        if requires_page_info and count:
             has_next_page = (
                 True
                 if (0 if limit is None else limit) + (0 if skip is None else skip) < count
                 else False
             )
-        has_previous_page = True if skip else False
+        has_previous_page = True if requires_page_info and skip else False
 
         if reverse:
             iterables = await sync_to_async(list)(iterables)

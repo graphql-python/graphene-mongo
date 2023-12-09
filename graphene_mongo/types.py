@@ -1,24 +1,23 @@
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
 
 import graphene
 import mongoengine
-from asgiref.sync import sync_to_async
 from graphene.relay import Connection, Node
-from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.inputobjecttype import InputObjectType, InputObjectTypeOptions
 from graphene.types.interface import Interface, InterfaceOptions
+from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene.utils.str_converters import to_snake_case
-from graphene_mongo import MongoengineConnectionField
 
+from graphene_mongo import MongoengineConnectionField
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry, get_inputs_registry
 from .utils import (
-    get_model_fields,
-    is_valid_mongoengine_model,
-    get_query_fields,
     ExecutorEnum,
+    get_model_fields,
+    get_query_fields,
+    is_valid_mongoengine_model,
+    sync_to_async,
 )
 
 
@@ -246,8 +245,6 @@ def create_graphene_generic_class(object_type, option_type):
             required_fields = list(set(required_fields))
             return await sync_to_async(
                 cls._meta.model.objects.no_dereference().only(*required_fields).get,
-                thread_sensitive=False,
-                executor=ThreadPoolExecutor(),
             )(pk=id)
 
         def resolve_id(self, info):
@@ -259,10 +256,9 @@ def create_graphene_generic_class(object_type, option_type):
 MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(
     ObjectType, ObjectTypeOptions
 )
-(
-    MongoengineInterfaceType,
-    MongoengineInterfaceTypeOptions,
-) = create_graphene_generic_class(Interface, InterfaceOptions)
+MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(
+    Interface, InterfaceOptions
+)
 MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(
     InputObjectType, InputObjectTypeOptions
 )
