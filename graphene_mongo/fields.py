@@ -296,7 +296,8 @@ class MongoengineConnectionField(ConnectionField):
                         reference_obj = reference_fields[arg_name].document_type(pk=arg)
                     hydrated_references[arg_name] = reference_obj
                 elif arg_name in self.model._fields_ordered and isinstance(
-                    getattr(self.model, arg_name), mongoengine.fields.GenericReferenceField
+                    getattr(self.model, arg_name),
+                    mongoengine.fields.GenericReferenceField,
                 ):
                     try:
                         reference_obj = get_document(
@@ -306,7 +307,8 @@ class MongoengineConnectionField(ConnectionField):
                         reference_obj = get_document(arg["_cls"])(pk=arg["_ref"].id)
                     hydrated_references[arg_name] = reference_obj
                 elif "__near" in arg_name and isinstance(
-                    getattr(self.model, arg_name.split("__")[0]), mongoengine.fields.PointField
+                    getattr(self.model, arg_name.split("__")[0]),
+                    mongoengine.fields.PointField,
                 ):
                     location = args.pop(arg_name, None)
                     hydrated_references[arg_name] = location["coordinates"]
@@ -383,7 +385,8 @@ class MongoengineConnectionField(ConnectionField):
             elif field_name in _root._fields_ordered and not (
                 isinstance(_root._fields[field_name].field, mongoengine.EmbeddedDocumentField)
                 or isinstance(
-                    _root._fields[field_name].field, mongoengine.GenericEmbeddedDocumentField
+                    _root._fields[field_name].field,
+                    mongoengine.GenericEmbeddedDocumentField,
                 )
             ):
                 if getattr(_root, field_name, []) is not None:
@@ -464,13 +467,16 @@ class MongoengineConnectionField(ConnectionField):
                     elif (
                         isinstance(getattr(self.model, key), mongoengine.fields.ReferenceField)
                         or isinstance(
-                            getattr(self.model, key), mongoengine.fields.GenericReferenceField
+                            getattr(self.model, key),
+                            mongoengine.fields.GenericReferenceField,
                         )
                         or isinstance(
-                            getattr(self.model, key), mongoengine.fields.LazyReferenceField
+                            getattr(self.model, key),
+                            mongoengine.fields.LazyReferenceField,
                         )
                         or isinstance(
-                            getattr(self.model, key), mongoengine.fields.CachedReferenceField
+                            getattr(self.model, key),
+                            mongoengine.fields.CachedReferenceField,
                         )
                     ):
                         if not isinstance(args_copy[key], ObjectId):
@@ -603,7 +609,7 @@ class MongoengineConnectionField(ConnectionField):
                 connection_fields = [
                     field
                     for field in self.fields
-                    if type(self.fields[field]) == MongoengineConnectionField
+                    if isinstance(self.fields[field], MongoengineConnectionField)
                 ]
 
                 def filter_connection(x):

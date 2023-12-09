@@ -1,5 +1,9 @@
 from . import models
-from ..types import MongoengineObjectType, MongoengineInterfaceType, MongoengineInputType
+from ..types import (
+    MongoengineObjectType,
+    MongoengineInterfaceType,
+    MongoengineInputType,
+)
 from graphene.types.union import Union
 
 

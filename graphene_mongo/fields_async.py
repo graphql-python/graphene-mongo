@@ -76,7 +76,8 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
             elif field_name in _root._fields_ordered and not (
                 isinstance(_root._fields[field_name].field, mongoengine.EmbeddedDocumentField)
                 or isinstance(
-                    _root._fields[field_name].field, mongoengine.GenericEmbeddedDocumentField
+                    _root._fields[field_name].field,
+                    mongoengine.GenericEmbeddedDocumentField,
                 )
             ):
                 if getattr(_root, field_name, []) is not None:
@@ -170,13 +171,16 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     elif (
                         isinstance(getattr(self.model, key), mongoengine.fields.ReferenceField)
                         or isinstance(
-                            getattr(self.model, key), mongoengine.fields.GenericReferenceField
+                            getattr(self.model, key),
+                            mongoengine.fields.GenericReferenceField,
                         )
                         or isinstance(
-                            getattr(self.model, key), mongoengine.fields.LazyReferenceField
+                            getattr(self.model, key),
+                            mongoengine.fields.LazyReferenceField,
                         )
                         or isinstance(
-                            getattr(self.model, key), mongoengine.fields.CachedReferenceField
+                            getattr(self.model, key),
+                            mongoengine.fields.CachedReferenceField,
                         )
                     ):
                         if not isinstance(args_copy[key], ObjectId):
@@ -304,7 +308,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                 connection_fields = [
                     field
                     for field in self.fields
-                    if type(self.fields[field]) == AsyncMongoengineConnectionField
+                    if isinstance(self.fields[field], AsyncMongoengineConnectionField)
                 ]
 
                 def filter_connection(x):
