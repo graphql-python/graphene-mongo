@@ -233,11 +233,18 @@ def find_skip_and_limit(first, last, after, before, count=None):
 
 
 def connection_from_iterables(
-    edges, start_offset, has_previous_page, has_next_page, connection_type, edge_type, pageinfo_type
+    edges,
+    start_offset,
+    has_previous_page,
+    has_next_page,
+    connection_type,
+    edge_type,
+    pageinfo_type,
 ):
     edges_items = [
         edge_type(
-            node=node, cursor=offset_to_cursor((0 if start_offset is None else start_offset) + i)
+            node=node,
+            cursor=offset_to_cursor((0 if start_offset is None else start_offset) + i),
         )
         for i, node in enumerate(edges)
     ]

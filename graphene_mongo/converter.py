@@ -197,13 +197,15 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
                         if model in to_resolve_models:
                             futures.append(
                                 pool.submit(
-                                    get_reference_objects, (model, object_id_list, registry, args)
+                                    get_reference_objects,
+                                    (model, object_id_list, registry, args),
                                 )
                             )
                         else:
                             futures.append(
                                 pool.submit(
-                                    get_non_querying_object, (model, object_id_list, registry, args)
+                                    get_non_querying_object,
+                                    (model, object_id_list, registry, args),
                                 )
                             )
                     result = list()
@@ -325,7 +327,9 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
         base_type = type(base_type)
 
     return graphene.List(
-        base_type, description=get_field_description(field, registry), required=field.required
+        base_type,
+        description=get_field_description(field, registry),
+        required=field.required,
     )
 
 
@@ -625,7 +629,9 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
             return None
         if isinstance(field, mongoengine.EmbeddedDocumentField):
             return graphene.Field(
-                _type, description=get_field_description(field, registry), required=field.required
+                _type,
+                description=get_field_description(field, registry),
+                required=field.required,
             )
         field_resolver = None
         required = False
@@ -755,5 +761,7 @@ if sys.version_info >= (3, 6):
             registry.register_enum(field._enum_cls)
         _type = registry.get_type_for_enum(field._enum_cls)
         return graphene.Field(
-            _type, description=get_field_description(field, registry), required=field.required
+            _type,
+            description=get_field_description(field, registry),
+            required=field.required,
         )

@@ -190,13 +190,17 @@ def create_graphene_generic_class_async(object_type, option_type):
     return AsyncGrapheneMongoengineGenericType, AsyncMongoengineGenericObjectTypeOptions
 
 
-AsyncMongoengineObjectType, AsyncMongoengineObjectTypeOptions = create_graphene_generic_class_async(
-    ObjectType, ObjectTypeOptions
-)
+(
+    AsyncMongoengineObjectType,
+    AsyncMongoengineObjectTypeOptions,
+) = create_graphene_generic_class_async(ObjectType, ObjectTypeOptions)
 
 (
     AsyncMongoengineInterfaceType,
     MongoengineInterfaceTypeOptions,
 ) = create_graphene_generic_class_async(Interface, InterfaceOptions)
 
-AsyncGrapheneMongoengineObjectTypes = (AsyncMongoengineObjectType, AsyncMongoengineInterfaceType)
+AsyncGrapheneMongoengineObjectTypes = (
+    AsyncMongoengineObjectType,
+    AsyncMongoengineInterfaceType,
+)

@@ -801,7 +801,8 @@ async def test_should_get_queryset_returns_dict_filters_async(fixtures):
     class Query(graphene.ObjectType):
         node = Node.Field()
         articles = AsyncMongoengineConnectionField(
-            nodes_async.ArticleAsyncNode, get_queryset=lambda *_, **__: {"headline": "World"}
+            nodes_async.ArticleAsyncNode,
+            get_queryset=lambda *_, **__: {"headline": "World"},
         )
 
     query = """
@@ -1032,7 +1033,9 @@ async def test_should_get_correct_list_of_documents_async(fixtures):
 
 
 @pytest.mark.asyncio
-async def test_should_filter_mongoengine_queryset_by_id_and_other_fields_async(fixtures):
+async def test_should_filter_mongoengine_queryset_by_id_and_other_fields_async(
+    fixtures,
+):
     class Query(graphene.ObjectType):
         players = AsyncMongoengineConnectionField(nodes_async.PlayerAsyncNode)
 

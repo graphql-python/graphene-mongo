@@ -14,7 +14,12 @@ from graphene_mongo import MongoengineConnectionField
 
 from .converter import convert_mongoengine_field
 from .registry import Registry, get_global_registry, get_inputs_registry
-from .utils import get_model_fields, is_valid_mongoengine_model, get_query_fields, ExecutorEnum
+from .utils import (
+    get_model_fields,
+    is_valid_mongoengine_model,
+    get_query_fields,
+    ExecutorEnum,
+)
 
 
 def construct_fields(
@@ -254,9 +259,10 @@ def create_graphene_generic_class(object_type, option_type):
 MongoengineObjectType, MongoengineObjectTypeOptions = create_graphene_generic_class(
     ObjectType, ObjectTypeOptions
 )
-MongoengineInterfaceType, MongoengineInterfaceTypeOptions = create_graphene_generic_class(
-    Interface, InterfaceOptions
-)
+(
+    MongoengineInterfaceType,
+    MongoengineInterfaceTypeOptions,
+) = create_graphene_generic_class(Interface, InterfaceOptions)
 MongoengineInputType, MongoengineInputTypeOptions = create_graphene_generic_class(
     InputObjectType, InputObjectTypeOptions
 )
