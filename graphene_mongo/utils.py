@@ -182,19 +182,18 @@ def has_page_info(info):
         info (ResolveInfo)
 
     Returns:
-        dict: Returned from collect_query_fields
+        bool: True if it received pageinfo
     """
 
     fragments = {}
+    if not info:
+        return True  # Returning True if invalid info is provided
     node = ast_to_dict(info.field_nodes[0])
-
     for name, value in info.fragments.items():
         fragments[name] = ast_to_dict(value)
 
     query = collect_query_fields(node, fragments)
-    # if "PageInfo" in query:
-    #     return query["edges"]["node"].keys()
-    return bool("PageInfo" in query)
+    return next((True for x in query.keys() if x.lower() == "pageinfo"), False)
 
 
 def ast_to_dict(node, include_loc=False):
