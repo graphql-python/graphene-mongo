@@ -285,13 +285,13 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
                             )
                         tasks.append(task)
                     result = await asyncio.gather(*tasks)
-                    result = [each[0] for each in result]
-                    result_object_ids = list()
-                    for each in result:
-                        result_object_ids.append(each.id)
+                    result_object = {}
+                    for items in result:
+                        for item in items:
+                            result_object[item.id] = item
                     ordered_result = list()
                     for each in to_resolve_object_ids:
-                        ordered_result.append(result[result_object_ids.index(each)])
+                        ordered_result.append(result_object[each])
                     return ordered_result
                 return None
 
@@ -350,10 +350,19 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
     if len(_types) == 0:
         return None
 
-    name = (
-        to_camel_case("{}_{}".format(field._owner_document.__name__, field.db_field)) + "UnionType"
-        if ExecutorEnum.SYNC
-        else "AsyncUnionType"
+    field_name = field.db_field
+    if field_name is None:
+        # Get db_field name from parent mongo_field
+        for db_field_name, _mongo_parent_field in field.owner_document._fields.items():
+            if hasattr(_mongo_parent_field, "field") and _mongo_parent_field.field == field:
+                field_name = db_field_name
+                break
+
+    name = to_camel_case(
+        "{}_{}_union_type".format(
+            field._owner_document.__name__,
+            field_name,
+        )
     )
     Meta = type("Meta", (object,), {"types": tuple(_types)})
     _union = type(name, (graphene.Union,), {"Meta": Meta})
