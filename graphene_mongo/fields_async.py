@@ -25,8 +25,8 @@ from .utils import (
     connection_from_iterables,
     find_skip_and_limit,
     get_query_fields,
-    sync_to_async,
     has_page_info,
+    sync_to_async,
 )
 
 PYMONGO_VERSION = tuple(pymongo.version_tuple[:2])
@@ -131,12 +131,7 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
                     )
                     items = await sync_to_async(_base_query.limit)(limit)
                     has_next_page = (
-                        (
-                            await sync_to_async(len)(
-                                await sync_to_async(_base_query.skip(limit).only("id").limit)(1)
-                            )
-                            != 0
-                        )
+                        (await sync_to_async(len)(_base_query.skip(limit).only("id").limit(1)) != 0)
                         if requires_page_info
                         else False
                     )
