@@ -38,7 +38,9 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
@@ -49,7 +51,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install poetry
-    - name: Build & Release package
+    - name: Build package
       run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-        poetry publish --build
+        poetry build
+    - name: Build package
+      run: |
+        poetry build
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
