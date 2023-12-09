@@ -91,9 +91,7 @@ def test_should_dict_convert_json():
 
 
 def test_should_map_convert_json():
-    assert_conversion(
-        mongoengine.MapField, graphene.JSONString, field=mongoengine.StringField()
-    )
+    assert_conversion(mongoengine.MapField, graphene.JSONString, field=mongoengine.StringField())
 
 
 def test_should_point_convert_field():
@@ -127,15 +125,11 @@ def test_should_file_convert_field():
 
 
 def test_should_field_convert_list():
-    assert_conversion(
-        mongoengine.ListField, graphene.List, field=mongoengine.StringField()
-    )
+    assert_conversion(mongoengine.ListField, graphene.List, field=mongoengine.StringField())
 
 
 def test_should_geo_convert_list():
-    assert_conversion(
-        mongoengine.GeoPointField, graphene.List, field=mongoengine.FloatField()
-    )
+    assert_conversion(mongoengine.GeoPointField, graphene.List, field=mongoengine.FloatField())
 
 
 def test_should_reference_convert_dynamic():
@@ -144,9 +138,7 @@ def test_should_reference_convert_dynamic():
             model = Editor
             interfaces = (graphene.Node,)
 
-    dynamic_field = convert_mongoengine_field(
-        EmbeddedArticle._fields["editor"], E._meta.registry
-    )
+    dynamic_field = convert_mongoengine_field(EmbeddedArticle._fields["editor"], E._meta.registry)
     assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
@@ -159,9 +151,7 @@ def test_should_lazy_reference_convert_dynamic():
             model = Publisher
             interfaces = (graphene.Node,)
 
-    dynamic_field = convert_mongoengine_field(
-        Editor._fields["company"], P._meta.registry
-    )
+    dynamic_field = convert_mongoengine_field(Editor._fields["company"], P._meta.registry)
 
     assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
@@ -209,9 +199,7 @@ def test_should_list_of_reference_convert_list():
         class Meta:
             model = Article
 
-    graphene_field = convert_mongoengine_field(
-        Reporter._fields["articles"], A._meta.registry
-    )
+    graphene_field = convert_mongoengine_field(Reporter._fields["articles"], A._meta.registry)
     assert isinstance(graphene_field, graphene.List)
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == A
@@ -270,17 +258,13 @@ def test_should_self_reference_convert_dynamic():
             model = Player
             interfaces = (graphene.Node,)
 
-    dynamic_field = convert_mongoengine_field(
-        Player._fields["opponent"], P._meta.registry
-    )
+    dynamic_field = convert_mongoengine_field(Player._fields["opponent"], P._meta.registry)
     assert isinstance(dynamic_field, graphene.Dynamic)
     graphene_type = dynamic_field.get_type()
     assert isinstance(graphene_type, graphene.Field)
     assert graphene_type.type == P
 
-    graphene_field = convert_mongoengine_field(
-        Player._fields["players"], P._meta.registry
-    )
+    graphene_field = convert_mongoengine_field(Player._fields["players"], P._meta.registry)
     assert isinstance(graphene_field, MongoengineConnectionField)
 
 
@@ -293,9 +277,7 @@ def test_should_list_of_self_reference_convert_list():
         class Meta:
             model = Player
 
-    graphene_field = convert_mongoengine_field(
-        Player._fields["players"], P._meta.registry
-    )
+    graphene_field = convert_mongoengine_field(Player._fields["players"], P._meta.registry)
     assert isinstance(graphene_field, graphene.List)
     dynamic_field = graphene_field.get_type()
     assert dynamic_field._of_type == P
@@ -306,27 +288,16 @@ def test_should_description_convert_common_metadata():
         class Meta:
             model = Article
 
-    headline_field = convert_mongoengine_field(
-        Article._fields["headline"], A._meta.registry
-    )
+    headline_field = convert_mongoengine_field(Article._fields["headline"], A._meta.registry)
     assert headline_field.kwargs["description"] == "The article headline."
 
-    pubDate_field = convert_mongoengine_field(
-        Article._fields["pub_date"], A._meta.registry
-    )
-    assert (
-            pubDate_field.kwargs["description"]
-            == "Publication Date\nThe date of first press."
-    )
+    pubDate_field = convert_mongoengine_field(Article._fields["pub_date"], A._meta.registry)
+    assert pubDate_field.kwargs["description"] == "Publication Date\nThe date of first press."
 
-    firstName_field = convert_mongoengine_field(
-        Editor._fields["first_name"], A._meta.registry
-    )
+    firstName_field = convert_mongoengine_field(Editor._fields["first_name"], A._meta.registry)
     assert firstName_field.kwargs["description"] == "Editor's first name.\n(fname)"
 
-    metadata_field = convert_mongoengine_field(
-        Editor._fields["metadata"], A._meta.registry
-    )
+    metadata_field = convert_mongoengine_field(Editor._fields["metadata"], A._meta.registry)
     assert metadata_field.kwargs["description"] == "Arbitrary metadata."
 
 
@@ -339,9 +310,7 @@ def test_should_description_convert_reference_metadata():
         class Meta:
             model = Editor
 
-    editor_field = convert_mongoengine_field(
-        Article._fields["editor"], A._meta.registry
-    ).get_type()
+    editor_field = convert_mongoengine_field(Article._fields["editor"], A._meta.registry).get_type()
     assert editor_field.description == "An Editor of a publication."
 
 

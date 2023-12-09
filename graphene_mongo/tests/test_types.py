@@ -13,7 +13,6 @@ registry.reset_global_registry()
 
 
 class Human(MongoengineObjectType):
-
     pub_date = Int()
 
     class Meta:
@@ -135,6 +134,7 @@ def test_mongoengine_objecttype_order_by():
         class Meta:
             model = Article
             order_by = "some_order_by_statement"
+
     assert "some_order_by_statement" not in list(A._meta.fields.keys())
 
 

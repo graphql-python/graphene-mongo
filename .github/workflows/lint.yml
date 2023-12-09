@@ -11,7 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        python: ["3.11"]
+        python: ["3.12"]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -19,9 +19,7 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python }}
-    - name: Install dependencies
+    - name: Lint with ruff
       run: |
-        python -m pip install --upgrade pip
-        pip install flake8
-    - name: Lint with flake8
-      run: make lint
+        python -m pip install ruff
+        make lint
