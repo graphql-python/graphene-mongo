@@ -4,10 +4,11 @@ import enum
 import inspect
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Coroutine, ParamSpec
+from typing import Any, Callable, Union
 
 import mongoengine
 from asgiref.sync import sync_to_async as asgiref_sync_to_async
+from asgiref.sync import SyncToAsync
 from graphene import Node
 from graphene.utils.trim_docstring import trim_docstring
 from graphql import FieldNode
@@ -283,7 +284,7 @@ def sync_to_async(
     func: Callable = None,
     thread_sensitive: bool = False,
     executor: Any = None,  # noqa
-) -> Callable[[ParamSpec("_P")], Coroutine[Any, Any, Any]]:
+) -> Union[SyncToAsync, Callable[[Callable[..., Any]], SyncToAsync]]:
     """
     Wrapper over sync_to_async from asgiref.sync
     Defaults to thread insensitive with ThreadPoolExecutor of n workers
