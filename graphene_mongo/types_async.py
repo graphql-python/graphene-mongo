@@ -1,6 +1,5 @@
 import graphene
 import mongoengine
-from asgiref.sync import sync_to_async
 from graphene import InputObjectType
 from graphene.relay import Connection, Node
 from graphene.types.interface import Interface, InterfaceOptions
@@ -11,7 +10,7 @@ from graphene.utils.str_converters import to_snake_case
 from graphene_mongo import AsyncMongoengineConnectionField
 from .registry import Registry, get_global_async_registry, get_inputs_async_registry
 from .types import construct_fields, construct_self_referenced_fields
-from .utils import ExecutorEnum, get_query_fields, is_valid_mongoengine_model
+from .utils import ExecutorEnum, get_query_fields, is_valid_mongoengine_model, sync_to_async
 
 
 def create_graphene_generic_class_async(object_type, option_type):

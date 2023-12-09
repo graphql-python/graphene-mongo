@@ -7,7 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Union
 
 import mongoengine
-from asgiref.sync import SyncToAsync, sync_to_async as asgiref_sync_to_async
+from asgiref.sync import sync_to_async as asgiref_sync_to_async
+from asgiref.sync import SyncToAsync
 from graphene import Node
 from graphene.utils.trim_docstring import trim_docstring
 from graphql import FieldNode
@@ -171,6 +172,28 @@ def get_query_fields(info):
     if "edges" in query:
         return query["edges"]["node"].keys()
     return query
+
+
+def has_page_info(info):
+    """A convenience function to call collect_query_fields with info
+    for retrieving if page_info details are required
+
+    Args:
+        info (ResolveInfo)
+
+    Returns:
+        bool: True if it received pageinfo
+    """
+
+    fragments = {}
+    if not info:
+        return True  # Returning True if invalid info is provided
+    node = ast_to_dict(info.field_nodes[0])
+    for name, value in info.fragments.items():
+        fragments[name] = ast_to_dict(value)
+
+    query = collect_query_fields(node, fragments)
+    return next((True for x in query.keys() if x.lower() == "pageinfo"), False)
 
 
 def ast_to_dict(node, include_loc=False):
