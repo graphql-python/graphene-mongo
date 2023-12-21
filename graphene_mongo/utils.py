@@ -259,9 +259,12 @@ def ast_to_dict(node, include_loc=False):
 
 
 def find_skip_and_limit(first, last, after, before, count=None):
-    reverse = False
     skip = 0
     limit = None
+
+    if last is not None and count is None:
+        raise ValueError("Count Missing")
+
     if first is not None and after is not None:
         skip = after + 1
         limit = first
@@ -274,29 +277,26 @@ def find_skip_and_limit(first, last, after, before, count=None):
         skip = 0
         limit = first
     elif last is not None and before is not None:
-        reverse = False
         if last >= before:
             limit = before
         else:
             limit = last
             skip = before - last
     elif last is not None and after is not None:
-        if not count:
-            raise ValueError("Count Missing")
-        reverse = True
+        skip = after + 1
         if last + after < count:
             limit = last
         else:
             limit = count - after - 1
     elif last is not None:
-        skip = 0
+        skip = count - last
         limit = last
-        reverse = True
     elif after is not None:
         skip = after + 1
     elif before is not None:
         limit = before
-    return skip, limit, reverse
+
+    return skip, limit
 
 
 def connection_from_iterables(
