@@ -9,15 +9,13 @@ from graphene.utils.str_converters import to_snake_case, to_camel_case
 from mongoengine.base import get_document, LazyReference
 from . import advanced_types
 from .utils import (
-    import_single_dispatch,
     get_field_description,
     get_query_fields,
     ExecutorEnum,
     sync_to_async,
 )
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-singledispatch = import_single_dispatch()
+from functools import singledispatch
 
 
 class MongoEngineConversionError(Exception):
