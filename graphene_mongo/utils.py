@@ -55,29 +55,6 @@ def is_valid_mongoengine_model(model):
     )
 
 
-def import_single_dispatch():
-    try:
-        from functools import singledispatch
-    except ImportError:
-        singledispatch = None
-
-    if not singledispatch:
-        try:
-            from singledispatch import singledispatch
-        except ImportError:
-            pass
-
-    if not singledispatch:
-        raise Exception(
-            "It seems your python version does not include "
-            "functools.singledispatch. Please install the 'singledispatch' "
-            "package. More information here: "
-            "https://pypi.python.org/pypi/singledispatch"
-        )
-
-    return singledispatch
-
-
 # noqa
 def get_type_for_document(schema, document):
     types = schema.types.values()
