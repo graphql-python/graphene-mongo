@@ -1,17 +1,16 @@
 import base64
 
 import graphene
+from graphene_federation import shareable
 
 
+@shareable  # Support Graphene Federation v2
 class FileFieldType(graphene.ObjectType):
     content_type = graphene.String()
     md5 = graphene.String()
     chunk_size = graphene.Int()
     length = graphene.Int()
     data = graphene.String()
-
-    # Support Graphene Federation v2
-    _shareable = True
 
     @classmethod
     def _resolve_fs_field(cls, field, name, default_value=None):
@@ -38,11 +37,9 @@ class FileFieldType(graphene.ObjectType):
         return None
 
 
+@shareable  # Support Graphene Federation v2
 class _CoordinatesTypeField(graphene.ObjectType):
     type = graphene.String()
-
-    # Support Graphene Federation v2
-    _shareable = True
 
     def resolve_type(self, info):
         return self["type"]
