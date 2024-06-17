@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "graphene-mongo"
 packages = [{ include = "graphene_mongo" }]
-version = "0.4.3"
+version = "0.4.4"
 description = "Graphene Mongoengine integration"
 authors = [
     "Abaw Chen <abaw.chen@gmail.com>",
@@ -14,7 +14,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -27,8 +26,9 @@ keywords = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4"
+python = ">=3.9,<4"
 graphene = ">=3.1.1"
+graphene-federation = ">=3.1.5"
 promise = ">=2.3"
 mongoengine = ">=0.27"
 asgiref = "^3.7.2"

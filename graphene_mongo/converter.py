@@ -545,7 +545,7 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
     model = field.document_type
 
     def reference_resolver(root, *args, **kwargs):
-        document = getattr(root, field.name or field.db_name)
+        document = root._data.get(field.name or field.db_name, None)
         if document:
             queried_fields = list()
             _type = registry.get_type_for_model(field.document_type, executor=executor)
@@ -558,37 +558,22 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
                 item = to_snake_case(each)
                 if item in field.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
+
+            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
+            if isinstance(document, field.document_type) and all(
+                document._data[_field] is not None for _field in fields_to_fetch
+            ):
+                return document  # Data is already fetched
             return (
                 field.document_type.objects()
                 .no_dereference()
-                .only(*(set(list(_type._meta.required_fields) + queried_fields)))
+                .only(*fields_to_fetch)
                 .get(pk=document.id)
             )
         return None
 
     def cached_reference_resolver(root, *args, **kwargs):
-        if field:
-            queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type, executor=executor)
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            for each in get_query_fields(args[0]).keys():
-                item = to_snake_case(each)
-                if item in field.document_type._fields_ordered + tuple(filter_args):
-                    queried_fields.append(item)
-            return (
-                field.document_type.objects()
-                .no_dereference()
-                .only(*(set(list(_type._meta.required_fields) + queried_fields)))
-                .get(pk=getattr(root, field.name or field.db_name))
-            )
-        return None
-
-    async def reference_resolver_async(root, *args, **kwargs):
-        document = getattr(root, field.name or field.db_name)
+        document = root._data.get(field.name or field.db_name, None)
         if document:
             queried_fields = list()
             _type = registry.get_type_for_model(field.document_type, executor=executor)
@@ -601,16 +586,23 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
                 item = to_snake_case(each)
                 if item in field.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
-            return await sync_to_async(
+
+            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
+            if isinstance(document, field.document_type) and all(
+                document._data[_field] is not None for _field in fields_to_fetch
+            ):
+                return document  # Data is already fetched
+            return (
                 field.document_type.objects()
                 .no_dereference()
-                .only(*(set(list(_type._meta.required_fields) + queried_fields)))
-                .get
-            )(pk=document.id)
+                .only(*fields_to_fetch)
+                .get(pk=getattr(root, field.name or field.db_name))
+            )
         return None
 
-    async def cached_reference_resolver_async(root, *args, **kwargs):
-        if field:
+    async def reference_resolver_async(root, *args, **kwargs):
+        document = root._data.get(field.name or field.db_name, None)
+        if document:
             queried_fields = list()
             _type = registry.get_type_for_model(field.document_type, executor=executor)
             filter_args = list()
@@ -622,11 +614,39 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
                 item = to_snake_case(each)
                 if item in field.document_type._fields_ordered + tuple(filter_args):
                     queried_fields.append(item)
+
+            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
+            if isinstance(document, field.document_type) and all(
+                document._data[_field] is not None for _field in fields_to_fetch
+            ):
+                return document  # Data is already fetched
             return await sync_to_async(
-                field.document_type.objects()
-                .no_dereference()
-                .only(*(set(list(_type._meta.required_fields) + queried_fields)))
-                .get
+                field.document_type.objects().no_dereference().only(*fields_to_fetch).get
+            )(pk=document.id)
+        return None
+
+    async def cached_reference_resolver_async(root, *args, **kwargs):
+        document = root._data.get(field.name or field.db_name, None)
+        if document:
+            queried_fields = list()
+            _type = registry.get_type_for_model(field.document_type, executor=executor)
+            filter_args = list()
+            if _type._meta.filter_fields:
+                for key, values in _type._meta.filter_fields.items():
+                    for each in values:
+                        filter_args.append(key + "__" + each)
+            for each in get_query_fields(args[0]).keys():
+                item = to_snake_case(each)
+                if item in field.document_type._fields_ordered + tuple(filter_args):
+                    queried_fields.append(item)
+
+            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
+            if isinstance(document, field.document_type) and all(
+                document._data[_field] is not None for _field in fields_to_fetch
+            ):
+                return document  # Data is already fetched
+            return await sync_to_async(
+                field.document_type.objects().no_dereference().only(*fields_to_fetch).get
             )(pk=getattr(root, field.name or field.db_name))
         return None
 
