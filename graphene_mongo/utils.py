@@ -79,6 +79,8 @@ def get_field_description(field, registry=None):
         parts.append(field.verbose_name.title())
     if hasattr(field, "help_text"):
         parts.append(field.help_text)
+    if hasattr(field, "description"):
+        parts.append(field.description)
     if field.db_field != field.name:
         name_format = "(%s)" if parts else "%s"
         parts.append(name_format % field.db_field)
