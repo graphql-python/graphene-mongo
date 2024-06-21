@@ -86,6 +86,14 @@ def get_field_description(field, registry=None):
     return "\n".join(parts)
 
 
+def get_field_is_required(field, registry=None):
+    """
+    A field is said to be required in gql only if
+    field.required = True and field.null = False
+    """
+    return field.required and not field.null
+
+
 def get_node_from_global_id(node, info, global_id):
     try:
         for interface in node._meta.interfaces:

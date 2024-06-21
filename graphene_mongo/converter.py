@@ -11,6 +11,7 @@ from . import advanced_types
 from .utils import (
     get_field_description,
     get_query_fields,
+    get_field_is_required,
     ExecutorEnum,
     sync_to_async,
 )
@@ -34,34 +35,43 @@ def convert_mongoengine_field(field, registry=None, executor: ExecutorEnum = Exe
 @convert_mongoengine_field.register(mongoengine.URLField)
 def convert_field_to_string(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.String(
-        description=get_field_description(field, registry), required=field.required
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
     )
 
 
 @convert_mongoengine_field.register(mongoengine.UUIDField)
 @convert_mongoengine_field.register(mongoengine.ObjectIdField)
 def convert_field_to_id(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
-    return graphene.ID(description=get_field_description(field, registry), required=field.required)
+    return graphene.ID(
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.IntField)
 @convert_mongoengine_field.register(mongoengine.LongField)
 @convert_mongoengine_field.register(mongoengine.SequenceField)
 def convert_field_to_int(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
-    return graphene.Int(description=get_field_description(field, registry), required=field.required)
+    return graphene.Int(
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.BooleanField)
 def convert_field_to_boolean(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.Boolean(
-        description=get_field_description(field, registry), required=field.required
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
     )
 
 
 @convert_mongoengine_field.register(mongoengine.FloatField)
 def convert_field_to_float(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.Float(
-        description=get_field_description(field, registry), required=field.required
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
     )
 
 
@@ -69,28 +79,34 @@ def convert_field_to_float(field, registry=None, executor: ExecutorEnum = Execut
 @convert_mongoengine_field.register(mongoengine.DecimalField)
 def convert_field_to_decimal(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.Decimal(
-        description=get_field_description(field, registry), required=field.required
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
     )
 
 
 @convert_mongoengine_field.register(mongoengine.DateTimeField)
 def convert_field_to_datetime(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.DateTime(
-        description=get_field_description(field, registry), required=field.required
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
     )
 
 
 @convert_mongoengine_field.register(mongoengine.DateField)
 def convert_field_to_date(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     return graphene.Date(
-        description=get_field_description(field, registry), required=field.required
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
     )
 
 
 @convert_mongoengine_field.register(mongoengine.DictField)
 @convert_mongoengine_field.register(mongoengine.MapField)
 def convert_field_to_jsonstring(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
-    return JSONString(description=get_field_description(field, registry), required=field.required)
+    return JSONString(
+        description=get_field_description(field, registry),
+        required=get_field_is_required(field, registry),
+    )
 
 
 @convert_mongoengine_field.register(mongoengine.PointField)
@@ -98,7 +114,7 @@ def convert_point_to_field(field, registry=None, executor: ExecutorEnum = Execut
     return graphene.Field(
         advanced_types.PointFieldType,
         description=get_field_description(field, registry),
-        required=field.required,
+        required=get_field_is_required(field, registry),
     )
 
 
@@ -107,7 +123,7 @@ def convert_polygon_to_field(field, registry=None, executor: ExecutorEnum = Exec
     return graphene.Field(
         advanced_types.PolygonFieldType,
         description=get_field_description(field, registry),
-        required=field.required,
+        required=get_field_is_required(field, registry),
     )
 
 
@@ -116,7 +132,7 @@ def convert_multipolygon_to_field(field, registry=None, executor: ExecutorEnum =
     return graphene.Field(
         advanced_types.MultiPolygonFieldType,
         description=get_field_description(field, registry),
-        required=field.required,
+        required=get_field_is_required(field, registry),
     )
 
 
@@ -125,7 +141,7 @@ def convert_file_to_field(field, registry=None, executor: ExecutorEnum = Executo
     return graphene.Field(
         advanced_types.FileFieldType,
         description=get_field_description(field, registry),
-        required=field.required,
+        required=get_field_is_required(field, registry),
     )
 
 
@@ -298,7 +314,7 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
             return graphene.List(
                 base_type._type,
                 description=get_field_description(field, registry),
-                required=field.required,
+                required=get_field_is_required(field, registry),
                 resolver=reference_resolver
                 if executor == ExecutorEnum.SYNC
                 else reference_resolver_async,
@@ -306,7 +322,7 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
         return graphene.List(
             base_type._type,
             description=get_field_description(field, registry),
-            required=field.required,
+            required=get_field_is_required(field, registry),
         )
     if isinstance(base_type, (graphene.Dynamic)):
         base_type = base_type.get_type()
@@ -327,7 +343,7 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
     return graphene.List(
         base_type,
         description=get_field_description(field, registry),
-        required=field.required,
+        required=get_field_is_required(field, registry),
     )
 
 
@@ -491,7 +507,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         field_resolver = None
         required = False
         if field.db_field is not None:
-            required = field.required
+            required = get_field_is_required(field, registry)
             resolver_function = getattr(
                 registry.get_type_for_model(field.owner_document, executor=executor),
                 "resolve_" + field.db_field,
@@ -516,7 +532,7 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
         field_resolver = None
         required = False
         if field.db_field is not None:
-            required = field.required
+            required = get_field_is_required(field, registry)
             resolver_function = getattr(
                 registry.get_type_for_model(field.owner_document, executor=executor),
                 "resolve_" + field.db_field,
@@ -658,12 +674,12 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
             return graphene.Field(
                 _type,
                 description=get_field_description(field, registry),
-                required=field.required,
+                required=get_field_is_required(field, registry),
             )
         field_resolver = None
         required = False
         if field.db_field is not None:
-            required = field.required
+            required = get_field_is_required(field, registry)
             resolver_function = getattr(
                 registry.get_type_for_model(field.owner_document, executor=executor),
                 "resolve_" + field.db_field,
@@ -760,7 +776,7 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
         field_resolver = None
         required = False
         if field.db_field is not None:
-            required = field.required
+            required = get_field_is_required(field, registry)
             resolver_function = getattr(
                 registry.get_type_for_model(field.owner_document, executor=executor),
                 "resolve_" + field.db_field,
@@ -790,5 +806,5 @@ if sys.version_info >= (3, 6):
         return graphene.Field(
             _type,
             description=get_field_description(field, registry),
-            required=field.required,
+            required=get_field_is_required(field, registry),
         )
