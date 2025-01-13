@@ -49,9 +49,9 @@ class MongoengineConnectionField(ConnectionField):
     def __init__(self, type, *args, **kwargs):
         get_queryset = kwargs.pop("get_queryset", None)
         if get_queryset:
-            assert callable(
-                get_queryset
-            ), "Attribute `get_queryset` on {} must be callable.".format(self)
+            assert callable(get_queryset), (
+                "Attribute `get_queryset` on {} must be callable.".format(self)
+            )
         self._get_queryset = get_queryset
         super(MongoengineConnectionField, self).__init__(type, *args, **kwargs)
 
@@ -64,9 +64,9 @@ class MongoengineConnectionField(ConnectionField):
         from .types import MongoengineObjectType
 
         _type = super(ConnectionField, self).type
-        assert issubclass(
-            _type, MongoengineObjectType
-        ), "MongoengineConnectionField only accepts MongoengineObjectType types"
+        assert issubclass(_type, MongoengineObjectType), (
+            "MongoengineConnectionField only accepts MongoengineObjectType types"
+        )
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )

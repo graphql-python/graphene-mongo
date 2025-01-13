@@ -45,9 +45,9 @@ class AsyncMongoengineConnectionField(MongoengineConnectionField):
         from .types_async import AsyncMongoengineObjectType
 
         _type = super(ConnectionField, self).type
-        assert issubclass(
-            _type, AsyncMongoengineObjectType
-        ), "AsyncMongoengineConnectionField only accepts AsyncMongoengineObjectType types"
+        assert issubclass(_type, AsyncMongoengineObjectType), (
+            "AsyncMongoengineConnectionField only accepts AsyncMongoengineObjectType types"
+        )
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
