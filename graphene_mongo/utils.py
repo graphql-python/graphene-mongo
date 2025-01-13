@@ -203,6 +203,40 @@ def get_query_fields(info):
     return query
 
 
+def get_queried_union_types(info):
+    """A convenience function to get queried union types with its fields
+
+    Args:
+        info (ResolveInfo)
+
+    Returns:
+        dict[union_type_name, queried_fields(dict)]
+    """
+
+    fragments = {}
+    node = ast_to_dict(info.field_nodes[0])
+    variables = info.variable_values
+
+    for name, value in info.fragments.items():
+        fragments[name] = ast_to_dict(value)
+
+    fragments_queries: dict[str, dict] = {}
+
+    selection_set = node.get("selection_set") if isinstance(node, dict) else node.selection_set
+    if selection_set:
+        for leaf in selection_set.selections:
+            if leaf.kind == "fragment_spread":
+                fragment_name = fragments[leaf.name.value].type_condition.name.value
+                fragments_queries[fragment_name] = collect_query_fields(
+                    fragments[leaf.name.value], fragments, variables
+                )
+            elif leaf.kind == "inline_fragment":
+                fragment_name = leaf.type_condition.name.value
+                fragments_queries[fragment_name] = collect_query_fields(leaf, fragments, variables)
+
+    return fragments_queries
+
+
 def has_page_info(info):
     """A convenience function to call collect_query_fields with info
     for retrieving if page_info details are required
