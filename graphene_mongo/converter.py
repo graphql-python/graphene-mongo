@@ -186,7 +186,9 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
                     return None
 
                 choice_to_resolve = dict()
-                querying_union_types = get_queried_union_types(args[0])
+                querying_union_types = get_queried_union_types(
+                    info=args[0], valid_gql_types=registry._registry_string_map.keys()
+                )
                 to_resolve_models = dict()
                 for each, queried_fields in querying_union_types.items():
                     to_resolve_models[registry._registry_string_map[each]] = queried_fields
@@ -263,7 +265,9 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
                     return None
 
                 choice_to_resolve = dict()
-                querying_union_types = get_queried_union_types(args[0])
+                querying_union_types = get_queried_union_types(
+                    info=args[0], valid_gql_types=registry._registry_async_string_map.keys()
+                )
                 to_resolve_models = dict()
                 for each, queried_fields in querying_union_types.items():
                     to_resolve_models[registry._registry_async_string_map[each]] = queried_fields
