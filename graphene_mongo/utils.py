@@ -235,7 +235,9 @@ def get_queried_union_types(info, valid_gql_types):
                     # This is done to avoid UnionFragments coming in fragments_queries as
                     # we actually need its children types and not the UnionFragments itself
                     fragments_queries.update(sub_query_fields)
-                    fragments_queries.pop('__typename', None)  # cannot resolve __typename for a union type
+                    fragments_queries.pop(
+                        "__typename", None
+                    )  # cannot resolve __typename for a union type
                 else:
                     fragments_queries[fragment_name] = sub_query_fields
             elif leaf.kind == "inline_fragment":

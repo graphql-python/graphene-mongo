@@ -163,16 +163,16 @@ class MongoengineConnectionField(ConnectionField):
                 ),
             ):
                 return False
-            if (
-                getattr(converted, "type", None)
-                and getattr(converted.type, "_of_type", None)
-                and issubclass((get_type(converted.type.of_type)), graphene.Union)
-            ):
-                return False
-            if isinstance(converted, (graphene.List)) and issubclass(
-                getattr(converted, "_of_type", None), graphene.Union
-            ):
-                return False
+
+            if isinstance(converted, (graphene.List)):
+                sub_type = getattr(converted, "_of_type", None)
+                if hasattr(sub_type, "of_type"):  # graphene.NonNull
+                    sub_type = sub_type.of_type
+                if issubclass(sub_type, graphene.Union) or issubclass(
+                    sub_type, graphene.ObjectType
+                ):
+                    return False
+
             # below if condition: workaround for DB filterable field redefined as custom graphene type
             if (
                 hasattr(field_, "type")
