@@ -214,6 +214,42 @@ def get_queried_union_types(info, valid_gql_types):
         dict[union_type_name, queried_fields(dict)]
     """
 
+    def collect_query_fields_for_union(node, fragments, variables):
+        """
+        Similar to collect_query_fields(...)
+
+        fragment_spread - logic is different for union
+        """
+
+        field = {}
+        selection_set = node.get("selection_set") if isinstance(node, dict) else node.selection_set
+        if selection_set:
+            for leaf in selection_set.selections:
+                if leaf.kind == "field":
+                    if include_field_by_directives(leaf, variables):
+                        field.update(
+                            {leaf.name.value: collect_query_fields(leaf, fragments, variables)}
+                        )
+                elif leaf.kind == "fragment_spread":  # This is different
+                    fragment = fragments[leaf.name.value]
+                    field.update(
+                        {
+                            fragment.type_condition.name.value: collect_query_fields(
+                                fragment, fragments, variables
+                            )
+                        }
+                    )
+                elif leaf.kind == "inline_fragment":
+                    field.update(
+                        {
+                            leaf.type_condition.name.value: collect_query_fields(
+                                leaf, fragments, variables
+                            )
+                        }
+                    )
+
+        return field
+
     fragments = {}
     node = ast_to_dict(info.field_nodes[0])
     variables = info.variable_values
@@ -228,7 +264,7 @@ def get_queried_union_types(info, valid_gql_types):
         for leaf in selection_set.selections:
             if leaf.kind == "fragment_spread":
                 fragment_name = fragments[leaf.name.value].type_condition.name.value
-                sub_query_fields = collect_query_fields(
+                sub_query_fields = collect_query_fields_for_union(
                     fragments[leaf.name.value], fragments, variables
                 )
                 if fragment_name not in valid_gql_types:
@@ -242,7 +278,9 @@ def get_queried_union_types(info, valid_gql_types):
                     fragments_queries[fragment_name] = sub_query_fields
             elif leaf.kind == "inline_fragment":
                 fragment_name = leaf.type_condition.name.value
-                fragments_queries[fragment_name] = collect_query_fields(leaf, fragments, variables)
+                fragments_queries[fragment_name] = collect_query_fields_for_union(
+                    leaf, fragments, variables
+                )
 
     return fragments_queries
 
