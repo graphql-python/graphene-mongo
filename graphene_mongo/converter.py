@@ -393,10 +393,12 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                 for key, values in _type._meta.filter_fields.items():
                     for each in values:
                         filter_args.append(key + "__" + each)
-            querying_types = list(get_query_fields(args[0]).keys())
-            if _type.__name__ in querying_types:
+            querying_union_types = get_queried_union_types(
+                info=args[0], valid_gql_types=registry._registry_string_map.keys()
+            )
+            if _type.__name__ in querying_union_types:
                 queried_fields = list()
-                for each in get_query_fields(args[0])[_type._meta.name].keys():
+                for each in querying_union_types[_type._meta.name].keys():
                     item = to_snake_case(each)
                     if item in document._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
@@ -418,14 +420,16 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
             document_field_type = registry.get_type_for_model(
                 document.document_type, executor=executor
             )
-            querying_types = list(get_query_fields(args[0]).keys())
+            querying_union_types = get_queried_union_types(
+                info=args[0], valid_gql_types=registry._registry_string_map.keys()
+            )
             filter_args = list()
             if document_field_type._meta.filter_fields:
                 for key, values in document_field_type._meta.filter_fields.items():
                     for each in values:
                         filter_args.append(key + "__" + each)
-            if document_field_type._meta.name in querying_types:
-                for each in get_query_fields(args[0])[document_field_type._meta.name].keys():
+            if document_field_type._meta.name in querying_union_types:
+                for each in querying_union_types[document_field_type._meta.name].keys():
                     item = to_snake_case(each)
                     if item in document.document_type._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
@@ -453,10 +457,12 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                 for key, values in _type._meta.filter_fields.items():
                     for each in values:
                         filter_args.append(key + "__" + each)
-            querying_types = list(get_query_fields(args[0]).keys())
-            if _type.__name__ in querying_types:
+            querying_union_types = get_queried_union_types(
+                info=args[0], valid_gql_types=registry._registry_string_map.keys()
+            )
+            if _type.__name__ in querying_union_types:
                 queried_fields = list()
-                for each in get_query_fields(args[0])[_type._meta.name].keys():
+                for each in querying_union_types[_type._meta.name].keys():
                     item = to_snake_case(each)
                     if item in document._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
@@ -478,14 +484,16 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
             document_field_type = registry.get_type_for_model(
                 document.document_type, executor=executor
             )
-            querying_types = list(get_query_fields(args[0]).keys())
+            querying_union_types = get_queried_union_types(
+                info=args[0], valid_gql_types=registry._registry_string_map.keys()
+            )
             filter_args = list()
             if document_field_type._meta.filter_fields:
                 for key, values in document_field_type._meta.filter_fields.items():
                     for each in values:
                         filter_args.append(key + "__" + each)
-            if document_field_type._meta.name in querying_types:
-                for each in get_query_fields(args[0])[document_field_type._meta.name].keys():
+            if document_field_type._meta.name in querying_union_types:
+                for each in querying_union_types[document_field_type._meta.name].keys():
                     item = to_snake_case(each)
                     if item in document.document_type._fields_ordered + tuple(filter_args):
                         queried_fields.append(item)
