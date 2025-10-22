@@ -13,6 +13,7 @@ from .utils import (
     get_query_fields,
     get_queried_union_types,
     get_field_is_required,
+    get_field_resolver,
     ExecutorEnum,
     sync_to_async,
 )
@@ -521,12 +522,11 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                 field_resolver = resolver_function
         return graphene.Field(
             _union,
-            resolver=field_resolver
-            if field_resolver
-            else (
-                lazy_reference_resolver
-                if executor == ExecutorEnum.SYNC
-                else lazy_reference_resolver_async
+            resolver=get_field_resolver(
+                field_resolver=field_resolver,
+                default_sync_resolver=lazy_reference_resolver,
+                default_async_resolver=lazy_reference_resolver_async,
+                executor=executor,
             ),
             description=get_field_description(field, registry),
             required=required,
@@ -546,10 +546,11 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
                 field_resolver = resolver_function
         return graphene.Field(
             _union,
-            resolver=field_resolver
-            if field_resolver
-            else (
-                reference_resolver if executor == ExecutorEnum.SYNC else reference_resolver_async
+            resolver=get_field_resolver(
+                field_resolver=field_resolver,
+                default_sync_resolver=reference_resolver,
+                default_async_resolver=reference_resolver_async,
+                executor=executor,
             ),
             description=get_field_description(field, registry),
             required=required,
@@ -694,12 +695,11 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
         if isinstance(field, mongoengine.ReferenceField):
             return graphene.Field(
                 _type,
-                resolver=field_resolver
-                if field_resolver
-                else (
-                    reference_resolver
-                    if executor == ExecutorEnum.SYNC
-                    else reference_resolver_async
+                resolver=get_field_resolver(
+                    field_resolver=field_resolver,
+                    default_sync_resolver=reference_resolver,
+                    default_async_resolver=reference_resolver_async,
+                    executor=executor,
                 ),
                 description=get_field_description(field, registry),
                 required=required,
@@ -707,12 +707,11 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
         else:
             return graphene.Field(
                 _type,
-                resolver=field_resolver
-                if field_resolver
-                else (
-                    cached_reference_resolver
-                    if executor == ExecutorEnum.SYNC
-                    else cached_reference_resolver_async
+                resolver=get_field_resolver(
+                    field_resolver=field_resolver,
+                    default_sync_resolver=cached_reference_resolver,
+                    default_async_resolver=cached_reference_resolver_async,
+                    executor=executor,
                 ),
                 description=get_field_description(field, registry),
                 required=required,
@@ -790,9 +789,12 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
                 field_resolver = resolver_function
         return graphene.Field(
             _type,
-            resolver=field_resolver
-            if field_resolver
-            else (lazy_resolver if executor == ExecutorEnum.SYNC else lazy_resolver_async),
+            resolver=get_field_resolver(
+                field_resolver=field_resolver,
+                default_sync_resolver=lazy_resolver,
+                default_async_resolver=lazy_resolver_async,
+                executor=executor,
+            ),
             description=get_field_description(field, registry),
             required=required,
         )

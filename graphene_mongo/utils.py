@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-import enum
-import inspect
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+import enum
+import inspect
 from typing import Any, Callable, Union
 
-import mongoengine
 from asgiref.sync import SyncToAsync
 from asgiref.sync import sync_to_async as asgiref_sync_to_async
 from graphene import Node
@@ -19,6 +18,7 @@ from graphql import (
     VariableNode,
 )
 from graphql_relay.connection.array_connection import offset_to_cursor
+import mongoengine
 
 
 class ExecutorEnum(enum.Enum):
@@ -163,19 +163,15 @@ def collect_query_fields(node, fragments, variables):
         for leaf in selection_set.selections:
             if leaf.kind == "field":
                 if include_field_by_directives(leaf, variables):
-                    field.update(
-                        {leaf.name.value: collect_query_fields(leaf, fragments, variables)}
-                    )
+                    field.update({
+                        leaf.name.value: collect_query_fields(leaf, fragments, variables)
+                    })
             elif leaf.kind == "fragment_spread":
                 field.update(collect_query_fields(fragments[leaf.name.value], fragments, variables))
             elif leaf.kind == "inline_fragment":
-                field.update(
-                    {
-                        leaf.type_condition.name.value: collect_query_fields(
-                            leaf, fragments, variables
-                        )
-                    }
-                )
+                field.update({
+                    leaf.type_condition.name.value: collect_query_fields(leaf, fragments, variables)
+                })
 
     return field
 
@@ -227,26 +223,22 @@ def get_queried_union_types(info, valid_gql_types):
             for leaf in selection_set.selections:
                 if leaf.kind == "field":
                     if include_field_by_directives(leaf, variables):
-                        field.update(
-                            {leaf.name.value: collect_query_fields(leaf, fragments, variables)}
-                        )
+                        field.update({
+                            leaf.name.value: collect_query_fields(leaf, fragments, variables)
+                        })
                 elif leaf.kind == "fragment_spread":  # This is different
                     fragment = fragments[leaf.name.value]
-                    field.update(
-                        {
-                            fragment.type_condition.name.value: collect_query_fields(
-                                fragment, fragments, variables
-                            )
-                        }
-                    )
+                    field.update({
+                        fragment.type_condition.name.value: collect_query_fields(
+                            fragment, fragments, variables
+                        )
+                    })
                 elif leaf.kind == "inline_fragment":
-                    field.update(
-                        {
-                            leaf.type_condition.name.value: collect_query_fields(
-                                leaf, fragments, variables
-                            )
-                        }
-                    )
+                    field.update({
+                        leaf.type_condition.name.value: collect_query_fields(
+                            leaf, fragments, variables
+                        )
+                    })
 
         return field
 
@@ -421,3 +413,30 @@ def sync_to_async(
     if executor is None:
         executor = ThreadPoolExecutor()
     return asgiref_sync_to_async(func=func, thread_sensitive=thread_sensitive, executor=executor)
+
+
+def get_field_resolver(
+    field_resolver: Callable | None,
+    default_async_resolver: Callable,
+    default_sync_resolver: Callable,
+    executor: ExecutorEnum,
+) -> Callable:
+    """
+    Helpr function to get the resolver for a field
+
+    Args:
+        field_resolver: user defined resolver (optional)
+        default_async_resolver: default library async resolver
+        default_sync_resolver: default library sync resolver
+        executor: ExecutorEnum
+
+    Returns:
+        resolver: Callable
+    """
+    if field_resolver is not None:
+        return field_resolver
+
+    if executor == ExecutorEnum.ASYNC:
+        return default_async_resolver
+
+    return default_sync_resolver
