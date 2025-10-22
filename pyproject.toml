@@ -24,6 +24,7 @@ classifiers = [
 keywords = [
     "graphene-mongo", "graphql", "api", "graphql", "protocol", "relay", "graphene", "mongo", "mongoengine"
 ]
+exclude = ["graphene_mongo/tests"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
