@@ -1,23 +1,24 @@
-import asyncio
 import sys
 
 import graphene
 import mongoengine
 
 from graphene.types.json import JSONString
-from graphene.utils.str_converters import to_snake_case, to_camel_case
-from mongoengine.base import get_document, LazyReference
+from graphene.utils.str_converters import to_camel_case
+from mongoengine.base import get_document
 from . import advanced_types
 from .utils import (
     get_field_description,
-    get_query_fields,
-    get_queried_union_types,
     get_field_is_required,
     get_field_resolver,
     ExecutorEnum,
-    sync_to_async,
 )
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from .field_resolvers import (
+    DynamicLazyFieldResolver,
+    DynamicReferenceFieldResolver,
+    ListFieldResolver,
+    UnionFieldResolver,
+)
 from functools import singledispatch
 
 
@@ -154,167 +155,19 @@ def convert_field_to_list(field, registry=None, executor: ExecutorEnum = Executo
     base_type = convert_mongoengine_field(field.field, registry=registry, executor=executor)
     if isinstance(base_type, graphene.Field):
         if isinstance(field.field, mongoengine.GenericReferenceField):
-
-            def get_reference_objects(*args, **kwargs):
-                document = get_document(args[0])
-                document_field = mongoengine.ReferenceField(document)
-                document_field = convert_mongoengine_field(document_field, registry)
-                document_field_type = document_field.get_type().type
-                queried_fields = list()
-                filter_args = list()
-                if document_field_type._meta.filter_fields:
-                    for key, values in document_field_type._meta.filter_fields.items():
-                        for each in values:
-                            filter_args.append(key + "__" + each)
-                for each in args[4]:
-                    item = to_snake_case(each)
-                    if item in document._fields_ordered + tuple(filter_args):
-                        queried_fields.append(item)
-                return (
-                    document.objects()
-                    .no_dereference()
-                    .only(*set(list(document_field_type._meta.required_fields) + queried_fields))
-                    .filter(pk__in=args[1])
-                )
-
-            def get_non_querying_object(*args, **kwargs):
-                model = get_document(args[0])
-                return [model(pk=each) for each in args[1]]
-
-            def reference_resolver(root, *args, **kwargs):
-                to_resolve = getattr(root, field.name or field.db_name)
-                if not to_resolve:
-                    return None
-
-                choice_to_resolve = dict()
-                querying_union_types = get_queried_union_types(
-                    info=args[0], valid_gql_types=registry._registry_string_map.keys()
-                )
-                to_resolve_models = dict()
-                for each, queried_fields in querying_union_types.items():
-                    to_resolve_models[registry._registry_string_map[each]] = queried_fields
-                to_resolve_object_ids = list()
-                for each in to_resolve:
-                    if isinstance(each, LazyReference):
-                        to_resolve_object_ids.append(each.pk)
-                        model = each.document_type._class_name
-                        if model not in choice_to_resolve:
-                            choice_to_resolve[model] = list()
-                        choice_to_resolve[model].append(each.pk)
-                    else:
-                        to_resolve_object_ids.append(each["_ref"].id)
-                        if each["_cls"] not in choice_to_resolve:
-                            choice_to_resolve[each["_cls"]] = list()
-                        choice_to_resolve[each["_cls"]].append(each["_ref"].id)
-                pool = ThreadPoolExecutor(5)
-                futures = list()
-                for model, object_id_list in choice_to_resolve.items():
-                    if model in to_resolve_models:
-                        queried_fields = to_resolve_models[model]
-                        futures.append(
-                            pool.submit(
-                                get_reference_objects,
-                                *(model, object_id_list, registry, args, queried_fields),
-                            )
-                        )
-                    else:
-                        futures.append(
-                            pool.submit(
-                                get_non_querying_object,
-                                *(model, object_id_list, registry, args),
-                            )
-                        )
-                result = list()
-                for x in as_completed(futures):
-                    result += x.result()
-                result_object_ids = [each.id for each in result]
-                ordered_result = [
-                    result[result_object_ids.index(each)] for each in to_resolve_object_ids
-                ]
-                return ordered_result
-
-            async def get_reference_objects_async(*args, **kwargs):
-                document = get_document(args[0])
-                document_field = mongoengine.ReferenceField(document)
-                document_field = convert_mongoengine_field(
-                    document_field, registry, executor=ExecutorEnum.ASYNC
-                )
-                document_field_type = document_field.get_type().type
-                queried_fields = list()
-                filter_args = list()
-                if document_field_type._meta.filter_fields:
-                    for key, values in document_field_type._meta.filter_fields.items():
-                        for each in values:
-                            filter_args.append(key + "__" + each)
-                for each in args[4]:
-                    item = to_snake_case(each)
-                    if item in document._fields_ordered + tuple(filter_args):
-                        queried_fields.append(item)
-                return await sync_to_async(list)(
-                    document.objects()
-                    .no_dereference()
-                    .only(*set(list(document_field_type._meta.required_fields) + queried_fields))
-                    .filter(pk__in=args[1])
-                )
-
-            async def get_non_querying_object_async(*args, **kwargs):
-                return get_non_querying_object(*args, **kwargs)
-
-            async def reference_resolver_async(root, *args, **kwargs):
-                to_resolve = getattr(root, field.name or field.db_name)
-                if not to_resolve:
-                    return None
-
-                choice_to_resolve = dict()
-                querying_union_types = get_queried_union_types(
-                    info=args[0], valid_gql_types=registry._registry_async_string_map.keys()
-                )
-                to_resolve_models = dict()
-                for each, queried_fields in querying_union_types.items():
-                    to_resolve_models[registry._registry_async_string_map[each]] = queried_fields
-                to_resolve_object_ids = list()
-                for each in to_resolve:
-                    if isinstance(each, LazyReference):
-                        to_resolve_object_ids.append(each.pk)
-                        model = each.document_type._class_name
-                        if model not in choice_to_resolve:
-                            choice_to_resolve[model] = list()
-                        choice_to_resolve[model].append(each.pk)
-                    else:
-                        to_resolve_object_ids.append(each["_ref"].id)
-                        if each["_cls"] not in choice_to_resolve:
-                            choice_to_resolve[each["_cls"]] = list()
-                        choice_to_resolve[each["_cls"]].append(each["_ref"].id)
-                loop = asyncio.get_event_loop()
-                tasks = []
-                for model, object_id_list in choice_to_resolve.items():
-                    if model in to_resolve_models:
-                        queried_fields = to_resolve_models[model]
-                        task = loop.create_task(
-                            get_reference_objects_async(
-                                model, object_id_list, registry, args, queried_fields
-                            )
-                        )
-                    else:
-                        task = loop.create_task(
-                            get_non_querying_object_async(model, object_id_list, registry, args)
-                        )
-                    tasks.append(task)
-                result = await asyncio.gather(*tasks)
-                result_object = {}
-                for items in result:
-                    for item in items:
-                        result_object[item.id] = item
-                ordered_result = [result_object[each] for each in to_resolve_object_ids]
-                return ordered_result
-
             return graphene.List(
                 base_type._type,
                 description=get_field_description(field, registry),
                 required=get_field_is_required(field, registry),
-                resolver=reference_resolver
-                if executor == ExecutorEnum.SYNC
-                else reference_resolver_async,
+                resolver=get_field_resolver(
+                    default_sync_resolver=ListFieldResolver.reference_resolver(
+                        field=field, registry=registry, executor=executor
+                    ),
+                    default_async_resolver=ListFieldResolver.reference_resolver_async(
+                        field=field, registry=registry, executor=executor
+                    ),
+                    executor=executor,
+                ),
             )
         return graphene.List(
             base_type._type,
@@ -382,133 +235,9 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
     Meta = type("Meta", (object,), {"types": tuple(_types)})
     _union = type(name, (graphene.Union,), {"Meta": Meta})
 
-    def reference_resolver(root, *args, **kwargs):
-        de_referenced = getattr(root, field.name or field.db_name)
-        if de_referenced:
-            document = get_document(de_referenced["_cls"])
-            document_field = mongoengine.ReferenceField(document)
-            document_field = convert_mongoengine_field(document_field, registry, executor=executor)
-            _type = document_field.get_type().type
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            querying_union_types = get_queried_union_types(
-                info=args[0], valid_gql_types=registry._registry_string_map.keys()
-            )
-            if _type.__name__ in querying_union_types:
-                queried_fields = list()
-                for each in querying_union_types[_type._meta.name].keys():
-                    item = to_snake_case(each)
-                    if item in document._fields_ordered + tuple(filter_args):
-                        queried_fields.append(item)
-                return (
-                    document.objects()
-                    .no_dereference()
-                    .only(*list(set(list(_type._meta.required_fields) + queried_fields)))
-                    .get(pk=de_referenced["_ref"].id)
-                )
-            return document()
-        return None
-
-    def lazy_reference_resolver(root, *args, **kwargs):
-        document = getattr(root, field.name or field.db_name)
-        if document:
-            if document._cached_doc:
-                return document._cached_doc
-            queried_fields = list()
-            document_field_type = registry.get_type_for_model(
-                document.document_type, executor=executor
-            )
-            querying_union_types = get_queried_union_types(
-                info=args[0], valid_gql_types=registry._registry_string_map.keys()
-            )
-            filter_args = list()
-            if document_field_type._meta.filter_fields:
-                for key, values in document_field_type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            if document_field_type._meta.name in querying_union_types:
-                for each in querying_union_types[document_field_type._meta.name].keys():
-                    item = to_snake_case(each)
-                    if item in document.document_type._fields_ordered + tuple(filter_args):
-                        queried_fields.append(item)
-                _type = registry.get_type_for_model(document.document_type, executor=executor)
-                return (
-                    document.document_type.objects()
-                    .no_dereference()
-                    .only(*(set((list(_type._meta.required_fields) + queried_fields))))
-                    .get(pk=document.pk)
-                )
-            return document.document_type()
-        return None
-
-    async def reference_resolver_async(root, *args, **kwargs):
-        de_referenced = getattr(root, field.name or field.db_name)
-        if de_referenced:
-            document = get_document(de_referenced["_cls"])
-            document_field = mongoengine.ReferenceField(document)
-            document_field = convert_mongoengine_field(
-                document_field, registry, executor=ExecutorEnum.ASYNC
-            )
-            _type = document_field.get_type().type
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            querying_union_types = get_queried_union_types(
-                info=args[0], valid_gql_types=registry._registry_string_map.keys()
-            )
-            if _type.__name__ in querying_union_types:
-                queried_fields = list()
-                for each in querying_union_types[_type._meta.name].keys():
-                    item = to_snake_case(each)
-                    if item in document._fields_ordered + tuple(filter_args):
-                        queried_fields.append(item)
-                return await sync_to_async(
-                    document.objects()
-                    .no_dereference()
-                    .only(*list(set(list(_type._meta.required_fields) + queried_fields)))
-                    .get
-                )(pk=de_referenced["_ref"].id)
-            return await sync_to_async(document)()
-        return None
-
-    async def lazy_reference_resolver_async(root, *args, **kwargs):
-        document = getattr(root, field.name or field.db_name)
-        if document:
-            if document._cached_doc:
-                return document._cached_doc
-            queried_fields = list()
-            document_field_type = registry.get_type_for_model(
-                document.document_type, executor=executor
-            )
-            querying_union_types = get_queried_union_types(
-                info=args[0], valid_gql_types=registry._registry_string_map.keys()
-            )
-            filter_args = list()
-            if document_field_type._meta.filter_fields:
-                for key, values in document_field_type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            if document_field_type._meta.name in querying_union_types:
-                for each in querying_union_types[document_field_type._meta.name].keys():
-                    item = to_snake_case(each)
-                    if item in document.document_type._fields_ordered + tuple(filter_args):
-                        queried_fields.append(item)
-                _type = registry.get_type_for_model(document.document_type, executor=executor)
-                return await sync_to_async(
-                    document.document_type.objects()
-                    .no_dereference()
-                    .only(*(set((list(_type._meta.required_fields) + queried_fields))))
-                    .get
-                )(pk=document.pk)
-            return await sync_to_async(document.document_type)()
-        return None
-
-    if isinstance(field, mongoengine.GenericLazyReferenceField):
+    if isinstance(field, mongoengine.GenericReferenceField) or isinstance(
+        field, mongoengine.GenericLazyReferenceField
+    ):
         field_resolver = None
         required = False
         if field.db_field is not None:
@@ -524,32 +253,12 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
             _union,
             resolver=get_field_resolver(
                 field_resolver=field_resolver,
-                default_sync_resolver=lazy_reference_resolver,
-                default_async_resolver=lazy_reference_resolver_async,
-                executor=executor,
-            ),
-            description=get_field_description(field, registry),
-            required=required,
-        )
-
-    elif isinstance(field, mongoengine.GenericReferenceField):
-        field_resolver = None
-        required = False
-        if field.db_field is not None:
-            required = get_field_is_required(field, registry)
-            resolver_function = getattr(
-                registry.get_type_for_model(field.owner_document, executor=executor),
-                "resolve_" + field.db_field,
-                None,
-            )
-            if resolver_function and callable(resolver_function):
-                field_resolver = resolver_function
-        return graphene.Field(
-            _union,
-            resolver=get_field_resolver(
-                field_resolver=field_resolver,
-                default_sync_resolver=reference_resolver,
-                default_async_resolver=reference_resolver_async,
+                default_sync_resolver=UnionFieldResolver.resolver(
+                    field=field, registry=registry, executor=executor
+                ),
+                default_async_resolver=UnionFieldResolver.resolver_async(
+                    field=field, registry=registry, executor=executor
+                ),
                 executor=executor,
             ),
             description=get_field_description(field, registry),
@@ -564,112 +273,6 @@ def convert_field_to_union(field, registry=None, executor: ExecutorEnum = Execut
 @convert_mongoengine_field.register(mongoengine.CachedReferenceField)
 def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     model = field.document_type
-
-    def reference_resolver(root, *args, **kwargs):
-        document = root._data.get(field.name or field.db_name, None)
-        if document:
-            queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type, executor=executor)
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            for each in get_query_fields(args[0]).keys():
-                item = to_snake_case(each)
-                if item in field.document_type._fields_ordered + tuple(filter_args):
-                    queried_fields.append(item)
-
-            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
-            if isinstance(document, field.document_type) and all(
-                document._data[_field] is not None for _field in fields_to_fetch
-            ):
-                return document  # Data is already fetched
-            return (
-                field.document_type.objects()
-                .no_dereference()
-                .only(*fields_to_fetch)
-                .get(pk=document.id)
-            )
-        return None
-
-    def cached_reference_resolver(root, *args, **kwargs):
-        document = root._data.get(field.name or field.db_name, None)
-        if document:
-            queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type, executor=executor)
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            for each in get_query_fields(args[0]).keys():
-                item = to_snake_case(each)
-                if item in field.document_type._fields_ordered + tuple(filter_args):
-                    queried_fields.append(item)
-
-            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
-            if isinstance(document, field.document_type) and all(
-                document._data[_field] is not None for _field in fields_to_fetch
-            ):
-                return document  # Data is already fetched
-            return (
-                field.document_type.objects()
-                .no_dereference()
-                .only(*fields_to_fetch)
-                .get(pk=getattr(root, field.name or field.db_name))
-            )
-        return None
-
-    async def reference_resolver_async(root, *args, **kwargs):
-        document = root._data.get(field.name or field.db_name, None)
-        if document:
-            queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type, executor=executor)
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            for each in get_query_fields(args[0]).keys():
-                item = to_snake_case(each)
-                if item in field.document_type._fields_ordered + tuple(filter_args):
-                    queried_fields.append(item)
-
-            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
-            if isinstance(document, field.document_type) and all(
-                document._data[_field] is not None for _field in fields_to_fetch
-            ):
-                return document  # Data is already fetched
-            return await sync_to_async(
-                field.document_type.objects().no_dereference().only(*fields_to_fetch).get
-            )(pk=document.id)
-        return None
-
-    async def cached_reference_resolver_async(root, *args, **kwargs):
-        document = root._data.get(field.name or field.db_name, None)
-        if document:
-            queried_fields = list()
-            _type = registry.get_type_for_model(field.document_type, executor=executor)
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            for each in get_query_fields(args[0]).keys():
-                item = to_snake_case(each)
-                if item in field.document_type._fields_ordered + tuple(filter_args):
-                    queried_fields.append(item)
-
-            fields_to_fetch = set(list(_type._meta.required_fields) + queried_fields)
-            if isinstance(document, field.document_type) and all(
-                document._data[_field] is not None for _field in fields_to_fetch
-            ):
-                return document  # Data is already fetched
-            return await sync_to_async(
-                field.document_type.objects().no_dereference().only(*fields_to_fetch).get
-            )(pk=getattr(root, field.name or field.db_name))
-        return None
 
     def dynamic_type():
         _type = registry.get_type_for_model(model, executor=executor)
@@ -692,30 +295,21 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
             )
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
-        if isinstance(field, mongoengine.ReferenceField):
-            return graphene.Field(
-                _type,
-                resolver=get_field_resolver(
-                    field_resolver=field_resolver,
-                    default_sync_resolver=reference_resolver,
-                    default_async_resolver=reference_resolver_async,
-                    executor=executor,
+        return graphene.Field(
+            _type,
+            resolver=get_field_resolver(
+                field_resolver=field_resolver,
+                default_sync_resolver=DynamicReferenceFieldResolver.reference_resolver(
+                    field=field, registry=registry, executor=executor
                 ),
-                description=get_field_description(field, registry),
-                required=required,
-            )
-        else:
-            return graphene.Field(
-                _type,
-                resolver=get_field_resolver(
-                    field_resolver=field_resolver,
-                    default_sync_resolver=cached_reference_resolver,
-                    default_async_resolver=cached_reference_resolver_async,
-                    executor=executor,
+                default_async_resolver=DynamicReferenceFieldResolver.reference_resolver_async(
+                    field=field, registry=registry, executor=executor
                 ),
-                description=get_field_description(field, registry),
-                required=required,
-            )
+                executor=executor,
+            ),
+            description=get_field_description(field, registry),
+            required=required,
+        )
 
     return graphene.Dynamic(dynamic_type)
 
@@ -723,54 +317,6 @@ def convert_field_to_dynamic(field, registry=None, executor: ExecutorEnum = Exec
 @convert_mongoengine_field.register(mongoengine.LazyReferenceField)
 def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum = ExecutorEnum.SYNC):
     model = field.document_type
-
-    def lazy_resolver(root, *args, **kwargs):
-        document = getattr(root, field.name or field.db_name)
-        if document:
-            if document._cached_doc:
-                return document._cached_doc
-            queried_fields = list()
-            _type = registry.get_type_for_model(document.document_type, executor=executor)
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            for each in get_query_fields(args[0]).keys():
-                item = to_snake_case(each)
-                if item in document.document_type._fields_ordered + tuple(filter_args):
-                    queried_fields.append(item)
-            return (
-                document.document_type.objects()
-                .no_dereference()
-                .only(*(set((list(_type._meta.required_fields) + queried_fields))))
-                .get(pk=document.pk)
-            )
-        return None
-
-    async def lazy_resolver_async(root, *args, **kwargs):
-        document = getattr(root, field.name or field.db_name)
-        if document:
-            if document._cached_doc:
-                return document._cached_doc
-            queried_fields = list()
-            _type = registry.get_type_for_model(document.document_type, executor=executor)
-            filter_args = list()
-            if _type._meta.filter_fields:
-                for key, values in _type._meta.filter_fields.items():
-                    for each in values:
-                        filter_args.append(key + "__" + each)
-            for each in get_query_fields(args[0]).keys():
-                item = to_snake_case(each)
-                if item in document.document_type._fields_ordered + tuple(filter_args):
-                    queried_fields.append(item)
-            return await sync_to_async(
-                document.document_type.objects()
-                .no_dereference()
-                .only(*(set((list(_type._meta.required_fields) + queried_fields))))
-                .get
-            )(pk=document.pk)
-        return None
 
     def dynamic_type():
         _type = registry.get_type_for_model(model, executor=executor)
@@ -787,12 +333,17 @@ def convert_lazy_field_to_dynamic(field, registry=None, executor: ExecutorEnum =
             )
             if resolver_function and callable(resolver_function):
                 field_resolver = resolver_function
+
         return graphene.Field(
             _type,
             resolver=get_field_resolver(
                 field_resolver=field_resolver,
-                default_sync_resolver=lazy_resolver,
-                default_async_resolver=lazy_resolver_async,
+                default_sync_resolver=DynamicLazyFieldResolver.lazy_resolver(
+                    field=field, registry=registry, executor=executor
+                ),
+                default_async_resolver=DynamicLazyFieldResolver.lazy_resolver_async(
+                    field=field, registry=registry, executor=executor
+                ),
                 executor=executor,
             ),
             description=get_field_description(field, registry),
