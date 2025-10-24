@@ -424,7 +424,24 @@ class MongoengineConnectionField(ConnectionField):
             list_length = len(iterables)
 
         elif callable(getattr(self.model, "objects", None)):
-            if (
+            if "pk__in" in args and args["pk__in"]:
+                count = len(args["pk__in"])
+                skip, limit = find_skip_and_limit(
+                    first=first, last=last, after=after, before=before, count=count
+                )
+                if limit:
+                    args["pk__in"] = args["pk__in"][skip : skip + limit]
+                elif skip:
+                    args["pk__in"] = args["pk__in"][skip:]
+                iterables = self.get_queryset(self.model, info, required_fields, **args)
+                list_length = len(iterables)
+                if isinstance(info, GraphQLResolveInfo):
+                    if not info.context:
+                        info = info._replace(context=Context())
+                    info.context.queryset = self.get_queryset(
+                        self.model, info, required_fields, **args
+                    )
+            elif (
                 _root is None
                 or args
                 or isinstance(getattr(_root, field_name, []), MongoengineConnectionField)
@@ -485,24 +502,6 @@ class MongoengineConnectionField(ConnectionField):
                         info.context.queryset = self.get_queryset(
                             self.model, info, required_fields, **args
                         )
-
-            elif "pk__in" in args and args["pk__in"]:
-                count = len(args["pk__in"])
-                skip, limit = find_skip_and_limit(
-                    first=first, last=last, after=after, before=before, count=count
-                )
-                if limit:
-                    args["pk__in"] = args["pk__in"][skip : skip + limit]
-                elif skip:
-                    args["pk__in"] = args["pk__in"][skip:]
-                iterables = self.get_queryset(self.model, info, required_fields, **args)
-                list_length = len(iterables)
-                if isinstance(info, GraphQLResolveInfo):
-                    if not info.context:
-                        info = info._replace(context=Context())
-                    info.context.queryset = self.get_queryset(
-                        self.model, info, required_fields, **args
-                    )
 
         elif _root is not None:
             field_name = to_snake_case(info.field_name)
