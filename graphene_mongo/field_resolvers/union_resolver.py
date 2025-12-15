@@ -96,9 +96,9 @@ class UnionFieldResolver:
     def resolver(field, registry, executor) -> Callable:
         def resolver(root, *args, **kwargs) -> Optional[Document]:
             resolver_fun = (
-                UnionFieldResolver.__reference_resolver_common
-                if isinstance(field, mongoengine.GenericReferenceField)
-                else UnionFieldResolver.__lazy_reference_resolver_common
+                UnionFieldResolver.__lazy_reference_resolver_common
+                if isinstance(field, mongoengine.GenericLazyReferenceField)
+                else UnionFieldResolver.__reference_resolver_common
             )
             result = resolver_fun(field, registry, executor, root, *args, **kwargs)
             if not isinstance(result, tuple):
@@ -112,9 +112,9 @@ class UnionFieldResolver:
     def resolver_async(field, registry, executor) -> Callable:
         async def resolver(root, *args, **kwargs) -> Optional[Document]:
             resolver_fun = (
-                UnionFieldResolver.__reference_resolver_common
-                if isinstance(field, mongoengine.GenericReferenceField)
-                else UnionFieldResolver.__lazy_reference_resolver_common
+                UnionFieldResolver.__lazy_reference_resolver_common
+                if isinstance(field, mongoengine.GenericLazyReferenceField)
+                else UnionFieldResolver.__reference_resolver_common
             )
             result = resolver_fun(field, registry, executor, root, *args, **kwargs)
             if not isinstance(result, tuple):
