@@ -49,9 +49,9 @@ class MongoengineConnectionField(ConnectionField):
     def __init__(self, type, *args, **kwargs):
         get_queryset = kwargs.pop("get_queryset", None)
         if get_queryset:
-            assert callable(
-                get_queryset
-            ), "Attribute `get_queryset` on {} must be callable.".format(self)
+            assert callable(get_queryset), (
+                "Attribute `get_queryset` on {} must be callable.".format(self)
+            )
         self._get_queryset = get_queryset
         super(MongoengineConnectionField, self).__init__(type, *args, **kwargs)
 
@@ -64,9 +64,9 @@ class MongoengineConnectionField(ConnectionField):
         from .types import MongoengineObjectType
 
         _type = super(ConnectionField, self).type
-        assert issubclass(
-            _type, MongoengineObjectType
-        ), "MongoengineConnectionField only accepts MongoengineObjectType types"
+        assert issubclass(_type, MongoengineObjectType), (
+            "MongoengineConnectionField only accepts MongoengineObjectType types"
+        )
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
@@ -163,16 +163,16 @@ class MongoengineConnectionField(ConnectionField):
                 ),
             ):
                 return False
-            if (
-                getattr(converted, "type", None)
-                and getattr(converted.type, "_of_type", None)
-                and issubclass((get_type(converted.type.of_type)), graphene.Union)
-            ):
-                return False
-            if isinstance(converted, (graphene.List)) and issubclass(
-                getattr(converted, "_of_type", None), graphene.Union
-            ):
-                return False
+
+            if isinstance(converted, (graphene.List)):
+                sub_type = getattr(converted, "_of_type", None)
+                if hasattr(sub_type, "of_type"):  # graphene.NonNull
+                    sub_type = sub_type.of_type
+                if issubclass(sub_type, graphene.Union) or issubclass(
+                    sub_type, graphene.ObjectType
+                ):
+                    return False
+
             # below if condition: workaround for DB filterable field redefined as custom graphene type
             if (
                 hasattr(field_, "type")
@@ -424,7 +424,24 @@ class MongoengineConnectionField(ConnectionField):
             list_length = len(iterables)
 
         elif callable(getattr(self.model, "objects", None)):
-            if (
+            if "pk__in" in args and args["pk__in"]:
+                count = len(args["pk__in"])
+                skip, limit = find_skip_and_limit(
+                    first=first, last=last, after=after, before=before, count=count
+                )
+                if limit:
+                    args["pk__in"] = args["pk__in"][skip : skip + limit]
+                elif skip:
+                    args["pk__in"] = args["pk__in"][skip:]
+                iterables = self.get_queryset(self.model, info, required_fields, **args)
+                list_length = len(iterables)
+                if isinstance(info, GraphQLResolveInfo):
+                    if not info.context:
+                        info = info._replace(context=Context())
+                    info.context.queryset = self.get_queryset(
+                        self.model, info, required_fields, **args
+                    )
+            elif (
                 _root is None
                 or args
                 or isinstance(getattr(_root, field_name, []), MongoengineConnectionField)
@@ -485,24 +502,6 @@ class MongoengineConnectionField(ConnectionField):
                         info.context.queryset = self.get_queryset(
                             self.model, info, required_fields, **args
                         )
-
-            elif "pk__in" in args and args["pk__in"]:
-                count = len(args["pk__in"])
-                skip, limit = find_skip_and_limit(
-                    first=first, last=last, after=after, before=before, count=count
-                )
-                if limit:
-                    args["pk__in"] = args["pk__in"][skip : skip + limit]
-                elif skip:
-                    args["pk__in"] = args["pk__in"][skip:]
-                iterables = self.get_queryset(self.model, info, required_fields, **args)
-                list_length = len(iterables)
-                if isinstance(info, GraphQLResolveInfo):
-                    if not info.context:
-                        info = info._replace(context=Context())
-                    info.context.queryset = self.get_queryset(
-                        self.model, info, required_fields, **args
-                    )
 
         elif _root is not None:
             field_name = to_snake_case(info.field_name)

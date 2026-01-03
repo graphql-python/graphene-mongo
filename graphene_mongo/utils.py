@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
 
-import enum
-import inspect
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Union
+import enum
+import inspect
+from typing import Any, Callable, Optional, Union
 
-import mongoengine
 from asgiref.sync import SyncToAsync
 from asgiref.sync import sync_to_async as asgiref_sync_to_async
 from graphene import Node
@@ -19,6 +18,7 @@ from graphql import (
     VariableNode,
 )
 from graphql_relay.connection.array_connection import offset_to_cursor
+import mongoengine
 
 
 class ExecutorEnum(enum.Enum):
@@ -79,11 +79,21 @@ def get_field_description(field, registry=None):
         parts.append(field.verbose_name.title())
     if hasattr(field, "help_text"):
         parts.append(field.help_text)
+    if hasattr(field, "description"):
+        parts.append(field.description)
     if field.db_field != field.name:
         name_format = "(%s)" if parts else "%s"
         parts.append(name_format % field.db_field)
 
     return "\n".join(parts)
+
+
+def get_field_is_required(field, registry=None):
+    """
+    A field is said to be required in gql only if
+    field.required = True and field.null = False
+    """
+    return field.required and not field.null
 
 
 def get_node_from_global_id(node, info, global_id):
@@ -191,6 +201,88 @@ def get_query_fields(info):
     if "edges" in query:
         return query["edges"]["node"].keys()
     return query
+
+
+def get_queried_union_types(info, valid_gql_types):
+    """A convenience function to get queried union types with its fields
+
+    Args:
+        info (ResolveInfo)
+        valid_gql_types (dict_keys)
+
+    Returns:
+        dict[union_type_name, queried_fields(dict)]
+    """
+
+    def collect_query_fields_for_union(node, fragments, variables):
+        """
+        Similar to collect_query_fields(...)
+
+        fragment_spread - logic is different for union
+        """
+
+        field = {}
+        selection_set = node.get("selection_set") if isinstance(node, dict) else node.selection_set
+        if selection_set:
+            for leaf in selection_set.selections:
+                if leaf.kind == "field":
+                    if include_field_by_directives(leaf, variables):
+                        field.update(
+                            {leaf.name.value: collect_query_fields(leaf, fragments, variables)}
+                        )
+                elif leaf.kind == "fragment_spread":  # This is different
+                    fragment = fragments[leaf.name.value]
+                    field.update(
+                        {
+                            fragment.type_condition.name.value: collect_query_fields(
+                                fragment, fragments, variables
+                            )
+                        }
+                    )
+                elif leaf.kind == "inline_fragment":
+                    field.update(
+                        {
+                            leaf.type_condition.name.value: collect_query_fields(
+                                leaf, fragments, variables
+                            )
+                        }
+                    )
+
+        return field
+
+    fragments = {}
+    node = ast_to_dict(info.field_nodes[0])
+    variables = info.variable_values
+
+    for name, value in info.fragments.items():
+        fragments[name] = ast_to_dict(value)
+
+    fragments_queries: dict[str, dict] = {}
+
+    selection_set = node.get("selection_set") if isinstance(node, dict) else node.selection_set
+    if selection_set:
+        for leaf in selection_set.selections:
+            if leaf.kind == "fragment_spread":
+                fragment_name = fragments[leaf.name.value].type_condition.name.value
+                sub_query_fields = collect_query_fields_for_union(
+                    fragments[leaf.name.value], fragments, variables
+                )
+                if fragment_name not in valid_gql_types:
+                    # This is done to avoid UnionFragments coming in fragments_queries as
+                    # we actually need its children types and not the UnionFragments itself
+                    fragments_queries.update(sub_query_fields)
+                    fragments_queries.pop(
+                        "__typename", None
+                    )  # cannot resolve __typename for a union type
+                else:
+                    fragments_queries[fragment_name] = sub_query_fields
+            elif leaf.kind == "inline_fragment":
+                fragment_name = leaf.type_condition.name.value
+                fragments_queries[fragment_name] = collect_query_fields_for_union(
+                    leaf, fragments, variables
+                )
+
+    return fragments_queries
 
 
 def has_page_info(info):
@@ -329,3 +421,30 @@ def sync_to_async(
     if executor is None:
         executor = ThreadPoolExecutor()
     return asgiref_sync_to_async(func=func, thread_sensitive=thread_sensitive, executor=executor)
+
+
+def get_field_resolver(
+    default_async_resolver: Callable,
+    default_sync_resolver: Callable,
+    executor: ExecutorEnum,
+    field_resolver: Optional[Callable] = None,
+) -> Callable:
+    """
+    Helpr function to get the resolver for a field
+
+    Args:
+        field_resolver: user defined resolver (optional)
+        default_async_resolver: default library async resolver
+        default_sync_resolver: default library sync resolver
+        executor: ExecutorEnum
+
+    Returns:
+        resolver: Callable
+    """
+    if field_resolver is not None:
+        return field_resolver
+
+    if executor == ExecutorEnum.ASYNC:
+        return default_async_resolver
+
+    return default_sync_resolver

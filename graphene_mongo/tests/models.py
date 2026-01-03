@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 
 import mongoengine
 import mongomock
@@ -177,3 +178,38 @@ class Bar(mongoengine.EmbeddedDocument):
 
 class Foo(mongoengine.Document):
     bars = mongoengine.EmbeddedDocumentListField(Bar)
+
+
+class GradeEnum(Enum):
+    A = "A"
+    B = "B"
+
+
+class Student(mongoengine.EmbeddedDocument):
+    name = mongoengine.StringField()
+
+
+class Teacher(mongoengine.EmbeddedDocument):
+    name = mongoengine.StringField()
+
+
+class Bench(mongoengine.Document):
+    size = mongoengine.IntField()
+
+
+class Exam(mongoengine.Document):
+    size = mongoengine.IntField()
+
+
+class SchoolClass(mongoengine.Document):
+    allowed_grades = mongoengine.ListField(mongoengine.EnumField(GradeEnum))
+    subjects = mongoengine.ListField(mongoengine.StringField())
+    students = mongoengine.ListField(mongoengine.EmbeddedDocumentListField(Student))
+    members = mongoengine.ListField(
+        mongoengine.GenericEmbeddedDocumentField(choices=[Student, Teacher])
+    )
+    records = mongoengine.ListField(mongoengine.GenericLazyReferenceField(choices=[Bench, Exam]))
+
+
+class School(mongoengine.Document):
+    classes = mongoengine.ListField(mongoengine.ReferenceField(SchoolClass))

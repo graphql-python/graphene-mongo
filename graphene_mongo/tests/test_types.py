@@ -1,13 +1,22 @@
-from pytest import raises
-
 from graphene import Field, Int, Interface, ObjectType
 from graphene.relay import Node, is_node
+from pytest import raises
 
+from .models import (
+    Article,
+    Bench,
+    Child,
+    EmbeddedArticle,
+    Exam,
+    Parent,
+    Reporter,
+    School,
+    SchoolClass,
+    Student,
+)
+from .utils import with_local_registry
 from .. import registry
 from ..types import MongoengineObjectType, MongoengineObjectTypeOptions
-from .models import Article, EmbeddedArticle, Reporter
-from .models import Parent, Child
-from .utils import with_local_registry
 
 registry.reset_global_registry()
 
@@ -83,7 +92,13 @@ def test_node_replacedfield():
 def test_object_type():
     assert issubclass(Human, ObjectType)
     assert set(Human._meta.fields.keys()) == set(
-        ["id", "headline", "pub_date", "editor", "reporter"]
+        [
+            "id",
+            "headline",
+            "pub_date",
+            "editor",
+            "reporter",
+        ]
     )
     assert is_node(Human)
 
@@ -176,3 +191,47 @@ def test_passing_meta_when_subclassing_mongoengine_objecttype():
 
     assert hasattr(B._meta, "some_subclass_attr")
     assert B._meta.some_subclass_attr == "someval"
+
+
+@with_local_registry
+def test_filter_list_types():
+    """
+    Test to check filter args should not be generated the following type of fields
+
+    ListField(EmbeddedDocumentListField(...))
+    ListField(GenericEmbeddedDocumentField(...))
+    ListField(GenericLazyReferenceField(...))
+    """
+
+    class ExamType(MongoengineObjectType):
+        class Meta:
+            model = Exam
+
+    class BenchType(MongoengineObjectType):
+        class Meta:
+            model = Bench
+
+    class StudentType(MongoengineObjectType):
+        class Meta:
+            model = Student
+
+    class SchoolClassType(MongoengineObjectType):
+        class Meta:
+            model = SchoolClass
+            interfaces = (Node,)
+
+    class SchoolType(MongoengineObjectType):
+        class Meta:
+            model = School
+            interfaces = (Node,)
+
+    class_type_filter_args = SchoolType._meta.fields["classes"].args
+    assert class_type_filter_args.keys() == {
+        "before",
+        "after",
+        "first",
+        "last",
+        "allowed_grades",
+        "id",
+        "subjects",
+    }

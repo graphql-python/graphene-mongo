@@ -164,8 +164,7 @@ def create_graphene_generic_class(object_type, option_type):
 
             if _meta:
                 assert isinstance(_meta, MongoengineGenericObjectTypeOptions), (
-                    "_meta must be an instance of MongoengineGenericObjectTypeOptions, "
-                    "received {}"
+                    "_meta must be an instance of MongoengineGenericObjectTypeOptions, received {}"
                 ).format(_meta.__class__)
             else:
                 _meta = MongoengineGenericObjectTypeOptions(option_type)
