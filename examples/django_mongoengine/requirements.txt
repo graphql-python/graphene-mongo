@@ -1,4 +1,4 @@
-Django==4.2.22
+Django==4.2.27
 pytest==4.6.3
 pytest-django==3.5.1
 mongoengine==0.27.0
