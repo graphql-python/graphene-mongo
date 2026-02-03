@@ -411,6 +411,9 @@ class MongoengineConnectionField(ConnectionField):
                     has_next_page = len(_base_query.skip(skip + limit).only("id").limit(1)) != 0
                 elif skip:
                     items = items.skip(skip)
+
+                iterables = items
+                list_length = items.count()
             else:
                 if limit:
                     _base_query = items
@@ -420,8 +423,9 @@ class MongoengineConnectionField(ConnectionField):
                     )
                 elif skip:
                     items = items[skip:]
-            iterables = items
-            list_length = items.count()
+
+                iterables = list(items)
+                list_length = len(iterables)
 
         elif callable(getattr(self.model, "objects", None)):
             if "pk__in" in args and args["pk__in"]:
