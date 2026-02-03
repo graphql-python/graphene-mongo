@@ -420,8 +420,8 @@ class MongoengineConnectionField(ConnectionField):
                     )
                 elif skip:
                     items = items[skip:]
-            iterables = list(items)
-            list_length = len(iterables)
+            iterables = items
+            list_length = items.count()
 
         elif callable(getattr(self.model, "objects", None)):
             if "pk__in" in args and args["pk__in"]:
